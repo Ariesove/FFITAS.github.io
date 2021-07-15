@@ -98,6 +98,45 @@
       </categories>
   </entry>
   <entry>
+    <title>HTTP</title>
+    <url>/2020/12/29/HTTP%E4%BD%93%E7%B3%BB/</url>
+    <content><![CDATA[<h2 id="👱-GET-和-post-本质区别"><a href="#👱-GET-和-post-本质区别" class="headerlink" title="👱 GET 和 post 本质区别"></a>👱 GET 和 post 本质区别</h2><h3 id="HTTP-常见的请求头字段"><a href="#HTTP-常见的请求头字段" class="headerlink" title="HTTP 常见的请求头字段"></a>HTTP 常见的请求头字段</h3><h3 id="叙述思路"><a href="#叙述思路" class="headerlink" title="叙述思路"></a>叙述思路</h3><ol>
+<li>首先属于 HTTP 协议—–》 引出本质是 TCP 连接——》 引出 tcp 连接次数问题—–&gt; 由次数问题：想到幂等。</li>
+<li>其次想到安全幂等，GET 安全幂等，POST 不安全也不幂等。</li>
+<li>同时还有一点 get 请求能够<strong>缓存</strong>比如第一次请求时浏览器会把相应数据缓存到本地，方便之后能直接命中：强缓存逻辑，而 post 请求时无法被缓存的。</li>
+<li>其次想到想起它们属于 HTTP 协议，也就是说也是基于 TCP 链接的，所以它们的<strong>本质</strong>都是 <strong>TCP 连接。</strong></li>
+<li>GET 请求是<strong>一个 tcp 报文</strong>  :(对于 GET 方式的请求，浏览器会把 http <strong>header</strong> 和 data 一并发送出去，服务器响应 200（返回数据）。) //你请求肯定要有请求头吗，对吧</li>
+<li>而 POST 请求是<strong>两个 tcp 报文</strong>，(浏览器先发送 header，服务器响应 100，浏览器再发送 data，服务器响应 200 ok（返回数据）。)</li>
+<li>所谓<strong>安全</strong>就是不会改变服务器资源，所谓的<strong><strong>幂</strong></strong>想起次幂，也就是说<strong>多次</strong>的意思</li>
+<li>所谓的<strong>不安全</strong>其实就是会改变，服务器的资源，所谓的不幂等就是，多次操作结果不相同。</li>
+</ol>
+<h4 id="💯-100-continue"><a href="#💯-100-continue" class="headerlink" title="💯 100 continue"></a>💯 100 continue</h4><ol>
+<li>HTTP <strong><code>100 Continue</code></strong> 信息型状态响应码表示目前为止一切正常, 客户端应该继续请求, 如果已完成请求则忽略.// 自己的话就是:👌  因为是 <strong>100</strong> 分所以<strong>目前状态正常，可以继续请求。</strong></li>
+</ol>
+<h3 id="为什么-http1-不能实现多路复用"><a href="#为什么-http1-不能实现多路复用" class="headerlink" title="为什么 http1 不能实现多路复用"></a>为什么 http1 不能实现多路复用</h3><ol>
+<li>HTTP/1.1 不是二进制传输，而是通过文本进行传输。由于没有流的概念，在使用并行传输（多路复用）传递数据时，接收端在接收到响应后，并不能区分多个响应分别对应的请求，所以无法将多个响应的结果重新进行组装，也就实现不了多路复用。</li>
+</ol>
+<h3 id="请求响应头怎么记忆"><a href="#请求响应头怎么记忆" class="headerlink" title="请求响应头怎么记忆"></a>请求响应头怎么记忆</h3><ol>
+<li>首先得联想到这个登录的场景，由登录联想到 cookies, c–》联想 coonection-keepalive,e 发音 accecpt–accept-encoding, s 联想到这个 useragent, o–&gt; 联想到这个 host 。</li>
+<li>接收方–&gt; 接受请求返回数据。所以联想到内容格式，及大小 –》content ,以及为了能提升用户的访问速率.</li>
+<li>首先是 header - cookies   –  connection: –&gt; user-agent–&gt;accept–&gt;   hc(缓存)：if-none-match, if-modify-since;</li>
+</ol>
+<h3 id="响应码"><a href="#响应码" class="headerlink" title="响应码"></a>响应码</h3><ol>
+<li>301 : 就是永久重定向，就是从 seo 优化的角度更好，会<strong>转移权重</strong>。（联想一个旧网址的 seo 和新网址的 seo）.</li>
+<li>但是 302 就是临时的重定向，<strong>不会转移权重</strong>不会去更新这个，等于是搜索权重下降了，因为 seo 不允许多个，域名指向一个地址，作弊提升这个权重排名。</li>
+<li>叙述思路：就是，301–》seo ，转移权重（就是将旧地址的搜索权重转移到新的）。. 重定向之后会做什么？读取浏览器缓存，强缓存和协商缓存</li>
+<li>302–》临时的重定向，不会把旧网址的，权重进行转移。但是会改变请求的方法把 post 改为了 get 请求，所以出现了 307 的临时重定向，不会去改变这个请求的方法。</li>
+</ol>
+<h3 id="http-持久连接"><a href="#http-持久连接" class="headerlink" title="http 持久连接"></a>http 持久连接</h3><ol>
+<li>首先第一点，何时断开服务器会去设定一个时间然后，在 keep-alive 中添加这个断开的时间。</li>
+<li>其次何时数据传输完毕，数据联想为一个 length,是不是只有长度符合你的 length 才能够判断，数据传输完毕，追问—》如果说没有 content-length;怎么来判断，就是说看编码快，如果</li>
+</ol>
+]]></content>
+      <categories>
+        <category>HTTP</category>
+      </categories>
+  </entry>
+  <entry>
     <title>HTTPS</title>
     <url>/2021/01/19/HTTPS%E4%BD%93%E7%B3%BB/</url>
     <content><![CDATA[<h4 id="问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改"><a href="#问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改" class="headerlink" title="问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改"></a>问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改</h4><ol>
@@ -154,42 +193,189 @@
       </categories>
   </entry>
   <entry>
-    <title>HTTP</title>
-    <url>/2020/12/29/HTTP%E4%BD%93%E7%B3%BB/</url>
-    <content><![CDATA[<h2 id="👱-GET-和-post-本质区别"><a href="#👱-GET-和-post-本质区别" class="headerlink" title="👱 GET 和 post 本质区别"></a>👱 GET 和 post 本质区别</h2><h3 id="HTTP-常见的请求头字段"><a href="#HTTP-常见的请求头字段" class="headerlink" title="HTTP 常见的请求头字段"></a>HTTP 常见的请求头字段</h3><h3 id="叙述思路"><a href="#叙述思路" class="headerlink" title="叙述思路"></a>叙述思路</h3><ol>
-<li>首先属于 HTTP 协议—–》 引出本质是 TCP 连接——》 引出 tcp 连接次数问题—–&gt; 由次数问题：想到幂等。</li>
-<li>其次想到安全幂等，GET 安全幂等，POST 不安全也不幂等。</li>
-<li>同时还有一点 get 请求能够<strong>缓存</strong>比如第一次请求时浏览器会把相应数据缓存到本地，方便之后能直接命中：强缓存逻辑，而 post 请求时无法被缓存的。</li>
-<li>其次想到想起它们属于 HTTP 协议，也就是说也是基于 TCP 链接的，所以它们的<strong>本质</strong>都是 <strong>TCP 连接。</strong></li>
-<li>GET 请求是<strong>一个 tcp 报文</strong>  :(对于 GET 方式的请求，浏览器会把 http <strong>header</strong> 和 data 一并发送出去，服务器响应 200（返回数据）。) //你请求肯定要有请求头吗，对吧</li>
-<li>而 POST 请求是<strong>两个 tcp 报文</strong>，(浏览器先发送 header，服务器响应 100，浏览器再发送 data，服务器响应 200 ok（返回数据）。)</li>
-<li>所谓<strong>安全</strong>就是不会改变服务器资源，所谓的<strong><strong>幂</strong></strong>想起次幂，也就是说<strong>多次</strong>的意思</li>
-<li>所谓的<strong>不安全</strong>其实就是会改变，服务器的资源，所谓的不幂等就是，多次操作结果不相同。</li>
+    <title>优化垃圾回收机制</title>
+    <url>/2020/12/19/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%9D%A5%E4%BC%98%E5%8C%96%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%C2%B7/</url>
+    <content><![CDATA[<h1 id="V8引擎如何来优化垃圾回收机制的·"><a href="#V8引擎如何来优化垃圾回收机制的·" class="headerlink" title="V8引擎如何来优化垃圾回收机制的·"></a>V8引擎如何来优化垃圾回收机制的·</h1><h2 id="相应优化算法"><a href="#相应优化算法" class="headerlink" title="相应优化算法"></a>相应优化算法</h2><h3 id="全停顿算法"><a href="#全停顿算法" class="headerlink" title="全停顿算法"></a>全停顿算法</h3><ul>
+<li><p>js是单线程，并且js执行和垃圾回收机制任务都在主线上，js执行就会被挂起，导致全停顿</p>
+</li>
+<li><p>Subtopic</p>
+</li>
+<li><p>并行回收</p>
+<ul>
+<li>副垃圾回收机制–采取专门用来清理新生代对象</li>
+<li>这些辅助线程，也会来帮忙将对象区域的数据转移到空闲区域</li>
+<li>Subtopic</li>
+<li>弊端还是全停顿，对于老生代对象还是会非常影响效率</li>
+</ul>
+</li>
+</ul>
+<h3 id="增量标记算法"><a href="#增量标记算法" class="headerlink" title="增量标记算法"></a>增量标记算法</h3><ul>
+<li><p>增量回收</p>
+<ul>
+<li><p>分治的思想</p>
+</li>
+<li><p>就是说将完整的标记清除任务分解为一个个小任务，然后穿插着在主线程上进行</p>
+</li>
+<li><p>怎么实现的</p>
+<ul>
+<li><p>如何来实现垃圾回收机制的暂停和恢复</p>
+<ul>
+<li><p>三色标记法</p>
+<ul>
+<li><p>黑色</p>
+<ul>
+<li>能够被GCroot对象遍历到</li>
+</ul>
+</li>
+<li><p>白色</p>
+<ul>
+<li>无法被GCroot对象遍历到–会被清除</li>
+</ul>
+</li>
+<li><p>灰色</p>
+<ul>
+<li><p>被GCroot对象遍历到，但是子节点还未被处理</p>
+</li>
+<li><p>V8的垃圾回收器，会来判断此时有没有灰色标记</p>
+<ul>
+<li><p>有</p>
+<ul>
+<li>下次恢复垃圾回收机制时就从灰色的标记开始，继续标记</li>
+</ul>
+</li>
+<li><p>没有</p>
+<ul>
+<li>直接开始清除</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>那这里有一个问题如果中途，已经被标记的变量，被改变</p>
+<ul>
+<li>原来被标记为黑色–现在改变后变白色了</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="重点：并发回收机制"><a href="#重点：并发回收机制" class="headerlink" title="重点：并发回收机制"></a>重点：并发回收机制</h2><h3 id="不管是增量回收还是-并行回收，都是运行在主线程上"><a href="#不管是增量回收还是-并行回收，都是运行在主线程上" class="headerlink" title="不管是增量回收还是/并行回收，都是运行在主线程上"></a>不管是增量回收还是/并行回收，都是运行在主线程上</h3><h3 id="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收"><a href="#那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收" class="headerlink" title="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-"></a>那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-</h3><h3 id="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"><a href="#简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收" class="headerlink" title="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"></a>简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收</h3><h3 id="Subtopic"><a href="#Subtopic" class="headerlink" title="Subtopic"></a>Subtopic</h3><h2 id="主垃圾回收机制采取了三种机制"><a href="#主垃圾回收机制采取了三种机制" class="headerlink" title="主垃圾回收机制采取了三种机制"></a>主垃圾回收机制采取了三种机制</h2>]]></content>
+      <categories>
+        <category>v8引擎</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>TCP</title>
+    <url>/2020/08/19/TCP/</url>
+    <content><![CDATA[<h2 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h2><h3 id="如何来理解-tcp-是面向流的"><a href="#如何来理解-tcp-是面向流的" class="headerlink" title="如何来理解 tcp 是面向流的"></a>如何来理解 tcp 是面向流的</h3><ol>
+<li><p>所谓的流就是说无<a href="siyuan://blocks/20210130110417-7sbw2pb">“消息保护边界的”</a></p>
+<blockquote>
+<ol>
+<li>由于 tcp 无消息保护边界，（个人理解就是不知道消息从哪里开始，也不知道消息从哪里结束）需要在接收端来处理消息边界问题，这也就是说粘包，拆包问题。</li>
+<li>什么是粘包，就是说有可能两个信息包，粘在了一起</li>
+<li>有些包被拆成几块因为大于了 MSS,所以需要拆包，，然后与其它包粘在一起。</li>
 </ol>
-<h4 id="💯-100-continue"><a href="#💯-100-continue" class="headerlink" title="💯 100 continue"></a>💯 100 continue</h4><ol>
-<li>HTTP <strong><code>100 Continue</code></strong> 信息型状态响应码表示目前为止一切正常, 客户端应该继续请求, 如果已完成请求则忽略.// 自己的话就是:👌  因为是 <strong>100</strong> 分所以<strong>目前状态正常，可以继续请求。</strong></li>
+</blockquote>
+<p>，这里通俗理解就是说接受方无法去界定这个消息的开始和结尾，而有消息保护边界就是说消息之间是独立的，因为消息与消息之间有边界。</p>
+</li>
 </ol>
-<h3 id="为什么-http1-不能实现多路复用"><a href="#为什么-http1-不能实现多路复用" class="headerlink" title="为什么 http1 不能实现多路复用"></a>为什么 http1 不能实现多路复用</h3><ol>
-<li>HTTP/1.1 不是二进制传输，而是通过文本进行传输。由于没有流的概念，在使用并行传输（多路复用）传递数据时，接收端在接收到响应后，并不能区分多个响应分别对应的请求，所以无法将多个响应的结果重新进行组装，也就实现不了多路复用。</li>
+<h3 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h3><ol>
+<li>首先（先联想图）客户端向服务器发出序列号 SYN ，seq（随机发出一个序列号）</li>
+<li>服务器收到后会基于客户端的序列号，发出一个 ACK 确认号。为了表示一个回礼，还需要发 Seq</li>
+<li>客户端会再次对服务器的序列号产生一个确认。</li>
 </ol>
-<h3 id="请求响应头怎么记忆"><a href="#请求响应头怎么记忆" class="headerlink" title="请求响应头怎么记忆"></a>请求响应头怎么记忆</h3><ol>
-<li>首先得联想到这个登录的场景，由登录联想到 cookies, c–》联想 coonection-keepalive,e 发音 accecpt–accept-encoding, s 联想到这个 useragent, o–&gt; 联想到这个 host 。</li>
-<li>接收方–&gt; 接受请求返回数据。所以联想到内容格式，及大小 –》content ,以及为了能提升用户的访问速率.</li>
-<li>首先是 header - cookies   –  connection: –&gt; user-agent–&gt;accept–&gt;   hc(缓存)：if-none-match, if-modify-since;</li>
+<h3 id="为什么建立连接是三次，而不是两次。"><a href="#为什么建立连接是三次，而不是两次。" class="headerlink" title="为什么建立连接是三次，而不是两次。"></a>为什么建立连接是三次，而不是两次。</h3><h4 id="防止历史请求初始化-tcp-连接"><a href="#防止历史请求初始化-tcp-连接" class="headerlink" title="防止历史请求初始化 tcp 连接"></a>防止历史请求初始化 tcp 连接</h4><ol>
+<li><strong>反向验证两次为什么不行</strong>：如果只有两次，客户端这里对于服务器发来的报文，无法来判断这个报文是否有效（是否过期，是否超时）因为网路拥塞这样的事情很常见。</li>
+<li>所以客户端这里没有足够的<strong>上下文</strong>来判断，是否是如期的请求。</li>
+<li>此时从三次说，那为什么三次避免了这样的问题，当客户端收到服务器的请求的时候，<strong>客户端</strong>本身会<strong>存储</strong>自己所发出的<strong>序列号</strong>，所以可以依据所收到的 ack 来判断是否是如期的，如果是就正常连接。</li>
+<li>但如果不是，那就发送 <strong>RST</strong> （有重置的意思）报文，来结束这个连接。</li>
 </ol>
-<h3 id="响应码"><a href="#响应码" class="headerlink" title="响应码"></a>响应码</h3><ol>
-<li>301 : 就是永久重定向，就是从 seo 优化的角度更好，会<strong>转移权重</strong>。（联想一个旧网址的 seo 和新网址的 seo）.</li>
-<li>但是 302 就是临时的重定向，<strong>不会转移权重</strong>不会去更新这个，等于是搜索权重下降了，因为 seo 不允许多个，域名指向一个地址，作弊提升这个权重排名。</li>
-<li>叙述思路：就是，301–》seo ，转移权重（就是将旧地址的搜索权重转移到新的）。. 重定向之后会做什么？读取浏览器缓存，强缓存和协商缓存</li>
-<li>302–》临时的重定向，不会把旧网址的，权重进行转移。但是会改变请求的方法把 post 改为了 get 请求，所以出现了 307 的临时重定向，不会去改变这个请求的方法。</li>
+<h4 id="确认彼此的系列号"><a href="#确认彼此的系列号" class="headerlink" title="确认彼此的系列号"></a>确认彼此的系列号</h4><ol>
+<li>其实 tcp 能够实现可靠连接的本质其实是能够确认彼此的序列号，那你如果只有两次，只能单向确认，无法互相确认，所以需要三次。</li>
 </ol>
-<h3 id="http-持久连接"><a href="#http-持久连接" class="headerlink" title="http 持久连接"></a>http 持久连接</h3><ol>
-<li>首先第一点，何时断开服务器会去设定一个时间然后，在 keep-alive 中添加这个断开的时间。</li>
-<li>其次何时数据传输完毕，数据联想为一个 length,是不是只有长度符合你的 length 才能够判断，数据传输完毕，追问—》如果说没有 content-length;怎么来判断，就是说看编码快，如果</li>
+<h4 id="防止（服务器）资源浪费"><a href="#防止（服务器）资源浪费" class="headerlink" title="防止（服务器）资源浪费"></a>防止（服务器）资源浪费</h4><ol>
+<li>由于仅有两次，服务器是没有办法判断对方是否收到了正确的序号</li>
+<li>客户端如果因为网路阻塞，发出了多个 SYN 信号，那客户端有可能收到，也有可能收不到，所以为了确保对方收到，服务器只能建立多个重复的 tcp 链接。极大的浪费资源。</li>
 </ol>
+<h4 id="TCP-四次挥手"><a href="#TCP-四次挥手" class="headerlink" title="TCP 四次挥手"></a>TCP 四次挥手</h4><ol>
+<li>（首先看到<strong>四</strong>先想想哪四次，<strong>两对 FIN-ACK</strong> ，为什么一定要四次，就是说客户端向服务器先发 FIN 表示两个人关系淡了想分了，所以<strong>发出 FIN 终止报文</strong>。</li>
+<li>服务区器先对终止报文发出确认</li>
+<li>但服务器收到还可能对收到的信进行处理并发送，意味着此时不能立刻终止关系。</li>
+<li>在处理完信息后再去发出 FIN，自身进入 closed 状态。</li>
+<li>客户端收到信息后再次，向服务器发出一个 ACK,后它不会立刻进入到 closed 状态，它需要等待两个 <strong>MSL</strong>（最大报文生存时间）为什么是两个主要是因为网络时常会发生阻塞，对方没有收到一个 ACK,客户端会重发，那么重发之后一个来回就对应了两个 MSL。第二个原因：<a href="https://blog.csdn.net/LF_2016/article/details/60468161">防止历史报文骚扰服务器</a>。</li>
+<li><a href="http://www.bubuko.com/infodetail-3143286.html">易理解第二个原因</a></li>
+<li>补充：TIME——wait 等待过程。</li>
+</ol>
+<h3 id="TCP-流量控制"><a href="#TCP-流量控制" class="headerlink" title="TCP 流量控制"></a>TCP 流量控制</h3><h5 id="知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。"><a href="#知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。" class="headerlink" title="知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。"></a>知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。</h5><ol>
+<li>（此处联想 tcp 连接的一个过程）首先滑动窗口受限于接收方的接收能力大小，就是发送方每发送数据后，服务器就会去移动滑动窗口的指针，之后可用窗口会减小，并且会将当前可用窗口的大小发送给客户端，用来控制发送方发送的数据量以达到，流量控制。</li>
+</ol>
+<p><strong>讲述思路：</strong></p>
+<ol>
+<li>首先想到滑动窗口首先<strong>联想接收方有一个滑动窗口</strong>，也就是说这个主要是和接收方有关，防止对方发送的数据超出了接收方的数据。</li>
+</ol>
+<h5 id="发送窗口和接收窗口分别由哪些构成"><a href="#发送窗口和接收窗口分别由哪些构成" class="headerlink" title="发送窗口和接收窗口分别由哪些构成"></a>发送窗口和接收窗口分别由哪些构成</h5><ol>
+<li>发送窗口：由<strong>发送</strong>想到了<strong>已发送</strong>到并得到确认的字段区域，那有得到确认的自然还有<strong>没有接收到确认的</strong>，<strong>可用窗口</strong>，那由于自身肯定还有好多数据好多话想告诉接收方所以自然还会有许多数据等待发送，但是这个会超出对方的接收范围。也就 是<strong>不可用窗口</strong>。（两个发送，可不可以）4 个</li>
+<li>接收方窗口：已经接受到的数据并确认，<strong>理解有一个误区就是说接收方没有接收到数据但是没有得到确认的</strong>，发送方有是因为它自己是发送数据的，接收到的 ack 是有可能阻塞的，未确认，接收方不考虑这个，只管接收就好。<strong>还有未接收到，并是可接受范围内</strong>，<strong>未接收但是，超出了可用窗口大小的区域</strong>。（三个）</li>
+</ol>
+<h5 id="那你知道滑动窗口和拥塞窗口有什么区别不"><a href="#那你知道滑动窗口和拥塞窗口有什么区别不" class="headerlink" title="那你知道滑动窗口和拥塞窗口有什么区别不"></a>那你知道滑动窗口和拥塞窗口有什么区别不</h5><ol>
+<li>由拥塞想到了网络拥塞，也就是说主要应用于解决网络拥塞问题的，主要由发送方控制，防止它发多了导致了网络拥塞。</li>
+<li>而滑动窗口主要是因为解决防止发送方数据量超过了接收方的能力，也就是说其大小取决于接收方。</li>
+</ol>
+<h3 id="如果对方问到这个-tcp-流量控制我该怎么回答"><a href="#如果对方问到这个-tcp-流量控制我该怎么回答" class="headerlink" title="如果对方问到这个 tcp 流量控制我该怎么回答"></a>如果对方问到这个 tcp 流量控制我该怎么回答</h3><ol>
+<li>流量控制依赖于<strong>滑动窗口</strong>来控制发送方发送的速率不要太快（联想一个窗口，里面有有两个指针，然后再作答）</li>
+<li><img src="assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_2021-03-18_085843-20210318085932-amu0bbp.png" alt="屏幕截图_2021-03-18_085843.png">。</li>
+<li>你怎么理解这个窗口就是缓存区的<strong>剩余</strong>大小，只有收到确认才能将已经发送的数据进行发送。</li>
+<li>所谓的流量控制其实就是面试以服务端发送举例子（此时假定发送窗口可接收窗口都不变的情况），客户端接收做例子，这里我概括说就是，每当服务器发送完数据后，相应的可用窗口大小就会减少，相对应的指针也会发送变化，就是 snd.next 指向的是<strong>可用窗口</strong>大小的头指针，右移，当收到了对方的<strong>确认</strong>后，自生的 snd.una 也会右移，那么此时可用窗口大小自然增大。</li>
+<li>此时接收方再接收到信息后 rsv.next,也会发送移动，如果发送方的数据超过了其可用窗口就会导致窗口关闭也就是说起到了<strong>流量控制</strong>。在接收到接收方的确认后才可以据悉的发送数据。</li>
+<li>实际上如果应用层没有及时的读取缓存区里的数据就会导致，每次接收方接收到数据后，其<strong>接收</strong>窗口大小会变得更小，并且会将这个大小以 <strong>window 字段</strong>来告诉，发送方来达到流量控制，以此控制发送方的速率。</li>
+<li>但是窗口大小其实会动态变化的，如果先减少了接收缓存区，又收缩了窗口，最终没有多余接收缓存，可以接收数据，就会导致丢包，那为了解决这个问题，就是先<strong>来收缩窗口</strong>，再去<strong>减少</strong>接收缓存。（这里就是说这个，窗口）</li>
+<li>窗口局面就是说如果说在窗口关闭后，应用应用进程如果没有及时读取缓冲区里的数据会导致窗口收缩，</li>
+<li>那么在窗口关闭后应用进程及时读取消息，就会恢复其接收窗口大小，并且会通知发送方以 window 字段，但是这里有一个问题就是，如果这个消息丢失了，就会导致，<strong>死锁</strong>现象。</li>
+<li><strong>坚持定时器</strong>，就是一旦接收方窗口大小变为 0 就会启动，并每隔一段时间来进行探测报文探测对方目前可用窗口大小，这样就可以来避免死锁了。</li>
+</ol>
+<h3 id="糊涂窗口"><a href="#糊涂窗口" class="headerlink" title="糊涂窗口"></a>糊涂窗口</h3><ol>
+<li>糊涂窗口就是为了<strong>避免</strong>发送方发送<strong>小数据</strong>，因为 tcp ip 头部太大为了发送小数据而导致资源浪费。</li>
+<li>一般采取 Nagle 算法来解决就是通过这个 1：只有当窗口值<strong>大于 MSS</strong>，的长度，以及收到之前数据的<strong>确认</strong>之前，一直再囤积想要发送的数据。</li>
+</ol>
+<h3 id="拥塞控制（联想折线上升图）"><a href="#拥塞控制（联想折线上升图）" class="headerlink" title="拥塞控制（联想折线上升图）"></a>拥塞控制（联想折线上升图）</h3><ol>
+<li>首先来复盘一下自己的知识点，就是首先由拥塞想到了为什么拥塞窗口也就是说 crwd,</li>
+<li>那么也就是说所谓的拥塞窗口主要是来解决网络拥塞的。</li>
+<li>那么首先达到慢启动阶段，以指数增加。<a href="https://blog.csdn.net/linweixuan/article/details/4353015">慢启动为什么是指数增加</a>。</li>
+<li>之后到达了门限值，之后进入了拥塞避免阶段，每接收到一个 ack 就拥塞窗口加拥塞窗口分之一。线性增加</li>
+<li>但是还是会拥塞，先有超时重传，门限值减半，拥塞窗口初始化为 1</li>
+<li>还有一种就是快重传会接收到三个重复的 ack，cwnd 减半，然后门限值为拥塞窗口一半，到达快恢复后，其拥塞窗口在此基础上加三（三个重复的 ack）。</li>
+</ol>
+<h3 id="粘包拆包问题"><a href="#粘包拆包问题" class="headerlink" title="粘包拆包问题"></a>粘包拆包问题</h3><h3 id="tcp-粘包，"><a href="#tcp-粘包，" class="headerlink" title="tcp 粘包，"></a>tcp 粘包，</h3><ol>
+<li>由于 tcp 无消息保护边界，（个人理解就是不知道消息从哪里开始，也不知道消息从哪里结束）需要在接收端来处理消息边界问题，这也就是说粘包，拆包问题。</li>
+<li>什么是粘包，就是说有可能两个信息包，粘在了一起</li>
+<li>有些包被拆成几块因为大于了 MSS,所以需要拆包，，然后与其它包粘在一起。</li>
+</ol>
+<h3 id="为什么会出现这个奇怪的现象"><a href="#为什么会出现这个奇怪的现象" class="headerlink" title="为什么会出现这个奇怪的现象"></a>为什么会出现这个奇怪的现象</h3><ol>
+<li>对于接受方就是，<strong>接受数据到缓存的</strong>速率<strong>大于</strong>了<strong>应用进程读取数据</strong>的速率，就会导致多个包粘连在一起。</li>
+<li>发送方的 Nagel 算法。导致出现了在接收到一个确认后，收集多个分组数据再去发送。/粘包。</li>
+</ol>
+<p>怎么解决这个问题</p>
+<ol>
+<li>发送方 去关闭 nagel 算法。</li>
+<li>由于接收方不清楚，一个完整消息的大小，所以发送端会给数据包，<strong>添加一个包首部</strong>，这个首部，会<strong>包含数据包的长度</strong>，这样接收方通过首部消息就可以知道了类似于有了消息边界。</li>
+<li>发送端将每个数据包大小固定，这样接收方就可以知道这个了。</li>
+<li>也可以在<strong>数据包之间设置边界</strong>，如添加特殊的符号，接收方就可以清楚一个完整数据包的大小了。</li>
+</ol>
+<h3 id="tcp-重传机制"><a href="#tcp-重传机制" class="headerlink" title="tcp 重传机制"></a>tcp 重传机制</h3><ol>
+<li>D-SACK<br>[http tcp](assets/http tcp.pdf?page=65).</li>
+</ol>
+<h3 id="tcp-的包一定是按照顺序的吗"><a href="#tcp-的包一定是按照顺序的吗" class="headerlink" title="tcp 的包一定是按照顺序的吗"></a>tcp 的包一定是按照顺序的吗</h3><p><a href="https://blog.csdn.net/jiujiu372/article/details/76855199">tcp 的包一定是按照顺序的吗</a></p>
+<p><a href="https://"></a></p>
 ]]></content>
       <categories>
-        <category>HTTP</category>
+        <category>TCP</category>
       </categories>
   </entry>
   <entry>
@@ -547,192 +733,6 @@
 ]]></content>
       <categories>
         <category>v8引擎</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>优化垃圾回收机制</title>
-    <url>/2020/12/19/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%9D%A5%E4%BC%98%E5%8C%96%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%C2%B7/</url>
-    <content><![CDATA[<h1 id="V8引擎如何来优化垃圾回收机制的·"><a href="#V8引擎如何来优化垃圾回收机制的·" class="headerlink" title="V8引擎如何来优化垃圾回收机制的·"></a>V8引擎如何来优化垃圾回收机制的·</h1><h2 id="相应优化算法"><a href="#相应优化算法" class="headerlink" title="相应优化算法"></a>相应优化算法</h2><h3 id="全停顿算法"><a href="#全停顿算法" class="headerlink" title="全停顿算法"></a>全停顿算法</h3><ul>
-<li><p>js是单线程，并且js执行和垃圾回收机制任务都在主线上，js执行就会被挂起，导致全停顿</p>
-</li>
-<li><p>Subtopic</p>
-</li>
-<li><p>并行回收</p>
-<ul>
-<li>副垃圾回收机制–采取专门用来清理新生代对象</li>
-<li>这些辅助线程，也会来帮忙将对象区域的数据转移到空闲区域</li>
-<li>Subtopic</li>
-<li>弊端还是全停顿，对于老生代对象还是会非常影响效率</li>
-</ul>
-</li>
-</ul>
-<h3 id="增量标记算法"><a href="#增量标记算法" class="headerlink" title="增量标记算法"></a>增量标记算法</h3><ul>
-<li><p>增量回收</p>
-<ul>
-<li><p>分治的思想</p>
-</li>
-<li><p>就是说将完整的标记清除任务分解为一个个小任务，然后穿插着在主线程上进行</p>
-</li>
-<li><p>怎么实现的</p>
-<ul>
-<li><p>如何来实现垃圾回收机制的暂停和恢复</p>
-<ul>
-<li><p>三色标记法</p>
-<ul>
-<li><p>黑色</p>
-<ul>
-<li>能够被GCroot对象遍历到</li>
-</ul>
-</li>
-<li><p>白色</p>
-<ul>
-<li>无法被GCroot对象遍历到–会被清除</li>
-</ul>
-</li>
-<li><p>灰色</p>
-<ul>
-<li><p>被GCroot对象遍历到，但是子节点还未被处理</p>
-</li>
-<li><p>V8的垃圾回收器，会来判断此时有没有灰色标记</p>
-<ul>
-<li><p>有</p>
-<ul>
-<li>下次恢复垃圾回收机制时就从灰色的标记开始，继续标记</li>
-</ul>
-</li>
-<li><p>没有</p>
-<ul>
-<li>直接开始清除</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>那这里有一个问题如果中途，已经被标记的变量，被改变</p>
-<ul>
-<li>原来被标记为黑色–现在改变后变白色了</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="重点：并发回收机制"><a href="#重点：并发回收机制" class="headerlink" title="重点：并发回收机制"></a>重点：并发回收机制</h2><h3 id="不管是增量回收还是-并行回收，都是运行在主线程上"><a href="#不管是增量回收还是-并行回收，都是运行在主线程上" class="headerlink" title="不管是增量回收还是/并行回收，都是运行在主线程上"></a>不管是增量回收还是/并行回收，都是运行在主线程上</h3><h3 id="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收"><a href="#那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收" class="headerlink" title="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-"></a>那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-</h3><h3 id="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"><a href="#简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收" class="headerlink" title="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"></a>简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收</h3><h3 id="Subtopic"><a href="#Subtopic" class="headerlink" title="Subtopic"></a>Subtopic</h3><h2 id="主垃圾回收机制采取了三种机制"><a href="#主垃圾回收机制采取了三种机制" class="headerlink" title="主垃圾回收机制采取了三种机制"></a>主垃圾回收机制采取了三种机制</h2>]]></content>
-      <categories>
-        <category>v8引擎</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>TCP</title>
-    <url>/2020/08/19/TCP/</url>
-    <content><![CDATA[<h2 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h2><h3 id="如何来理解-tcp-是面向流的"><a href="#如何来理解-tcp-是面向流的" class="headerlink" title="如何来理解 tcp 是面向流的"></a>如何来理解 tcp 是面向流的</h3><ol>
-<li><p>所谓的流就是说无<a href="siyuan://blocks/20210130110417-7sbw2pb">“消息保护边界的”</a></p>
-<blockquote>
-<ol>
-<li>由于 tcp 无消息保护边界，（个人理解就是不知道消息从哪里开始，也不知道消息从哪里结束）需要在接收端来处理消息边界问题，这也就是说粘包，拆包问题。</li>
-<li>什么是粘包，就是说有可能两个信息包，粘在了一起</li>
-<li>有些包被拆成几块因为大于了 MSS,所以需要拆包，，然后与其它包粘在一起。</li>
-</ol>
-</blockquote>
-<p>，这里通俗理解就是说接受方无法去界定这个消息的开始和结尾，而有消息保护边界就是说消息之间是独立的，因为消息与消息之间有边界。</p>
-</li>
-</ol>
-<h3 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h3><ol>
-<li>首先（先联想图）客户端向服务器发出序列号 SYN ，seq（随机发出一个序列号）</li>
-<li>服务器收到后会基于客户端的序列号，发出一个 ACK 确认号。为了表示一个回礼，还需要发 Seq</li>
-<li>客户端会再次对服务器的序列号产生一个确认。</li>
-</ol>
-<h3 id="为什么建立连接是三次，而不是两次。"><a href="#为什么建立连接是三次，而不是两次。" class="headerlink" title="为什么建立连接是三次，而不是两次。"></a>为什么建立连接是三次，而不是两次。</h3><h4 id="防止历史请求初始化-tcp-连接"><a href="#防止历史请求初始化-tcp-连接" class="headerlink" title="防止历史请求初始化 tcp 连接"></a>防止历史请求初始化 tcp 连接</h4><ol>
-<li><strong>反向验证两次为什么不行</strong>：如果只有两次，客户端这里对于服务器发来的报文，无法来判断这个报文是否有效（是否过期，是否超时）因为网路拥塞这样的事情很常见。</li>
-<li>所以客户端这里没有足够的<strong>上下文</strong>来判断，是否是如期的请求。</li>
-<li>此时从三次说，那为什么三次避免了这样的问题，当客户端收到服务器的请求的时候，<strong>客户端</strong>本身会<strong>存储</strong>自己所发出的<strong>序列号</strong>，所以可以依据所收到的 ack 来判断是否是如期的，如果是就正常连接。</li>
-<li>但如果不是，那就发送 <strong>RST</strong> （有重置的意思）报文，来结束这个连接。</li>
-</ol>
-<h4 id="确认彼此的系列号"><a href="#确认彼此的系列号" class="headerlink" title="确认彼此的系列号"></a>确认彼此的系列号</h4><ol>
-<li>其实 tcp 能够实现可靠连接的本质其实是能够确认彼此的序列号，那你如果只有两次，只能单向确认，无法互相确认，所以需要三次。</li>
-</ol>
-<h4 id="防止（服务器）资源浪费"><a href="#防止（服务器）资源浪费" class="headerlink" title="防止（服务器）资源浪费"></a>防止（服务器）资源浪费</h4><ol>
-<li>由于仅有两次，服务器是没有办法判断对方是否收到了正确的序号</li>
-<li>客户端如果因为网路阻塞，发出了多个 SYN 信号，那客户端有可能收到，也有可能收不到，所以为了确保对方收到，服务器只能建立多个重复的 tcp 链接。极大的浪费资源。</li>
-</ol>
-<h4 id="TCP-四次挥手"><a href="#TCP-四次挥手" class="headerlink" title="TCP 四次挥手"></a>TCP 四次挥手</h4><ol>
-<li>（首先看到<strong>四</strong>先想想哪四次，<strong>两对 FIN-ACK</strong> ，为什么一定要四次，就是说客户端向服务器先发 FIN 表示两个人关系淡了想分了，所以<strong>发出 FIN 终止报文</strong>。</li>
-<li>服务区器先对终止报文发出确认</li>
-<li>但服务器收到还可能对收到的信进行处理并发送，意味着此时不能立刻终止关系。</li>
-<li>在处理完信息后再去发出 FIN，自身进入 closed 状态。</li>
-<li>客户端收到信息后再次，向服务器发出一个 ACK,后它不会立刻进入到 closed 状态，它需要等待两个 <strong>MSL</strong>（最大报文生存时间）为什么是两个主要是因为网络时常会发生阻塞，对方没有收到一个 ACK,客户端会重发，那么重发之后一个来回就对应了两个 MSL。第二个原因：<a href="https://blog.csdn.net/LF_2016/article/details/60468161">防止历史报文骚扰服务器</a>。</li>
-<li><a href="http://www.bubuko.com/infodetail-3143286.html">易理解第二个原因</a></li>
-<li>补充：TIME——wait 等待过程。</li>
-</ol>
-<h3 id="TCP-流量控制"><a href="#TCP-流量控制" class="headerlink" title="TCP 流量控制"></a>TCP 流量控制</h3><h5 id="知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。"><a href="#知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。" class="headerlink" title="知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。"></a>知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。</h5><ol>
-<li>（此处联想 tcp 连接的一个过程）首先滑动窗口受限于接收方的接收能力大小，就是发送方每发送数据后，服务器就会去移动滑动窗口的指针，之后可用窗口会减小，并且会将当前可用窗口的大小发送给客户端，用来控制发送方发送的数据量以达到，流量控制。</li>
-</ol>
-<p><strong>讲述思路：</strong></p>
-<ol>
-<li>首先想到滑动窗口首先<strong>联想接收方有一个滑动窗口</strong>，也就是说这个主要是和接收方有关，防止对方发送的数据超出了接收方的数据。</li>
-</ol>
-<h5 id="发送窗口和接收窗口分别由哪些构成"><a href="#发送窗口和接收窗口分别由哪些构成" class="headerlink" title="发送窗口和接收窗口分别由哪些构成"></a>发送窗口和接收窗口分别由哪些构成</h5><ol>
-<li>发送窗口：由<strong>发送</strong>想到了<strong>已发送</strong>到并得到确认的字段区域，那有得到确认的自然还有<strong>没有接收到确认的</strong>，<strong>可用窗口</strong>，那由于自身肯定还有好多数据好多话想告诉接收方所以自然还会有许多数据等待发送，但是这个会超出对方的接收范围。也就 是<strong>不可用窗口</strong>。（两个发送，可不可以）4 个</li>
-<li>接收方窗口：已经接受到的数据并确认，<strong>理解有一个误区就是说接收方没有接收到数据但是没有得到确认的</strong>，发送方有是因为它自己是发送数据的，接收到的 ack 是有可能阻塞的，未确认，接收方不考虑这个，只管接收就好。<strong>还有未接收到，并是可接受范围内</strong>，<strong>未接收但是，超出了可用窗口大小的区域</strong>。（三个）</li>
-</ol>
-<h5 id="那你知道滑动窗口和拥塞窗口有什么区别不"><a href="#那你知道滑动窗口和拥塞窗口有什么区别不" class="headerlink" title="那你知道滑动窗口和拥塞窗口有什么区别不"></a>那你知道滑动窗口和拥塞窗口有什么区别不</h5><ol>
-<li>由拥塞想到了网络拥塞，也就是说主要应用于解决网络拥塞问题的，主要由发送方控制，防止它发多了导致了网络拥塞。</li>
-<li>而滑动窗口主要是因为解决防止发送方数据量超过了接收方的能力，也就是说其大小取决于接收方。</li>
-</ol>
-<h3 id="如果对方问到这个-tcp-流量控制我该怎么回答"><a href="#如果对方问到这个-tcp-流量控制我该怎么回答" class="headerlink" title="如果对方问到这个 tcp 流量控制我该怎么回答"></a>如果对方问到这个 tcp 流量控制我该怎么回答</h3><ol>
-<li>流量控制依赖于<strong>滑动窗口</strong>来控制发送方发送的速率不要太快（联想一个窗口，里面有有两个指针，然后再作答）</li>
-<li><img src="assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_2021-03-18_085843-20210318085932-amu0bbp.png" alt="屏幕截图_2021-03-18_085843.png">。</li>
-<li>你怎么理解这个窗口就是缓存区的<strong>剩余</strong>大小，只有收到确认才能将已经发送的数据进行发送。</li>
-<li>所谓的流量控制其实就是面试以服务端发送举例子（此时假定发送窗口可接收窗口都不变的情况），客户端接收做例子，这里我概括说就是，每当服务器发送完数据后，相应的可用窗口大小就会减少，相对应的指针也会发送变化，就是 snd.next 指向的是<strong>可用窗口</strong>大小的头指针，右移，当收到了对方的<strong>确认</strong>后，自生的 snd.una 也会右移，那么此时可用窗口大小自然增大。</li>
-<li>此时接收方再接收到信息后 rsv.next,也会发送移动，如果发送方的数据超过了其可用窗口就会导致窗口关闭也就是说起到了<strong>流量控制</strong>。在接收到接收方的确认后才可以据悉的发送数据。</li>
-<li>实际上如果应用层没有及时的读取缓存区里的数据就会导致，每次接收方接收到数据后，其<strong>接收</strong>窗口大小会变得更小，并且会将这个大小以 <strong>window 字段</strong>来告诉，发送方来达到流量控制，以此控制发送方的速率。</li>
-<li>但是窗口大小其实会动态变化的，如果先减少了接收缓存区，又收缩了窗口，最终没有多余接收缓存，可以接收数据，就会导致丢包，那为了解决这个问题，就是先<strong>来收缩窗口</strong>，再去<strong>减少</strong>接收缓存。（这里就是说这个，窗口）</li>
-<li>窗口局面就是说如果说在窗口关闭后，应用应用进程如果没有及时读取缓冲区里的数据会导致窗口收缩，</li>
-<li>那么在窗口关闭后应用进程及时读取消息，就会恢复其接收窗口大小，并且会通知发送方以 window 字段，但是这里有一个问题就是，如果这个消息丢失了，就会导致，<strong>死锁</strong>现象。</li>
-<li><strong>坚持定时器</strong>，就是一旦接收方窗口大小变为 0 就会启动，并每隔一段时间来进行探测报文探测对方目前可用窗口大小，这样就可以来避免死锁了。</li>
-</ol>
-<h3 id="糊涂窗口"><a href="#糊涂窗口" class="headerlink" title="糊涂窗口"></a>糊涂窗口</h3><ol>
-<li>糊涂窗口就是为了<strong>避免</strong>发送方发送<strong>小数据</strong>，因为 tcp ip 头部太大为了发送小数据而导致资源浪费。</li>
-<li>一般采取 Nagle 算法来解决就是通过这个 1：只有当窗口值<strong>大于 MSS</strong>，的长度，以及收到之前数据的<strong>确认</strong>之前，一直再囤积想要发送的数据。</li>
-</ol>
-<h3 id="拥塞控制（联想折线上升图）"><a href="#拥塞控制（联想折线上升图）" class="headerlink" title="拥塞控制（联想折线上升图）"></a>拥塞控制（联想折线上升图）</h3><ol>
-<li>首先来复盘一下自己的知识点，就是首先由拥塞想到了为什么拥塞窗口也就是说 crwd,</li>
-<li>那么也就是说所谓的拥塞窗口主要是来解决网络拥塞的。</li>
-<li>那么首先达到慢启动阶段，以指数增加。<a href="https://blog.csdn.net/linweixuan/article/details/4353015">慢启动为什么是指数增加</a>。</li>
-<li>之后到达了门限值，之后进入了拥塞避免阶段，每接收到一个 ack 就拥塞窗口加拥塞窗口分之一。线性增加</li>
-<li>但是还是会拥塞，先有超时重传，门限值减半，拥塞窗口初始化为 1</li>
-<li>还有一种就是快重传会接收到三个重复的 ack，cwnd 减半，然后门限值为拥塞窗口一半，到达快恢复后，其拥塞窗口在此基础上加三（三个重复的 ack）。</li>
-</ol>
-<h3 id="粘包拆包问题"><a href="#粘包拆包问题" class="headerlink" title="粘包拆包问题"></a>粘包拆包问题</h3><h3 id="tcp-粘包，"><a href="#tcp-粘包，" class="headerlink" title="tcp 粘包，"></a>tcp 粘包，</h3><ol>
-<li>由于 tcp 无消息保护边界，（个人理解就是不知道消息从哪里开始，也不知道消息从哪里结束）需要在接收端来处理消息边界问题，这也就是说粘包，拆包问题。</li>
-<li>什么是粘包，就是说有可能两个信息包，粘在了一起</li>
-<li>有些包被拆成几块因为大于了 MSS,所以需要拆包，，然后与其它包粘在一起。</li>
-</ol>
-<h3 id="为什么会出现这个奇怪的现象"><a href="#为什么会出现这个奇怪的现象" class="headerlink" title="为什么会出现这个奇怪的现象"></a>为什么会出现这个奇怪的现象</h3><ol>
-<li>对于接受方就是，<strong>接受数据到缓存的</strong>速率<strong>大于</strong>了<strong>应用进程读取数据</strong>的速率，就会导致多个包粘连在一起。</li>
-<li>发送方的 Nagel 算法。导致出现了在接收到一个确认后，收集多个分组数据再去发送。/粘包。</li>
-</ol>
-<p>怎么解决这个问题</p>
-<ol>
-<li>发送方 去关闭 nagel 算法。</li>
-<li>由于接收方不清楚，一个完整消息的大小，所以发送端会给数据包，<strong>添加一个包首部</strong>，这个首部，会<strong>包含数据包的长度</strong>，这样接收方通过首部消息就可以知道了类似于有了消息边界。</li>
-<li>发送端将每个数据包大小固定，这样接收方就可以知道这个了。</li>
-<li>也可以在<strong>数据包之间设置边界</strong>，如添加特殊的符号，接收方就可以清楚一个完整数据包的大小了。</li>
-</ol>
-<h3 id="tcp-重传机制"><a href="#tcp-重传机制" class="headerlink" title="tcp 重传机制"></a>tcp 重传机制</h3><ol>
-<li>D-SACK<br>[http tcp](assets/http tcp.pdf?page=65).</li>
-</ol>
-<h3 id="tcp-的包一定是按照顺序的吗"><a href="#tcp-的包一定是按照顺序的吗" class="headerlink" title="tcp 的包一定是按照顺序的吗"></a>tcp 的包一定是按照顺序的吗</h3><p><a href="https://blog.csdn.net/jiujiu372/article/details/76855199">tcp 的包一定是按照顺序的吗</a></p>
-<p><a href="https://"></a></p>
-]]></content>
-      <categories>
-        <category>TCP</category>
       </categories>
   </entry>
   <entry>
@@ -1501,142 +1501,6 @@
       </categories>
   </entry>
   <entry>
-    <title>垃圾回收机制</title>
-    <url>/2020/12/15/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6/</url>
-    <content><![CDATA[<h1 id="垃圾回收机制"><a href="#垃圾回收机制" class="headerlink" title="垃圾回收机制"></a>垃圾回收机制</h1><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="为什么要分类—依据"><a href="#为什么要分类—依据" class="headerlink" title="为什么要分类—依据"></a>为什么要分类—依据</h3><ul>
-<li><p>代际假说</p>
-<ul>
-<li><p>一些变量生存周期很短</p>
-<ul>
-<li>存放在新生代区域</li>
-</ul>
-</li>
-<li><p>一些比如window这些存活时间很长的对象</p>
-<ul>
-<li>存放在老生代区域</li>
-</ul>
-</li>
-<li><p>依据生存周期的长短–因地制宜的选取对应的算法来回收</p>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="堆-划分的"><a href="#堆-划分的" class="headerlink" title="堆/划分的"></a>堆/划分的</h3><ul>
-<li><p>目的就是为了能根据不同的对象依据对应的垃圾回收机制，进行回收</p>
-</li>
-<li><p>新生代</p>
-<ul>
-<li><p>存储生存周期短的对象</p>
-</li>
-<li><p>区域划分依据scanverge算法</p>
-<ul>
-<li>对象区域</li>
-<li>空闲区域</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>老生代</p>
-<ul>
-<li>专门存储，生存周期长的对象</li>
-</ul>
-</li>
-</ul>
-<h3 id="主垃圾回收器"><a href="#主垃圾回收器" class="headerlink" title="主垃圾回收器"></a>主垃圾回收器</h3><ul>
-<li><p>专门处理老生代里的对象</p>
-</li>
-<li><p>算法</p>
-<ul>
-<li>标记–整理</li>
-<li>标记–清除</li>
-</ul>
-</li>
-<li><p>步骤</p>
-<ul>
-<li><p>先进行标记–对于清除的对象先进行标记</p>
-</li>
-<li><p>利用标记–整理算法将活动对象，全部移动到一端</p>
-<ul>
-<li><p>这一步的意义是什么</p>
-<ul>
-<li>因为随着你频繁删除堆里所存储的对象，必然会导致内存空间不连续</li>
-<li>这个是让内存空间尽可能的连续</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>再去清除除过这一端的其它垃圾数据</p>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="副垃圾回收机制"><a href="#副垃圾回收机制" class="headerlink" title="副垃圾回收机制"></a>副垃圾回收机制</h3><ul>
-<li><p>scanverge算法</p>
-</li>
-<li><p>专门处理新生代里存储的对象</p>
-</li>
-<li><p>步骤</p>
-<ul>
-<li><p>利用标记—清除算法清除对象区域里标记的垃圾数据</p>
-</li>
-<li><p>在标记–清除阶段将活动对象复制到空闲区域，并进行整理</p>
-<ul>
-<li>为的就是能够使存储空间尽可能的连续</li>
-</ul>
-</li>
-<li><p>对象区域和空闲区域调换</p>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="首先来明确一下什么样的变量的空间可以被回收"><a href="#首先来明确一下什么样的变量的空间可以被回收" class="headerlink" title="首先来明确一下什么样的变量的空间可以被回收"></a>首先来明确一下什么样的变量的空间可以被回收</h2><h3 id="依赖可访问性算法"><a href="#依赖可访问性算法" class="headerlink" title="依赖可访问性算法"></a>依赖可访问性算法</h3><h3 id="通过GCroot对象遍历内部所有对象"><a href="#通过GCroot对象遍历内部所有对象" class="headerlink" title="通过GCroot对象遍历内部所有对象"></a>通过GCroot对象遍历内部所有对象</h3><ul>
-<li>window</li>
-<li>Dom节点</li>
-</ul>
-<h3 id="通过GCroot-对象访问变量"><a href="#通过GCroot-对象访问变量" class="headerlink" title="通过GCroot 对象访问变量"></a>通过GCroot 对象访问变量</h3><ul>
-<li><p>可访问到的：活动对象</p>
-</li>
-<li><p>不可访问：非活动对象</p>
-<ul>
-<li>V8引擎清除的将是非活动对象</li>
-</ul>
-</li>
-</ul>
-<h2 id="在早期有一个局限性较大的垃圾回收机制"><a href="#在早期有一个局限性较大的垃圾回收机制" class="headerlink" title="在早期有一个局限性较大的垃圾回收机制"></a>在早期有一个局限性较大的垃圾回收机制</h2><h3 id="引用计数法"><a href="#引用计数法" class="headerlink" title="引用计数法"></a>引用计数法</h3><ul>
-<li><p>它具体是怎么做的</p>
-<ul>
-<li><p>每产生一个引用就计数加一</p>
-<ul>
-<li><p>什么是引用？</p>
-</li>
-<li><p>那它的局限性在哪</p>
-<ul>
-<li>它无法识别循环引用的场景，无法使计数为0; eg:A对象的引用指向B，而B的引用又指向A，它们的引用计数都是1，无法成为0, 就会造成内存泄漏；</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>为0就会被回收</p>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="切入点由数据类型说起"><a href="#切入点由数据类型说起" class="headerlink" title="切入点由数据类型说起"></a>切入点由数据类型说起</h2><h3 id="基本数据类型"><a href="#基本数据类型" class="headerlink" title="基本数据类型"></a>基本数据类型</h3><ul>
-<li>symbol</li>
-<li>number</li>
-<li>string</li>
-<li>布尔类型</li>
-</ul>
-<h3 id="复杂数据类型"><a href="#复杂数据类型" class="headerlink" title="复杂数据类型"></a>复杂数据类型</h3><ul>
-<li>function</li>
-<li>对象</li>
-</ul>
-]]></content>
-      <categories>
-        <category>v8引擎</category>
-      </categories>
-  </entry>
-  <entry>
     <title>websocket</title>
     <url>/2020/07/19/websocket/</url>
     <content><![CDATA[<h1 id="websocket"><a href="#websocket" class="headerlink" title="websocket"></a>websocket</h1><h2 id="它解决了http是半双工，实现了服务端推送"><a href="#它解决了http是半双工，实现了服务端推送" class="headerlink" title="它解决了http是半双工，实现了服务端推送"></a>它解决了http是半双工，实现了服务端推送</h2><h3 id="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"><a href="#也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的" class="headerlink" title="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"></a>也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的</h3><h2 id="那为了能够实现类似全双工的效果，http做出了哪些努力，"><a href="#那为了能够实现类似全双工的效果，http做出了哪些努力，" class="headerlink" title="那为了能够实现类似全双工的效果，http做出了哪些努力，"></a>那为了能够实现类似全双工的效果，http做出了哪些努力，</h2><h3 id="轮询"><a href="#轮询" class="headerlink" title="轮询"></a>轮询</h3><ul>
@@ -1648,83 +1512,6 @@
 <h2 id="那么websocket是怎么来建立连接的（握手）"><a href="#那么websocket是怎么来建立连接的（握手）" class="headerlink" title="那么websocket是怎么来建立连接的（握手）"></a>那么websocket是怎么来建立连接的（握手）</h2><h3 id="其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"><a href="#其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接" class="headerlink" title="其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"></a>其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接</h3><h3 id="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"><a href="#建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了" class="headerlink" title="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"></a>建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了</h3><h2 id="这个协议更多的是对http的一种优化"><a href="#这个协议更多的是对http的一种优化" class="headerlink" title="这个协议更多的是对http的一种优化"></a>这个协议更多的是对http的一种优化</h2><h2 id="二进制帧格式？"><a href="#二进制帧格式？" class="headerlink" title="二进制帧格式？"></a>二进制帧格式？</h2>]]></content>
       <categories>
         <category>HTTP</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>垃圾回收机制</title>
-    <url>/2021/01/19/%E6%89%A7%E8%A1%8C%E4%B8%8A%E4%B8%8B%E6%96%87/</url>
-    <content><![CDATA[<h1 id="执行上下文"><a href="#执行上下文" class="headerlink" title="执行上下文"></a>执行上下文</h1><h2 id="所谓的执行上下文其实就是代码所处的环境"><a href="#所谓的执行上下文其实就是代码所处的环境" class="headerlink" title="所谓的执行上下文其实就是代码所处的环境"></a>所谓的执行上下文其实就是代码所处的环境</h2><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="全局执行上下文"><a href="#全局执行上下文" class="headerlink" title="全局执行上下文"></a>全局执行上下文</h3><h3 id="函数执行上下文"><a href="#函数执行上下文" class="headerlink" title="函数执行上下文"></a>函数执行上下文</h3><h3 id="eval执行上下文–我不用"><a href="#eval执行上下文–我不用" class="headerlink" title="eval执行上下文–我不用"></a>eval执行上下文–我不用</h3><h2 id="调用栈"><a href="#调用栈" class="headerlink" title="调用栈"></a>调用栈</h2><h3 id="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"><a href="#每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间" class="headerlink" title="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"></a>每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间</h3><ul>
-<li><p>从这里开始，就可以知道作用域的本质了，其实就是当前所处的执行上下文了</p>
-<ul>
-<li><p>那为什么作用域外部无法访问到另一个作用域的内部</p>
-<ul>
-<li><p>原理其实是因为当外部执行上下文想要去访问函数执行上下文里的变量的时候，它出栈了自然是无法访问了</p>
-</li>
-<li><p>那为什么内部作用域又能去访问外部作用域</p>
-<ul>
-<li>其实这是因为zhi’x</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="全局执行上下文执行过程"><a href="#全局执行上下文执行过程" class="headerlink" title="全局执行上下文执行过程"></a>全局执行上下文执行过程</h3><ul>
-<li><p>创建阶段</p>
-<ul>
-<li>首先会创建一个全局对象window： global object</li>
-<li>创建一个this 然后让它指向这个window</li>
-<li>之后为变量和函数分配空间/并且要为变量赋一个undefined</li>
-<li>创建作用域链</li>
-</ul>
-</li>
-<li><p>执行阶段</p>
-<ul>
-<li>js引擎开始一行行执行代码，并开始给变量赋值</li>
-</ul>
-</li>
-<li><p>由此引出了变量提升的本质</p>
-<ul>
-<li>其实是因为js的执行上下文的创建阶段和赋值阶段并不同步所造成的</li>
-<li>创建阶段给变量开辟空间然后赋了初值undefined</li>
-<li>之后赋值的时候由于在访问的变量的时候，要去赋值的代码还未执行，所以依然是undefined</li>
-</ul>
-</li>
-</ul>
-<h3 id="函数执行上下文（调用时才会推入调用栈中）"><a href="#函数执行上下文（调用时才会推入调用栈中）" class="headerlink" title="函数执行上下文（调用时才会推入调用栈中）"></a>函数执行上下文（调用时才会推入调用栈中）</h3><ul>
-<li><p>创建阶段</p>
-<ul>
-<li><p>首先明确一点这个是在函数调用的时候才生成的</p>
-</li>
-<li><p>创建this </p>
-<ul>
-<li><p>将其指向调用者</p>
-</li>
-<li><p>无人调用就指向window</p>
-<ul>
-<li>也就是说，普通函数之所以this指向window其实是这里指定的</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>创建arguements 这里面包含着函数所有的参数</p>
-</li>
-<li><p>创建作用域链</p>
-</li>
-<li><p>是这样你想一想，你在全局执行上下文已经有了全局对象了，那函数执行上下文自然不用再去建立了</p>
-</li>
-</ul>
-</li>
-<li><p>执行阶段</p>
-<ul>
-<li>一行行执行函数内部的代码</li>
-</ul>
-</li>
-</ul>
-<h2 id="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"><a href="#那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度" class="headerlink" title="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"></a>那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度</h2>]]></content>
-      <categories>
-        <category>执行上下文</category>
       </categories>
   </entry>
   <entry>
@@ -1886,6 +1673,219 @@
 <h2 id="主题"><a href="#主题" class="headerlink" title="主题"></a>主题</h2><h2 id="主题-1"><a href="#主题-1" class="headerlink" title="主题"></a>主题</h2>]]></content>
       <categories>
         <category>异步</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>垃圾回收机制</title>
+    <url>/2021/01/19/%E6%89%A7%E8%A1%8C%E4%B8%8A%E4%B8%8B%E6%96%87/</url>
+    <content><![CDATA[<h1 id="执行上下文"><a href="#执行上下文" class="headerlink" title="执行上下文"></a>执行上下文</h1><h2 id="所谓的执行上下文其实就是代码所处的环境"><a href="#所谓的执行上下文其实就是代码所处的环境" class="headerlink" title="所谓的执行上下文其实就是代码所处的环境"></a>所谓的执行上下文其实就是代码所处的环境</h2><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="全局执行上下文"><a href="#全局执行上下文" class="headerlink" title="全局执行上下文"></a>全局执行上下文</h3><h3 id="函数执行上下文"><a href="#函数执行上下文" class="headerlink" title="函数执行上下文"></a>函数执行上下文</h3><h3 id="eval执行上下文–我不用"><a href="#eval执行上下文–我不用" class="headerlink" title="eval执行上下文–我不用"></a>eval执行上下文–我不用</h3><h2 id="调用栈"><a href="#调用栈" class="headerlink" title="调用栈"></a>调用栈</h2><h3 id="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"><a href="#每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间" class="headerlink" title="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"></a>每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间</h3><ul>
+<li><p>从这里开始，就可以知道作用域的本质了，其实就是当前所处的执行上下文了</p>
+<ul>
+<li><p>那为什么作用域外部无法访问到另一个作用域的内部</p>
+<ul>
+<li><p>原理其实是因为当外部执行上下文想要去访问函数执行上下文里的变量的时候，它出栈了自然是无法访问了</p>
+</li>
+<li><p>那为什么内部作用域又能去访问外部作用域</p>
+<ul>
+<li>其实这是因为zhi’x</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="全局执行上下文执行过程"><a href="#全局执行上下文执行过程" class="headerlink" title="全局执行上下文执行过程"></a>全局执行上下文执行过程</h3><ul>
+<li><p>创建阶段</p>
+<ul>
+<li>首先会创建一个全局对象window： global object</li>
+<li>创建一个this 然后让它指向这个window</li>
+<li>之后为变量和函数分配空间/并且要为变量赋一个undefined</li>
+<li>创建作用域链</li>
+</ul>
+</li>
+<li><p>执行阶段</p>
+<ul>
+<li>js引擎开始一行行执行代码，并开始给变量赋值</li>
+</ul>
+</li>
+<li><p>由此引出了变量提升的本质</p>
+<ul>
+<li>其实是因为js的执行上下文的创建阶段和赋值阶段并不同步所造成的</li>
+<li>创建阶段给变量开辟空间然后赋了初值undefined</li>
+<li>之后赋值的时候由于在访问的变量的时候，要去赋值的代码还未执行，所以依然是undefined</li>
+</ul>
+</li>
+</ul>
+<h3 id="函数执行上下文（调用时才会推入调用栈中）"><a href="#函数执行上下文（调用时才会推入调用栈中）" class="headerlink" title="函数执行上下文（调用时才会推入调用栈中）"></a>函数执行上下文（调用时才会推入调用栈中）</h3><ul>
+<li><p>创建阶段</p>
+<ul>
+<li><p>首先明确一点这个是在函数调用的时候才生成的</p>
+</li>
+<li><p>创建this </p>
+<ul>
+<li><p>将其指向调用者</p>
+</li>
+<li><p>无人调用就指向window</p>
+<ul>
+<li>也就是说，普通函数之所以this指向window其实是这里指定的</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>创建arguements 这里面包含着函数所有的参数</p>
+</li>
+<li><p>创建作用域链</p>
+</li>
+<li><p>是这样你想一想，你在全局执行上下文已经有了全局对象了，那函数执行上下文自然不用再去建立了</p>
+</li>
+</ul>
+</li>
+<li><p>执行阶段</p>
+<ul>
+<li>一行行执行函数内部的代码</li>
+</ul>
+</li>
+</ul>
+<h2 id="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"><a href="#那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度" class="headerlink" title="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"></a>那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度</h2>]]></content>
+      <categories>
+        <category>执行上下文</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>垃圾回收机制</title>
+    <url>/2020/12/15/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6/</url>
+    <content><![CDATA[<h1 id="垃圾回收机制"><a href="#垃圾回收机制" class="headerlink" title="垃圾回收机制"></a>垃圾回收机制</h1><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="为什么要分类—依据"><a href="#为什么要分类—依据" class="headerlink" title="为什么要分类—依据"></a>为什么要分类—依据</h3><ul>
+<li><p>代际假说</p>
+<ul>
+<li><p>一些变量生存周期很短</p>
+<ul>
+<li>存放在新生代区域</li>
+</ul>
+</li>
+<li><p>一些比如window这些存活时间很长的对象</p>
+<ul>
+<li>存放在老生代区域</li>
+</ul>
+</li>
+<li><p>依据生存周期的长短–因地制宜的选取对应的算法来回收</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="堆-划分的"><a href="#堆-划分的" class="headerlink" title="堆/划分的"></a>堆/划分的</h3><ul>
+<li><p>目的就是为了能根据不同的对象依据对应的垃圾回收机制，进行回收</p>
+</li>
+<li><p>新生代</p>
+<ul>
+<li><p>存储生存周期短的对象</p>
+</li>
+<li><p>区域划分依据scanverge算法</p>
+<ul>
+<li>对象区域</li>
+<li>空闲区域</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>老生代</p>
+<ul>
+<li>专门存储，生存周期长的对象</li>
+</ul>
+</li>
+</ul>
+<h3 id="主垃圾回收器"><a href="#主垃圾回收器" class="headerlink" title="主垃圾回收器"></a>主垃圾回收器</h3><ul>
+<li><p>专门处理老生代里的对象</p>
+</li>
+<li><p>算法</p>
+<ul>
+<li>标记–整理</li>
+<li>标记–清除</li>
+</ul>
+</li>
+<li><p>步骤</p>
+<ul>
+<li><p>先进行标记–对于清除的对象先进行标记</p>
+</li>
+<li><p>利用标记–整理算法将活动对象，全部移动到一端</p>
+<ul>
+<li><p>这一步的意义是什么</p>
+<ul>
+<li>因为随着你频繁删除堆里所存储的对象，必然会导致内存空间不连续</li>
+<li>这个是让内存空间尽可能的连续</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>再去清除除过这一端的其它垃圾数据</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="副垃圾回收机制"><a href="#副垃圾回收机制" class="headerlink" title="副垃圾回收机制"></a>副垃圾回收机制</h3><ul>
+<li><p>scanverge算法</p>
+</li>
+<li><p>专门处理新生代里存储的对象</p>
+</li>
+<li><p>步骤</p>
+<ul>
+<li><p>利用标记—清除算法清除对象区域里标记的垃圾数据</p>
+</li>
+<li><p>在标记–清除阶段将活动对象复制到空闲区域，并进行整理</p>
+<ul>
+<li>为的就是能够使存储空间尽可能的连续</li>
+</ul>
+</li>
+<li><p>对象区域和空闲区域调换</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="首先来明确一下什么样的变量的空间可以被回收"><a href="#首先来明确一下什么样的变量的空间可以被回收" class="headerlink" title="首先来明确一下什么样的变量的空间可以被回收"></a>首先来明确一下什么样的变量的空间可以被回收</h2><h3 id="依赖可访问性算法"><a href="#依赖可访问性算法" class="headerlink" title="依赖可访问性算法"></a>依赖可访问性算法</h3><h3 id="通过GCroot对象遍历内部所有对象"><a href="#通过GCroot对象遍历内部所有对象" class="headerlink" title="通过GCroot对象遍历内部所有对象"></a>通过GCroot对象遍历内部所有对象</h3><ul>
+<li>window</li>
+<li>Dom节点</li>
+</ul>
+<h3 id="通过GCroot-对象访问变量"><a href="#通过GCroot-对象访问变量" class="headerlink" title="通过GCroot 对象访问变量"></a>通过GCroot 对象访问变量</h3><ul>
+<li><p>可访问到的：活动对象</p>
+</li>
+<li><p>不可访问：非活动对象</p>
+<ul>
+<li>V8引擎清除的将是非活动对象</li>
+</ul>
+</li>
+</ul>
+<h2 id="在早期有一个局限性较大的垃圾回收机制"><a href="#在早期有一个局限性较大的垃圾回收机制" class="headerlink" title="在早期有一个局限性较大的垃圾回收机制"></a>在早期有一个局限性较大的垃圾回收机制</h2><h3 id="引用计数法"><a href="#引用计数法" class="headerlink" title="引用计数法"></a>引用计数法</h3><ul>
+<li><p>它具体是怎么做的</p>
+<ul>
+<li><p>每产生一个引用就计数加一</p>
+<ul>
+<li><p>什么是引用？</p>
+</li>
+<li><p>那它的局限性在哪</p>
+<ul>
+<li>它无法识别循环引用的场景，无法使计数为0; eg:A对象的引用指向B，而B的引用又指向A，它们的引用计数都是1，无法成为0, 就会造成内存泄漏；</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>为0就会被回收</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="切入点由数据类型说起"><a href="#切入点由数据类型说起" class="headerlink" title="切入点由数据类型说起"></a>切入点由数据类型说起</h2><h3 id="基本数据类型"><a href="#基本数据类型" class="headerlink" title="基本数据类型"></a>基本数据类型</h3><ul>
+<li>symbol</li>
+<li>number</li>
+<li>string</li>
+<li>布尔类型</li>
+</ul>
+<h3 id="复杂数据类型"><a href="#复杂数据类型" class="headerlink" title="复杂数据类型"></a>复杂数据类型</h3><ul>
+<li>function</li>
+<li>对象</li>
+</ul>
+]]></content>
+      <categories>
+        <category>v8引擎</category>
       </categories>
   </entry>
   <entry>
