@@ -98,45 +98,6 @@
       </categories>
   </entry>
   <entry>
-    <title>HTTP</title>
-    <url>/2020/12/29/HTTP%E4%BD%93%E7%B3%BB/</url>
-    <content><![CDATA[<h2 id="👱-GET-和-post-本质区别"><a href="#👱-GET-和-post-本质区别" class="headerlink" title="👱 GET 和 post 本质区别"></a>👱 GET 和 post 本质区别</h2><h3 id="HTTP-常见的请求头字段"><a href="#HTTP-常见的请求头字段" class="headerlink" title="HTTP 常见的请求头字段"></a>HTTP 常见的请求头字段</h3><h3 id="叙述思路"><a href="#叙述思路" class="headerlink" title="叙述思路"></a>叙述思路</h3><ol>
-<li>首先属于 HTTP 协议—–》 引出本质是 TCP 连接——》 引出 tcp 连接次数问题—–&gt; 由次数问题：想到幂等。</li>
-<li>其次想到安全幂等，GET 安全幂等，POST 不安全也不幂等。</li>
-<li>同时还有一点 get 请求能够<strong>缓存</strong>比如第一次请求时浏览器会把相应数据缓存到本地，方便之后能直接命中：强缓存逻辑，而 post 请求时无法被缓存的。</li>
-<li>其次想到想起它们属于 HTTP 协议，也就是说也是基于 TCP 链接的，所以它们的<strong>本质</strong>都是 <strong>TCP 连接。</strong></li>
-<li>GET 请求是<strong>一个 tcp 报文</strong>  :(对于 GET 方式的请求，浏览器会把 http <strong>header</strong> 和 data 一并发送出去，服务器响应 200（返回数据）。) //你请求肯定要有请求头吗，对吧</li>
-<li>而 POST 请求是<strong>两个 tcp 报文</strong>，(浏览器先发送 header，服务器响应 100，浏览器再发送 data，服务器响应 200 ok（返回数据）。)</li>
-<li>所谓<strong>安全</strong>就是不会改变服务器资源，所谓的<strong><strong>幂</strong></strong>想起次幂，也就是说<strong>多次</strong>的意思</li>
-<li>所谓的<strong>不安全</strong>其实就是会改变，服务器的资源，所谓的不幂等就是，多次操作结果不相同。</li>
-</ol>
-<h4 id="💯-100-continue"><a href="#💯-100-continue" class="headerlink" title="💯 100 continue"></a>💯 100 continue</h4><ol>
-<li>HTTP <strong><code>100 Continue</code></strong> 信息型状态响应码表示目前为止一切正常, 客户端应该继续请求, 如果已完成请求则忽略.// 自己的话就是:👌  因为是 <strong>100</strong> 分所以<strong>目前状态正常，可以继续请求。</strong></li>
-</ol>
-<h3 id="为什么-http1-不能实现多路复用"><a href="#为什么-http1-不能实现多路复用" class="headerlink" title="为什么 http1 不能实现多路复用"></a>为什么 http1 不能实现多路复用</h3><ol>
-<li>HTTP/1.1 不是二进制传输，而是通过文本进行传输。由于没有流的概念，在使用并行传输（多路复用）传递数据时，接收端在接收到响应后，并不能区分多个响应分别对应的请求，所以无法将多个响应的结果重新进行组装，也就实现不了多路复用。</li>
-</ol>
-<h3 id="请求响应头怎么记忆"><a href="#请求响应头怎么记忆" class="headerlink" title="请求响应头怎么记忆"></a>请求响应头怎么记忆</h3><ol>
-<li>首先得联想到这个登录的场景，由登录联想到 cookies, c–》联想 coonection-keepalive,e 发音 accecpt–accept-encoding, s 联想到这个 useragent, o–&gt; 联想到这个 host 。</li>
-<li>接收方–&gt; 接受请求返回数据。所以联想到内容格式，及大小 –》content ,以及为了能提升用户的访问速率.</li>
-<li>首先是 header - cookies   –  connection: –&gt; user-agent–&gt;accept–&gt;   hc(缓存)：if-none-match, if-modify-since;</li>
-</ol>
-<h3 id="响应码"><a href="#响应码" class="headerlink" title="响应码"></a>响应码</h3><ol>
-<li>301 : 就是永久重定向，就是从 seo 优化的角度更好，会<strong>转移权重</strong>。（联想一个旧网址的 seo 和新网址的 seo）.</li>
-<li>但是 302 就是临时的重定向，<strong>不会转移权重</strong>不会去更新这个，等于是搜索权重下降了，因为 seo 不允许多个，域名指向一个地址，作弊提升这个权重排名。</li>
-<li>叙述思路：就是，301–》seo ，转移权重（就是将旧地址的搜索权重转移到新的）。. 重定向之后会做什么？读取浏览器缓存，强缓存和协商缓存</li>
-<li>302–》临时的重定向，不会把旧网址的，权重进行转移。但是会改变请求的方法把 post 改为了 get 请求，所以出现了 307 的临时重定向，不会去改变这个请求的方法。</li>
-</ol>
-<h3 id="http-持久连接"><a href="#http-持久连接" class="headerlink" title="http 持久连接"></a>http 持久连接</h3><ol>
-<li>首先第一点，何时断开服务器会去设定一个时间然后，在 keep-alive 中添加这个断开的时间。</li>
-<li>其次何时数据传输完毕，数据联想为一个 length,是不是只有长度符合你的 length 才能够判断，数据传输完毕，追问—》如果说没有 content-length;怎么来判断，就是说看编码快，如果</li>
-</ol>
-]]></content>
-      <categories>
-        <category>HTTP</category>
-      </categories>
-  </entry>
-  <entry>
     <title>HTTPS</title>
     <url>/2021/01/19/HTTPS%E4%BD%93%E7%B3%BB/</url>
     <content><![CDATA[<h4 id="问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改"><a href="#问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改" class="headerlink" title="问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改"></a>问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改</h4><ol>
@@ -190,85 +151,6 @@
 ]]></content>
       <categories>
         <category>HTTPS</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>优化垃圾回收机制</title>
-    <url>/2020/12/19/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%9D%A5%E4%BC%98%E5%8C%96%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%C2%B7/</url>
-    <content><![CDATA[<h1 id="V8引擎如何来优化垃圾回收机制的·"><a href="#V8引擎如何来优化垃圾回收机制的·" class="headerlink" title="V8引擎如何来优化垃圾回收机制的·"></a>V8引擎如何来优化垃圾回收机制的·</h1><h2 id="相应优化算法"><a href="#相应优化算法" class="headerlink" title="相应优化算法"></a>相应优化算法</h2><h3 id="全停顿算法"><a href="#全停顿算法" class="headerlink" title="全停顿算法"></a>全停顿算法</h3><ul>
-<li><p>js是单线程，并且js执行和垃圾回收机制任务都在主线上，js执行就会被挂起，导致全停顿</p>
-</li>
-<li><p>Subtopic</p>
-</li>
-<li><p>并行回收</p>
-<ul>
-<li>副垃圾回收机制–采取专门用来清理新生代对象</li>
-<li>这些辅助线程，也会来帮忙将对象区域的数据转移到空闲区域</li>
-<li>Subtopic</li>
-<li>弊端还是全停顿，对于老生代对象还是会非常影响效率</li>
-</ul>
-</li>
-</ul>
-<h3 id="增量标记算法"><a href="#增量标记算法" class="headerlink" title="增量标记算法"></a>增量标记算法</h3><ul>
-<li><p>增量回收</p>
-<ul>
-<li><p>分治的思想</p>
-</li>
-<li><p>就是说将完整的标记清除任务分解为一个个小任务，然后穿插着在主线程上进行</p>
-</li>
-<li><p>怎么实现的</p>
-<ul>
-<li><p>如何来实现垃圾回收机制的暂停和恢复</p>
-<ul>
-<li><p>三色标记法</p>
-<ul>
-<li><p>黑色</p>
-<ul>
-<li>能够被GCroot对象遍历到</li>
-</ul>
-</li>
-<li><p>白色</p>
-<ul>
-<li>无法被GCroot对象遍历到–会被清除</li>
-</ul>
-</li>
-<li><p>灰色</p>
-<ul>
-<li><p>被GCroot对象遍历到，但是子节点还未被处理</p>
-</li>
-<li><p>V8的垃圾回收器，会来判断此时有没有灰色标记</p>
-<ul>
-<li><p>有</p>
-<ul>
-<li>下次恢复垃圾回收机制时就从灰色的标记开始，继续标记</li>
-</ul>
-</li>
-<li><p>没有</p>
-<ul>
-<li>直接开始清除</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>那这里有一个问题如果中途，已经被标记的变量，被改变</p>
-<ul>
-<li>原来被标记为黑色–现在改变后变白色了</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="重点：并发回收机制"><a href="#重点：并发回收机制" class="headerlink" title="重点：并发回收机制"></a>重点：并发回收机制</h2><h3 id="不管是增量回收还是-并行回收，都是运行在主线程上"><a href="#不管是增量回收还是-并行回收，都是运行在主线程上" class="headerlink" title="不管是增量回收还是/并行回收，都是运行在主线程上"></a>不管是增量回收还是/并行回收，都是运行在主线程上</h3><h3 id="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收"><a href="#那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收" class="headerlink" title="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-"></a>那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-</h3><h3 id="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"><a href="#简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收" class="headerlink" title="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"></a>简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收</h3><h3 id="Subtopic"><a href="#Subtopic" class="headerlink" title="Subtopic"></a>Subtopic</h3><h2 id="主垃圾回收机制采取了三种机制"><a href="#主垃圾回收机制采取了三种机制" class="headerlink" title="主垃圾回收机制采取了三种机制"></a>主垃圾回收机制采取了三种机制</h2>]]></content>
-      <categories>
-        <category>v8引擎</category>
       </categories>
   </entry>
   <entry>
@@ -376,6 +258,45 @@
 ]]></content>
       <categories>
         <category>TCP</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>HTTP</title>
+    <url>/2020/12/29/HTTP%E4%BD%93%E7%B3%BB/</url>
+    <content><![CDATA[<h2 id="👱-GET-和-post-本质区别"><a href="#👱-GET-和-post-本质区别" class="headerlink" title="👱 GET 和 post 本质区别"></a>👱 GET 和 post 本质区别</h2><h3 id="HTTP-常见的请求头字段"><a href="#HTTP-常见的请求头字段" class="headerlink" title="HTTP 常见的请求头字段"></a>HTTP 常见的请求头字段</h3><h3 id="叙述思路"><a href="#叙述思路" class="headerlink" title="叙述思路"></a>叙述思路</h3><ol>
+<li>首先属于 HTTP 协议—–》 引出本质是 TCP 连接——》 引出 tcp 连接次数问题—–&gt; 由次数问题：想到幂等。</li>
+<li>其次想到安全幂等，GET 安全幂等，POST 不安全也不幂等。</li>
+<li>同时还有一点 get 请求能够<strong>缓存</strong>比如第一次请求时浏览器会把相应数据缓存到本地，方便之后能直接命中：强缓存逻辑，而 post 请求时无法被缓存的。</li>
+<li>其次想到想起它们属于 HTTP 协议，也就是说也是基于 TCP 链接的，所以它们的<strong>本质</strong>都是 <strong>TCP 连接。</strong></li>
+<li>GET 请求是<strong>一个 tcp 报文</strong>  :(对于 GET 方式的请求，浏览器会把 http <strong>header</strong> 和 data 一并发送出去，服务器响应 200（返回数据）。) //你请求肯定要有请求头吗，对吧</li>
+<li>而 POST 请求是<strong>两个 tcp 报文</strong>，(浏览器先发送 header，服务器响应 100，浏览器再发送 data，服务器响应 200 ok（返回数据）。)</li>
+<li>所谓<strong>安全</strong>就是不会改变服务器资源，所谓的<strong><strong>幂</strong></strong>想起次幂，也就是说<strong>多次</strong>的意思</li>
+<li>所谓的<strong>不安全</strong>其实就是会改变，服务器的资源，所谓的不幂等就是，多次操作结果不相同。</li>
+</ol>
+<h4 id="💯-100-continue"><a href="#💯-100-continue" class="headerlink" title="💯 100 continue"></a>💯 100 continue</h4><ol>
+<li>HTTP <strong><code>100 Continue</code></strong> 信息型状态响应码表示目前为止一切正常, 客户端应该继续请求, 如果已完成请求则忽略.// 自己的话就是:👌  因为是 <strong>100</strong> 分所以<strong>目前状态正常，可以继续请求。</strong></li>
+</ol>
+<h3 id="为什么-http1-不能实现多路复用"><a href="#为什么-http1-不能实现多路复用" class="headerlink" title="为什么 http1 不能实现多路复用"></a>为什么 http1 不能实现多路复用</h3><ol>
+<li>HTTP/1.1 不是二进制传输，而是通过文本进行传输。由于没有流的概念，在使用并行传输（多路复用）传递数据时，接收端在接收到响应后，并不能区分多个响应分别对应的请求，所以无法将多个响应的结果重新进行组装，也就实现不了多路复用。</li>
+</ol>
+<h3 id="请求响应头怎么记忆"><a href="#请求响应头怎么记忆" class="headerlink" title="请求响应头怎么记忆"></a>请求响应头怎么记忆</h3><ol>
+<li>首先得联想到这个登录的场景，由登录联想到 cookies, c–》联想 coonection-keepalive,e 发音 accecpt–accept-encoding, s 联想到这个 useragent, o–&gt; 联想到这个 host 。</li>
+<li>接收方–&gt; 接受请求返回数据。所以联想到内容格式，及大小 –》content ,以及为了能提升用户的访问速率.</li>
+<li>首先是 header - cookies   –  connection: –&gt; user-agent–&gt;accept–&gt;   hc(缓存)：if-none-match, if-modify-since;</li>
+</ol>
+<h3 id="响应码"><a href="#响应码" class="headerlink" title="响应码"></a>响应码</h3><ol>
+<li>301 : 就是永久重定向，就是从 seo 优化的角度更好，会<strong>转移权重</strong>。（联想一个旧网址的 seo 和新网址的 seo）.</li>
+<li>但是 302 就是临时的重定向，<strong>不会转移权重</strong>不会去更新这个，等于是搜索权重下降了，因为 seo 不允许多个，域名指向一个地址，作弊提升这个权重排名。</li>
+<li>叙述思路：就是，301–》seo ，转移权重（就是将旧地址的搜索权重转移到新的）。. 重定向之后会做什么？读取浏览器缓存，强缓存和协商缓存</li>
+<li>302–》临时的重定向，不会把旧网址的，权重进行转移。但是会改变请求的方法把 post 改为了 get 请求，所以出现了 307 的临时重定向，不会去改变这个请求的方法。</li>
+</ol>
+<h3 id="http-持久连接"><a href="#http-持久连接" class="headerlink" title="http 持久连接"></a>http 持久连接</h3><ol>
+<li>首先第一点，何时断开服务器会去设定一个时间然后，在 keep-alive 中添加这个断开的时间。</li>
+<li>其次何时数据传输完毕，数据联想为一个 length,是不是只有长度符合你的 length 才能够判断，数据传输完毕，追问—》如果说没有 content-length;怎么来判断，就是说看编码快，如果</li>
+</ol>
+]]></content>
+      <categories>
+        <category>HTTP</category>
       </categories>
   </entry>
   <entry>
@@ -736,6 +657,85 @@
       </categories>
   </entry>
   <entry>
+    <title>优化垃圾回收机制</title>
+    <url>/2020/12/19/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%9D%A5%E4%BC%98%E5%8C%96%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%C2%B7/</url>
+    <content><![CDATA[<h1 id="V8引擎如何来优化垃圾回收机制的·"><a href="#V8引擎如何来优化垃圾回收机制的·" class="headerlink" title="V8引擎如何来优化垃圾回收机制的·"></a>V8引擎如何来优化垃圾回收机制的·</h1><h2 id="相应优化算法"><a href="#相应优化算法" class="headerlink" title="相应优化算法"></a>相应优化算法</h2><h3 id="全停顿算法"><a href="#全停顿算法" class="headerlink" title="全停顿算法"></a>全停顿算法</h3><ul>
+<li><p>js是单线程，并且js执行和垃圾回收机制任务都在主线上，js执行就会被挂起，导致全停顿</p>
+</li>
+<li><p>Subtopic</p>
+</li>
+<li><p>并行回收</p>
+<ul>
+<li>副垃圾回收机制–采取专门用来清理新生代对象</li>
+<li>这些辅助线程，也会来帮忙将对象区域的数据转移到空闲区域</li>
+<li>Subtopic</li>
+<li>弊端还是全停顿，对于老生代对象还是会非常影响效率</li>
+</ul>
+</li>
+</ul>
+<h3 id="增量标记算法"><a href="#增量标记算法" class="headerlink" title="增量标记算法"></a>增量标记算法</h3><ul>
+<li><p>增量回收</p>
+<ul>
+<li><p>分治的思想</p>
+</li>
+<li><p>就是说将完整的标记清除任务分解为一个个小任务，然后穿插着在主线程上进行</p>
+</li>
+<li><p>怎么实现的</p>
+<ul>
+<li><p>如何来实现垃圾回收机制的暂停和恢复</p>
+<ul>
+<li><p>三色标记法</p>
+<ul>
+<li><p>黑色</p>
+<ul>
+<li>能够被GCroot对象遍历到</li>
+</ul>
+</li>
+<li><p>白色</p>
+<ul>
+<li>无法被GCroot对象遍历到–会被清除</li>
+</ul>
+</li>
+<li><p>灰色</p>
+<ul>
+<li><p>被GCroot对象遍历到，但是子节点还未被处理</p>
+</li>
+<li><p>V8的垃圾回收器，会来判断此时有没有灰色标记</p>
+<ul>
+<li><p>有</p>
+<ul>
+<li>下次恢复垃圾回收机制时就从灰色的标记开始，继续标记</li>
+</ul>
+</li>
+<li><p>没有</p>
+<ul>
+<li>直接开始清除</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>那这里有一个问题如果中途，已经被标记的变量，被改变</p>
+<ul>
+<li>原来被标记为黑色–现在改变后变白色了</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="重点：并发回收机制"><a href="#重点：并发回收机制" class="headerlink" title="重点：并发回收机制"></a>重点：并发回收机制</h2><h3 id="不管是增量回收还是-并行回收，都是运行在主线程上"><a href="#不管是增量回收还是-并行回收，都是运行在主线程上" class="headerlink" title="不管是增量回收还是/并行回收，都是运行在主线程上"></a>不管是增量回收还是/并行回收，都是运行在主线程上</h3><h3 id="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收"><a href="#那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收" class="headerlink" title="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-"></a>那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-</h3><h3 id="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"><a href="#简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收" class="headerlink" title="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"></a>简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收</h3><h3 id="Subtopic"><a href="#Subtopic" class="headerlink" title="Subtopic"></a>Subtopic</h3><h2 id="主垃圾回收机制采取了三种机制"><a href="#主垃圾回收机制采取了三种机制" class="headerlink" title="主垃圾回收机制采取了三种机制"></a>主垃圾回收机制采取了三种机制</h2>]]></content>
+      <categories>
+        <category>v8引擎</category>
+      </categories>
+  </entry>
+  <entry>
     <title>垃圾回收机制</title>
     <url>/2020/07/12/css/</url>
     <content><![CDATA[<h1 id="css"><a href="#css" class="headerlink" title="css"></a>css</h1><h2 id="盒模型宽度如何计算"><a href="#盒模型宽度如何计算" class="headerlink" title="盒模型宽度如何计算"></a>盒模型宽度如何计算</h2><h3 id="offeset"><a href="#offeset" class="headerlink" title="offeset"></a>offeset</h3><ul>
@@ -1050,6 +1050,20 @@
 ]]></content>
       <categories>
         <category>ex6</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>websocket</title>
+    <url>/2020/07/19/websocket/</url>
+    <content><![CDATA[<h1 id="websocket"><a href="#websocket" class="headerlink" title="websocket"></a>websocket</h1><h2 id="它解决了http是半双工，实现了服务端推送"><a href="#它解决了http是半双工，实现了服务端推送" class="headerlink" title="它解决了http是半双工，实现了服务端推送"></a>它解决了http是半双工，实现了服务端推送</h2><h3 id="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"><a href="#也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的" class="headerlink" title="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"></a>也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的</h3><h2 id="那为了能够实现类似全双工的效果，http做出了哪些努力，"><a href="#那为了能够实现类似全双工的效果，http做出了哪些努力，" class="headerlink" title="那为了能够实现类似全双工的效果，http做出了哪些努力，"></a>那为了能够实现类似全双工的效果，http做出了哪些努力，</h2><h3 id="轮询"><a href="#轮询" class="headerlink" title="轮询"></a>轮询</h3><ul>
+<li>其实就是说，客户端会向服务器不断的发送询问，问是否有新的数据，那么很明显这样做，效率非常的低</li>
+</ul>
+<h3 id="长轮询"><a href="#长轮询" class="headerlink" title="长轮询"></a>长轮询</h3><ul>
+<li>意思就是说只有对方有数据才会发，每次客户端仅在接受到新数据才会去询问，如果，没有那就不询问了</li>
+</ul>
+<h2 id="那么websocket是怎么来建立连接的（握手）"><a href="#那么websocket是怎么来建立连接的（握手）" class="headerlink" title="那么websocket是怎么来建立连接的（握手）"></a>那么websocket是怎么来建立连接的（握手）</h2><h3 id="其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"><a href="#其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接" class="headerlink" title="其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"></a>其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接</h3><h3 id="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"><a href="#建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了" class="headerlink" title="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"></a>建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了</h3><h2 id="这个协议更多的是对http的一种优化"><a href="#这个协议更多的是对http的一种优化" class="headerlink" title="这个协议更多的是对http的一种优化"></a>这个协议更多的是对http的一种优化</h2><h2 id="二进制帧格式？"><a href="#二进制帧格式？" class="headerlink" title="二进制帧格式？"></a>二进制帧格式？</h2>]]></content>
+      <categories>
+        <category>HTTP</category>
       </categories>
   </entry>
   <entry>
@@ -1501,181 +1515,6 @@
       </categories>
   </entry>
   <entry>
-    <title>websocket</title>
-    <url>/2020/07/19/websocket/</url>
-    <content><![CDATA[<h1 id="websocket"><a href="#websocket" class="headerlink" title="websocket"></a>websocket</h1><h2 id="它解决了http是半双工，实现了服务端推送"><a href="#它解决了http是半双工，实现了服务端推送" class="headerlink" title="它解决了http是半双工，实现了服务端推送"></a>它解决了http是半双工，实现了服务端推送</h2><h3 id="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"><a href="#也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的" class="headerlink" title="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"></a>也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的</h3><h2 id="那为了能够实现类似全双工的效果，http做出了哪些努力，"><a href="#那为了能够实现类似全双工的效果，http做出了哪些努力，" class="headerlink" title="那为了能够实现类似全双工的效果，http做出了哪些努力，"></a>那为了能够实现类似全双工的效果，http做出了哪些努力，</h2><h3 id="轮询"><a href="#轮询" class="headerlink" title="轮询"></a>轮询</h3><ul>
-<li>其实就是说，客户端会向服务器不断的发送询问，问是否有新的数据，那么很明显这样做，效率非常的低</li>
-</ul>
-<h3 id="长轮询"><a href="#长轮询" class="headerlink" title="长轮询"></a>长轮询</h3><ul>
-<li>意思就是说只有对方有数据才会发，每次客户端仅在接受到新数据才会去询问，如果，没有那就不询问了</li>
-</ul>
-<h2 id="那么websocket是怎么来建立连接的（握手）"><a href="#那么websocket是怎么来建立连接的（握手）" class="headerlink" title="那么websocket是怎么来建立连接的（握手）"></a>那么websocket是怎么来建立连接的（握手）</h2><h3 id="其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"><a href="#其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接" class="headerlink" title="其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"></a>其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接</h3><h3 id="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"><a href="#建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了" class="headerlink" title="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"></a>建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了</h3><h2 id="这个协议更多的是对http的一种优化"><a href="#这个协议更多的是对http的一种优化" class="headerlink" title="这个协议更多的是对http的一种优化"></a>这个协议更多的是对http的一种优化</h2><h2 id="二进制帧格式？"><a href="#二进制帧格式？" class="headerlink" title="二进制帧格式？"></a>二进制帧格式？</h2>]]></content>
-      <categories>
-        <category>HTTP</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>垃圾回收机制</title>
-    <url>/2021/01/12/%E5%BC%82%E6%AD%A5/</url>
-    <content><![CDATA[<h1 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h1><h2 id="异步发展阶段"><a href="#异步发展阶段" class="headerlink" title="异步发展阶段"></a>异步发展阶段</h2><h3 id="回调函数"><a href="#回调函数" class="headerlink" title="回调函数"></a>回调函数</h3><h3 id="generator"><a href="#generator" class="headerlink" title="generator()"></a>generator()</h3><ul>
-<li>Subtopic</li>
-<li>子主题</li>
-<li>子主题</li>
-</ul>
-<h3 id="promise"><a href="#promise" class="headerlink" title="promise"></a>promise</h3><ul>
-<li><p>为什么有promise</p>
-<ul>
-<li><p>避免出现回调地狱</p>
-</li>
-<li><p>它是如何避免的</p>
-<ul>
-<li>通过.then的链式调用，从而避免的了不断嵌套的回调地狱</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>它有哪些状态</p>
-<ul>
-<li><p>pending</p>
-<ul>
-<li>new/创建 一个promise后的状态</li>
-</ul>
-</li>
-<li><p>fulfilled</p>
-<ul>
-<li>调用promise.resolve()的方法后</li>
-</ul>
-</li>
-<li><p>rejected</p>
-<ul>
-<li>异步任务出错/或是抛出异常后//但是如果仅仅是return 了一个错误对象，也是不行的</li>
-<li>调用promise.reject()</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>不同状态所触发的方法</p>
-<ul>
-<li><p>then()</p>
-<ul>
-<li><p>首先当promise对象为fullfiled时会触发</p>
-</li>
-<li><p>里面只能接收一个函数，其它类型一律无视</p>
-</li>
-<li><p>并且会返回一个新的fullfiled(一般情况下，如果throw了一个错误)promise对象</p>
-<ul>
-<li>这也解答了自己一个疑惑就是说，为什么then可以链式来调用，不是状态只能变一次吗，其实是因为又新建了一个新的promise对象</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>catch()</p>
-<ul>
-<li>当状态为rejected时触发</li>
-<li>返回了一个具有fullfiled状态的promise对象</li>
-</ul>
-</li>
-<li><p>finally</p>
-<ul>
-<li>无论什么状态，最终都会执行的函数</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>谨记一点就是</p>
-<ul>
-<li><p>promise的状态的改变是不可逆的</p>
-<ul>
-<li><p>一旦成为fullfilled状态，或是rejected状态</p>
-</li>
-<li><p>即便是同状态的改变也不可以</p>
-</li>
-<li><p>核心</p>
-<ul>
-<li>状态仅能改变一次</li>
-<li>再具体一点就是说，一旦状态变了，后续,resolve(),reject()方法全部失效</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>有哪些方法</p>
-<ul>
-<li><p>resolve(value)</p>
-<ul>
-<li><p>成功</p>
-<ul>
-<li>Subtopic</li>
-</ul>
-</li>
-<li><p>value是一个带有then()方法的对象</p>
-<ul>
-<li><p>由then()方法所返回状态来决定</p>
-<ul>
-<li>从这可以看出来，then()方法返回的并不一定是成功的状态</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>reject( )</p>
-<ul>
-<li>promise.reject()所返回的是失败状态的promise对象</li>
-</ul>
-</li>
-<li><p>race（）</p>
-</li>
-<li><p>all()</p>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="async-await"><a href="#async-await" class="headerlink" title="async/await"></a>async/await</h3><ul>
-<li><p>原因</p>
-<ul>
-<li>已经有了promise为什么还要有它</li>
-</ul>
-</li>
-<li><p>这里先记住一点就是，await 一旦出现意味着之后所有的任务全部都是，异步任务，async所声明的函数本身依然属于同步任务</p>
-</li>
-<li><p>记住await</p>
-<ul>
-<li>普通值</li>
-<li>函数</li>
-</ul>
-</li>
-</ul>
-<h2 id="它的特点是什么"><a href="#它的特点是什么" class="headerlink" title="它的特点是什么"></a>它的特点是什么</h2><h3 id="就是异步任务的执行是不会阻塞，之后代码的执行，可以等之后的任务执行后再去执行；"><a href="#就是异步任务的执行是不会阻塞，之后代码的执行，可以等之后的任务执行后再去执行；" class="headerlink" title="就是异步任务的执行是不会阻塞，之后代码的执行，可以等之后的任务执行后再去执行；"></a>就是异步任务的执行是不会阻塞，之后代码的执行，可以等之后的任务执行后再去执行；</h3><h3 id="一言以蔽之"><a href="#一言以蔽之" class="headerlink" title="一言以蔽之"></a>一言以蔽之</h3><ul>
-<li>不会去立刻执行的任务</li>
-<li>新理解：函数执行后不会立刻返回结果，并且不阻塞之后的任务</li>
-</ul>
-<h2 id="那么为什么要有异步"><a href="#那么为什么要有异步" class="headerlink" title="那么为什么要有异步"></a>那么为什么要有异步</h2><h3 id="有些网络请求实在是太耗费时间了，如果不引入异步机制的话会浪费时间，用同步的话，只要第一个任务没完成后面的任务全部阻塞了"><a href="#有些网络请求实在是太耗费时间了，如果不引入异步机制的话会浪费时间，用同步的话，只要第一个任务没完成后面的任务全部阻塞了" class="headerlink" title="有些网络请求实在是太耗费时间了，如果不引入异步机制的话会浪费时间，用同步的话，只要第一个任务没完成后面的任务全部阻塞了"></a>有些网络请求实在是太耗费时间了，如果不引入异步机制的话会浪费时间，用同步的话，只要第一个任务没完成后面的任务全部阻塞了</h3><h2 id="哪些属于异步任务"><a href="#哪些属于异步任务" class="headerlink" title="哪些属于异步任务"></a>哪些属于异步任务</h2><h3 id="settimeout"><a href="#settimeout" class="headerlink" title="settimeout()"></a>settimeout()</h3><h3 id="dom事件"><a href="#dom事件" class="headerlink" title="dom事件"></a>dom事件</h3><ul>
-<li>子主题</li>
-</ul>
-<h3 id="AJAX-AXIOS请求"><a href="#AJAX-AXIOS请求" class="headerlink" title="AJAX/AXIOS请求"></a>AJAX/AXIOS请求</h3><h3 id="setinterval"><a href="#setinterval" class="headerlink" title="setinterval()"></a>setinterval()</h3><h3 id="回调函数-1"><a href="#回调函数-1" class="headerlink" title="回调函数"></a>回调函数</h3><ul>
-<li><p>先明确一下什么是回调函数</p>
-<ul>
-<li><p>就是当一个a函数作为函数b的参数，并且由这个b函数来执行这个a函数//那么a就是回调函数</p>
-</li>
-<li><p>那它和异步有什么关系</p>
-<ul>
-<li>回调函数能够获得异步任务的结果</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="那怎么解决异步回调的问题"><a href="#那怎么解决异步回调的问题" class="headerlink" title="那怎么解决异步回调的问题"></a>那怎么解决异步回调的问题</h2><h3 id="回调地狱"><a href="#回调地狱" class="headerlink" title="回调地狱"></a>回调地狱</h3><ul>
-<li>当前执行的任务依赖上一个任务的执行的结果，并在上一个任务的回调中去执行</li>
-</ul>
-<h2 id="主题"><a href="#主题" class="headerlink" title="主题"></a>主题</h2><h2 id="主题-1"><a href="#主题-1" class="headerlink" title="主题"></a>主题</h2>]]></content>
-      <categories>
-        <category>异步</category>
-      </categories>
-  </entry>
-  <entry>
     <title>垃圾回收机制</title>
     <url>/2021/01/19/%E6%89%A7%E8%A1%8C%E4%B8%8A%E4%B8%8B%E6%96%87/</url>
     <content><![CDATA[<h1 id="执行上下文"><a href="#执行上下文" class="headerlink" title="执行上下文"></a>执行上下文</h1><h2 id="所谓的执行上下文其实就是代码所处的环境"><a href="#所谓的执行上下文其实就是代码所处的环境" class="headerlink" title="所谓的执行上下文其实就是代码所处的环境"></a>所谓的执行上下文其实就是代码所处的环境</h2><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="全局执行上下文"><a href="#全局执行上下文" class="headerlink" title="全局执行上下文"></a>全局执行上下文</h3><h3 id="函数执行上下文"><a href="#函数执行上下文" class="headerlink" title="函数执行上下文"></a>函数执行上下文</h3><h3 id="eval执行上下文–我不用"><a href="#eval执行上下文–我不用" class="headerlink" title="eval执行上下文–我不用"></a>eval执行上下文–我不用</h3><h2 id="调用栈"><a href="#调用栈" class="headerlink" title="调用栈"></a>调用栈</h2><h3 id="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"><a href="#每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间" class="headerlink" title="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"></a>每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间</h3><ul>
@@ -1886,6 +1725,167 @@
 ]]></content>
       <categories>
         <category>v8引擎</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>垃圾回收机制</title>
+    <url>/2021/01/12/%E5%BC%82%E6%AD%A5/</url>
+    <content><![CDATA[<h1 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h1><h2 id="异步发展阶段"><a href="#异步发展阶段" class="headerlink" title="异步发展阶段"></a>异步发展阶段</h2><h3 id="回调函数"><a href="#回调函数" class="headerlink" title="回调函数"></a>回调函数</h3><h3 id="generator"><a href="#generator" class="headerlink" title="generator()"></a>generator()</h3><ul>
+<li>Subtopic</li>
+<li>子主题</li>
+<li>子主题</li>
+</ul>
+<h3 id="promise"><a href="#promise" class="headerlink" title="promise"></a>promise</h3><ul>
+<li><p>为什么有promise</p>
+<ul>
+<li><p>避免出现回调地狱</p>
+</li>
+<li><p>它是如何避免的</p>
+<ul>
+<li>通过.then的链式调用，从而避免的了不断嵌套的回调地狱</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>它有哪些状态</p>
+<ul>
+<li><p>pending</p>
+<ul>
+<li>new/创建 一个promise后的状态</li>
+</ul>
+</li>
+<li><p>fulfilled</p>
+<ul>
+<li>调用promise.resolve()的方法后</li>
+</ul>
+</li>
+<li><p>rejected</p>
+<ul>
+<li>异步任务出错/或是抛出异常后//但是如果仅仅是return 了一个错误对象，也是不行的</li>
+<li>调用promise.reject()</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>不同状态所触发的方法</p>
+<ul>
+<li><p>then()</p>
+<ul>
+<li><p>首先当promise对象为fullfiled时会触发</p>
+</li>
+<li><p>里面只能接收一个函数，其它类型一律无视</p>
+</li>
+<li><p>并且会返回一个新的fullfiled(一般情况下，如果throw了一个错误)promise对象</p>
+<ul>
+<li>这也解答了自己一个疑惑就是说，为什么then可以链式来调用，不是状态只能变一次吗，其实是因为又新建了一个新的promise对象</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>catch()</p>
+<ul>
+<li>当状态为rejected时触发</li>
+<li>返回了一个具有fullfiled状态的promise对象</li>
+</ul>
+</li>
+<li><p>finally</p>
+<ul>
+<li>无论什么状态，最终都会执行的函数</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>谨记一点就是</p>
+<ul>
+<li><p>promise的状态的改变是不可逆的</p>
+<ul>
+<li><p>一旦成为fullfilled状态，或是rejected状态</p>
+</li>
+<li><p>即便是同状态的改变也不可以</p>
+</li>
+<li><p>核心</p>
+<ul>
+<li>状态仅能改变一次</li>
+<li>再具体一点就是说，一旦状态变了，后续,resolve(),reject()方法全部失效</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>有哪些方法</p>
+<ul>
+<li><p>resolve(value)</p>
+<ul>
+<li><p>成功</p>
+<ul>
+<li>Subtopic</li>
+</ul>
+</li>
+<li><p>value是一个带有then()方法的对象</p>
+<ul>
+<li><p>由then()方法所返回状态来决定</p>
+<ul>
+<li>从这可以看出来，then()方法返回的并不一定是成功的状态</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>reject( )</p>
+<ul>
+<li>promise.reject()所返回的是失败状态的promise对象</li>
+</ul>
+</li>
+<li><p>race（）</p>
+</li>
+<li><p>all()</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="async-await"><a href="#async-await" class="headerlink" title="async/await"></a>async/await</h3><ul>
+<li><p>原因</p>
+<ul>
+<li>已经有了promise为什么还要有它</li>
+</ul>
+</li>
+<li><p>这里先记住一点就是，await 一旦出现意味着之后所有的任务全部都是，异步任务，async所声明的函数本身依然属于同步任务</p>
+</li>
+<li><p>记住await</p>
+<ul>
+<li>普通值</li>
+<li>函数</li>
+</ul>
+</li>
+</ul>
+<h2 id="它的特点是什么"><a href="#它的特点是什么" class="headerlink" title="它的特点是什么"></a>它的特点是什么</h2><h3 id="就是异步任务的执行是不会阻塞，之后代码的执行，可以等之后的任务执行后再去执行；"><a href="#就是异步任务的执行是不会阻塞，之后代码的执行，可以等之后的任务执行后再去执行；" class="headerlink" title="就是异步任务的执行是不会阻塞，之后代码的执行，可以等之后的任务执行后再去执行；"></a>就是异步任务的执行是不会阻塞，之后代码的执行，可以等之后的任务执行后再去执行；</h3><h3 id="一言以蔽之"><a href="#一言以蔽之" class="headerlink" title="一言以蔽之"></a>一言以蔽之</h3><ul>
+<li>不会去立刻执行的任务</li>
+<li>新理解：函数执行后不会立刻返回结果，并且不阻塞之后的任务</li>
+</ul>
+<h2 id="那么为什么要有异步"><a href="#那么为什么要有异步" class="headerlink" title="那么为什么要有异步"></a>那么为什么要有异步</h2><h3 id="有些网络请求实在是太耗费时间了，如果不引入异步机制的话会浪费时间，用同步的话，只要第一个任务没完成后面的任务全部阻塞了"><a href="#有些网络请求实在是太耗费时间了，如果不引入异步机制的话会浪费时间，用同步的话，只要第一个任务没完成后面的任务全部阻塞了" class="headerlink" title="有些网络请求实在是太耗费时间了，如果不引入异步机制的话会浪费时间，用同步的话，只要第一个任务没完成后面的任务全部阻塞了"></a>有些网络请求实在是太耗费时间了，如果不引入异步机制的话会浪费时间，用同步的话，只要第一个任务没完成后面的任务全部阻塞了</h3><h2 id="哪些属于异步任务"><a href="#哪些属于异步任务" class="headerlink" title="哪些属于异步任务"></a>哪些属于异步任务</h2><h3 id="settimeout"><a href="#settimeout" class="headerlink" title="settimeout()"></a>settimeout()</h3><h3 id="dom事件"><a href="#dom事件" class="headerlink" title="dom事件"></a>dom事件</h3><ul>
+<li>子主题</li>
+</ul>
+<h3 id="AJAX-AXIOS请求"><a href="#AJAX-AXIOS请求" class="headerlink" title="AJAX/AXIOS请求"></a>AJAX/AXIOS请求</h3><h3 id="setinterval"><a href="#setinterval" class="headerlink" title="setinterval()"></a>setinterval()</h3><h3 id="回调函数-1"><a href="#回调函数-1" class="headerlink" title="回调函数"></a>回调函数</h3><ul>
+<li><p>先明确一下什么是回调函数</p>
+<ul>
+<li><p>就是当一个a函数作为函数b的参数，并且由这个b函数来执行这个a函数//那么a就是回调函数</p>
+</li>
+<li><p>那它和异步有什么关系</p>
+<ul>
+<li>回调函数能够获得异步任务的结果</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="那怎么解决异步回调的问题"><a href="#那怎么解决异步回调的问题" class="headerlink" title="那怎么解决异步回调的问题"></a>那怎么解决异步回调的问题</h2><h3 id="回调地狱"><a href="#回调地狱" class="headerlink" title="回调地狱"></a>回调地狱</h3><ul>
+<li>当前执行的任务依赖上一个任务的执行的结果，并在上一个任务的回调中去执行</li>
+</ul>
+<h2 id="主题"><a href="#主题" class="headerlink" title="主题"></a>主题</h2><h2 id="主题-1"><a href="#主题-1" class="headerlink" title="主题"></a>主题</h2>]]></content>
+      <categories>
+        <category>异步</category>
       </categories>
   </entry>
   <entry>
