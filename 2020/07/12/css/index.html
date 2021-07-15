@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ffitas.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="css盒模型宽度如何计算offeset Subtopic  client 子主题  盒模型计算 标准盒模型  box-sizing: content:box   怪异盒模型（ie）  box-sizing: borderbox 应用边界问题    margin-纵向重叠在练习布局的时候经常会有这个问题，就是说，上下元素的margin 会发生重叠再具体来讲就是margin-top+margin-bo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="垃圾回收机制">
+<meta property="og:url" content="http://ffitas.github.io/2020/07/12/css/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="css盒模型宽度如何计算offeset Subtopic  client 子主题  盒模型计算 标准盒模型  box-sizing: content:box   怪异盒模型（ie）  box-sizing: borderbox 应用边界问题    margin-纵向重叠在练习布局的时候经常会有这个问题，就是说，上下元素的margin 会发生重叠再具体来讲就是margin-top+margin-bo">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-07-12T02:20:05.000Z">
+<meta property="article:modified_time" content="2021-07-15T07:13:17.790Z">
+<meta property="article:author" content="宋辰星">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://ffitas.github.io/2020/07/12/css/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>垃圾回收机制 | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-首页">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-分类">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://ffitas.github.io/2020/07/12/css/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="宋辰星">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          垃圾回收机制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-07-12 10:20:05" itemprop="dateCreated datePublished" datetime="2020-07-12T10:20:05+08:00">2020-07-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-07-15 15:13:17" itemprop="dateModified" datetime="2021-07-15T15:13:17+08:00">2021-07-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/css/" itemprop="url" rel="index"><span itemprop="name">css</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="css"><a href="#css" class="headerlink" title="css"></a>css</h1><h2 id="盒模型宽度如何计算"><a href="#盒模型宽度如何计算" class="headerlink" title="盒模型宽度如何计算"></a>盒模型宽度如何计算</h2><h3 id="offeset"><a href="#offeset" class="headerlink" title="offeset"></a>offeset</h3><ul>
+<li>Subtopic</li>
+</ul>
+<h3 id="client"><a href="#client" class="headerlink" title="client"></a>client</h3><ul>
+<li>子主题</li>
+</ul>
+<h3 id="盒模型计算"><a href="#盒模型计算" class="headerlink" title="盒模型计算"></a>盒模型计算</h3><ul>
+<li><p>标准盒模型</p>
+<ul>
+<li>box-sizing: content:box</li>
+</ul>
+</li>
+<li><p>怪异盒模型（ie）</p>
+<ul>
+<li>box-sizing: borderbox</li>
+<li>应用边界问题</li>
+</ul>
+</li>
+</ul>
+<h2 id="margin-纵向重叠"><a href="#margin-纵向重叠" class="headerlink" title="margin-纵向重叠"></a>margin-纵向重叠</h2><h3 id="在练习布局的时候经常会有这个问题，就是说，上下元素的margin-会发生重叠"><a href="#在练习布局的时候经常会有这个问题，就是说，上下元素的margin-会发生重叠" class="headerlink" title="在练习布局的时候经常会有这个问题，就是说，上下元素的margin 会发生重叠"></a>在练习布局的时候经常会有这个问题，就是说，上下元素的margin 会发生重叠</h3><h3 id="再具体来讲就是margin-top-margin-bottom-margin-top-bottom"><a href="#再具体来讲就是margin-top-margin-bottom-margin-top-bottom" class="headerlink" title="再具体来讲就是margin-top+margin-bottom !== margin(top+bottom)"></a>再具体来讲就是margin-top+margin-bottom !== margin(top+bottom)</h3><h3 id="所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin"><a href="#所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin" class="headerlink" title="所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin"></a>所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin</h3><h3 id="怎么来解决这个问题"><a href="#怎么来解决这个问题" class="headerlink" title="怎么来解决这个问题"></a>怎么来解决这个问题</h3><h2 id="margin负值"><a href="#margin负值" class="headerlink" title="margin负值"></a>margin负值</h2><h3 id="这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。"><a href="#这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。" class="headerlink" title="这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。"></a>这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。</h3><h2 id="BFC"><a href="#BFC" class="headerlink" title="BFC"></a>BFC</h2><h3 id="块级格式化上下文"><a href="#块级格式化上下文" class="headerlink" title="块级格式化上下文"></a>块级格式化上下文</h3><h3 id="独立的容器"><a href="#独立的容器" class="headerlink" title="独立的容器"></a>独立的容器</h3><h3 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h3><ul>
+<li>margin纵向重叠的问题</li>
+<li>还有就是三栏布局（两列定宽）中间自适应，中间元素，加入overflow:hidden；就可以解决这个问题，因为独立容器就是紧贴着浮动的元素。这里没有必要去给父元素设置，因为浮动元素设置，是为了计算子元素的宽高的。</li>
+<li>清除浮动，原理就是bfc块是计算浮动元素高度的。</li>
+</ul>
+<h3 id="怎么来触发"><a href="#怎么来触发" class="headerlink" title="怎么来触发"></a>怎么来触发</h3><ul>
+<li><p>浮动</p>
+</li>
+<li><p>非overflow: visible</p>
+</li>
+<li><p>定位元素：absolute, fix 首先都会脱离文档流</p>
+<ul>
+<li>区别：absolute相对于最近的非staic定位元素进行定位也就是说定位元素，而fix是定死在浏览器窗口内不会随着滚动条的滚动而滚动</li>
+</ul>
+</li>
+<li><p>flex元素就是设置了display；flex布局的元素</p>
+</li>
+</ul>
+<h3 id="联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。"><a href="#联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。" class="headerlink" title="联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。"></a>联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。</h3><h2 id="Float布局"><a href="#Float布局" class="headerlink" title="Float布局"></a>Float布局</h2><h3 id="圣杯布局"><a href="#圣杯布局" class="headerlink" title="圣杯布局"></a>圣杯布局</h3><ul>
+<li><p>这里有个之前忽略的点就是用</p>
+<ul>
+<li>clear:both来清楚浮动</li>
+</ul>
+</li>
+<li><p>这里有一个之前没有搞清楚的一点就是：这里用到了margin负值</p>
+<ul>
+<li>如果你给一个浮动元素，负值且为100%的话，它其实是相对于父元素的，去向左来位移的</li>
+</ul>
+</li>
+<li><p>加深了对于position:relative理解</p>
+<ul>
+<li><p>这个是相对于自身来定位的什么意思就是说，当给一个设置lerelative的元素设置了top,left,right,时它会相对于自身左上角那个顶点进行移动</p>
+</li>
+<li><p>之前一直只是单纯用子绝父相，很少来单独的使用，relative</p>
+</li>
+<li><p>它的移动不会去干扰其它的布局元素也就是说，加了realtive的元素相当于不存在一样，它干扰不了其它布局的元素，其它元素的布局该是啥就是啥</p>
+<ul>
+<li>但我这里有一个问题就是到底，脱流的元素是否会被影响，我看中间的center 会被影响</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="双飞翼布局"><a href="#双飞翼布局" class="headerlink" title="双飞翼布局"></a>双飞翼布局</h3><ul>
+<li><p>原因</p>
+<ul>
+<li>中间元素优先取渲染因为优先级更高一些</li>
+</ul>
+</li>
+</ul>
+<h3 id="为什么用"><a href="#为什么用" class="headerlink" title="为什么用"></a>为什么用</h3><h3 id="主要用于pc"><a href="#主要用于pc" class="headerlink" title="主要用于pc"></a>主要用于pc</h3><h2 id="清除浮动"><a href="#清除浮动" class="headerlink" title="清除浮动"></a>清除浮动</h2><h3 id="联想：clear-清除"><a href="#联想：clear-清除" class="headerlink" title="联想：clear(清除)"></a>联想：clear(清除)</h3><h3 id="clear-both-额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear-both"><a href="#clear-both-额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear-both" class="headerlink" title="clear:both 额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear:both"></a>clear:both 额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear:both</h3><h3 id="overflow-hidden"><a href="#overflow-hidden" class="headerlink" title="overflow:hidden"></a>overflow:hidden</h3><h3 id="clear-fix"><a href="#clear-fix" class="headerlink" title="clear:fix"></a>clear:fix</h3><ul>
+<li>原理类似于这个clear:both,先创建一个空元素，然后再去转换为块级元素，因为伪元素是一个行内元素，类似额外标签，但是内容是空的，然后再去清除浮动。</li>
+<li>content: ‘ ‘</li>
+<li>dispaly: block</li>
+<li>clear:both</li>
+</ul>
+<h2 id="flex"><a href="#flex" class="headerlink" title="flex"></a>flex</h2><h3 id="哪些属性"><a href="#哪些属性" class="headerlink" title="哪些属性"></a>哪些属性</h3><ul>
+<li><p>flex-direction</p>
+<ul>
+<li>子元素布局方向要么raw column</li>
+</ul>
+</li>
+<li><p>justify-content</p>
+<ul>
+<li>space-between</li>
+<li>Subtopic</li>
+</ul>
+</li>
+<li><p>align-item</p>
+</li>
+<li><p>wrap</p>
+</li>
+<li><p>align-self</p>
+<ul>
+<li>按照当前主轴方向的垂直方向进行排列</li>
+<li>center</li>
+<li>start</li>
+<li>end</li>
+</ul>
+</li>
+</ul>
+<h3 id="怎么形成弹性布局"><a href="#怎么形成弹性布局" class="headerlink" title="怎么形成弹性布局"></a>怎么形成弹性布局</h3><h2 id="垂直水平居中"><a href="#垂直水平居中" class="headerlink" title="垂直水平居中"></a>垂直水平居中</h2>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2020/07/19/websocket/" rel="next" title="websocket">
+      websocket <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#css"><span class="nav-number">1.</span> <span class="nav-text">css</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%92%E6%A8%A1%E5%9E%8B%E5%AE%BD%E5%BA%A6%E5%A6%82%E4%BD%95%E8%AE%A1%E7%AE%97"><span class="nav-number">1.1.</span> <span class="nav-text">盒模型宽度如何计算</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#offeset"><span class="nav-number">1.1.1.</span> <span class="nav-text">offeset</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#client"><span class="nav-number">1.1.2.</span> <span class="nav-text">client</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%92%E6%A8%A1%E5%9E%8B%E8%AE%A1%E7%AE%97"><span class="nav-number">1.1.3.</span> <span class="nav-text">盒模型计算</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#margin-%E7%BA%B5%E5%90%91%E9%87%8D%E5%8F%A0"><span class="nav-number">1.2.</span> <span class="nav-text">margin-纵向重叠</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E7%BB%83%E4%B9%A0%E5%B8%83%E5%B1%80%E7%9A%84%E6%97%B6%E5%80%99%E7%BB%8F%E5%B8%B8%E4%BC%9A%E6%9C%89%E8%BF%99%E4%B8%AA%E9%97%AE%E9%A2%98%EF%BC%8C%E5%B0%B1%E6%98%AF%E8%AF%B4%EF%BC%8C%E4%B8%8A%E4%B8%8B%E5%85%83%E7%B4%A0%E7%9A%84margin-%E4%BC%9A%E5%8F%91%E7%94%9F%E9%87%8D%E5%8F%A0"><span class="nav-number">1.2.1.</span> <span class="nav-text">在练习布局的时候经常会有这个问题，就是说，上下元素的margin 会发生重叠</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%8D%E5%85%B7%E4%BD%93%E6%9D%A5%E8%AE%B2%E5%B0%B1%E6%98%AFmargin-top-margin-bottom-margin-top-bottom"><span class="nav-number">1.2.2.</span> <span class="nav-text">再具体来讲就是margin-top+margin-bottom !&#x3D;&#x3D; margin(top+bottom)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%80%E8%B0%93%E7%9A%84%E9%87%8D%E5%8F%A0%E5%B0%B1%E6%98%AF%E7%BA%B5%E6%96%B9%E5%90%91%E7%9A%84margin%E4%BC%9A%E9%87%8D%E5%8F%A0%E5%9C%A8%E4%B8%80%E8%B5%B7%E5%8F%96%E5%80%BC%E6%9C%80%E5%A4%A7%E7%9A%84margin"><span class="nav-number">1.2.3.</span> <span class="nav-text">所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E6%9D%A5%E8%A7%A3%E5%86%B3%E8%BF%99%E4%B8%AA%E9%97%AE%E9%A2%98"><span class="nav-number">1.2.4.</span> <span class="nav-text">怎么来解决这个问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#margin%E8%B4%9F%E5%80%BC"><span class="nav-number">1.3.</span> <span class="nav-text">margin负值</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%99%E9%87%8C%E8%81%94%E6%83%B3%E4%B8%80%E4%B8%AA%E5%9B%BE%EF%BC%8C%E5%B0%B1%E6%98%AF%EF%BC%8C%E6%9C%89%E4%B8%8A%E4%B8%8B%E5%B7%A6%E5%8F%B3%E5%9B%9B%E4%B8%AA%E8%BE%B9%E8%B7%9D%EF%BC%8C%E7%84%B6%E5%90%8E%EF%BC%8C%E5%90%91%E4%B8%8A%E5%92%8C%E5%B7%A6%E5%85%83%E7%B4%A0%E8%87%AA%E8%BA%AB%E4%BC%9A%E5%8F%91%E7%94%9F%E7%A7%BB%E5%8A%A8%EF%BC%8C%E5%AF%B9%E4%BA%8E%E4%B8%8B%E5%92%8C%E5%8F%B3%E5%B0%B1%E6%98%AF%E7%9B%B8%E5%BA%94%E4%BD%8D%E7%BD%AE%E5%B0%86%E4%B8%8D%E5%8D%A0%E9%AB%98%E5%92%8C%E5%AE%BD%EF%BC%8C%E8%87%AA%E8%BA%AB%E4%B8%8D%E4%BC%9A%E5%8F%98%E5%8A%A8%E3%80%82%E6%8D%A2%E8%A8%80%E4%B9%8B%E5%85%B6%E5%AE%83%E5%85%83%E7%B4%A0%E4%BC%9A%E8%BF%9B%E8%A1%8C%E7%A7%BB%E5%8A%A8%E5%8D%A0%E6%8D%AE%E5%85%B6%E7%A9%BA%E7%BC%BA%E4%BD%8D%E7%BD%AE%E3%80%82"><span class="nav-number">1.3.1.</span> <span class="nav-text">这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BFC"><span class="nav-number">1.4.</span> <span class="nav-text">BFC</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9D%97%E7%BA%A7%E6%A0%BC%E5%BC%8F%E5%8C%96%E4%B8%8A%E4%B8%8B%E6%96%87"><span class="nav-number">1.4.1.</span> <span class="nav-text">块级格式化上下文</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8B%AC%E7%AB%8B%E7%9A%84%E5%AE%B9%E5%99%A8"><span class="nav-number">1.4.2.</span> <span class="nav-text">独立的容器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3"><span class="nav-number">1.4.3.</span> <span class="nav-text">解决</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E6%9D%A5%E8%A7%A6%E5%8F%91"><span class="nav-number">1.4.4.</span> <span class="nav-text">怎么来触发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%81%94%E6%83%B3%E4%B8%80%E4%B8%AA%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%B0%B1%E6%98%AF%E4%B8%A4%E4%B8%AA%E5%85%83%E7%B4%A0%EF%BC%8C%E5%B0%B1%E6%98%AF%E4%B8%8A%E4%B8%8Bmargin%E9%87%8D%E5%8F%A0%EF%BC%8C%E5%B9%B6%E4%B8%94%EF%BC%8C%E8%BF%98%E6%9C%89%E4%B8%80%E4%B8%AA%E5%9C%BA%E6%99%AF%E5%B0%B1%E6%98%AF%E4%B8%80%E4%B8%AA%E5%AE%B9%E5%99%A8%E5%9B%A0%E4%B8%BA%E5%AD%90%E5%AE%B9%E5%99%A8%E6%B5%AE%E5%8A%A8%E8%80%8C%E9%AB%98%E5%BA%A6%E5%A1%8C%E9%99%B7%E3%80%82"><span class="nav-number">1.4.5.</span> <span class="nav-text">联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Float%E5%B8%83%E5%B1%80"><span class="nav-number">1.5.</span> <span class="nav-text">Float布局</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A3%E6%9D%AF%E5%B8%83%E5%B1%80"><span class="nav-number">1.5.1.</span> <span class="nav-text">圣杯布局</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%8C%E9%A3%9E%E7%BF%BC%E5%B8%83%E5%B1%80"><span class="nav-number">1.5.2.</span> <span class="nav-text">双飞翼布局</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E7%94%A8"><span class="nav-number">1.5.3.</span> <span class="nav-text">为什么用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E7%94%A8%E4%BA%8Epc"><span class="nav-number">1.5.4.</span> <span class="nav-text">主要用于pc</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B8%85%E9%99%A4%E6%B5%AE%E5%8A%A8"><span class="nav-number">1.6.</span> <span class="nav-text">清除浮动</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%81%94%E6%83%B3%EF%BC%9Aclear-%E6%B8%85%E9%99%A4"><span class="nav-number">1.6.1.</span> <span class="nav-text">联想：clear(清除)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#clear-both-%E9%A2%9D%E5%A4%96%E6%A0%87%E7%AD%BE%E6%B3%95%EF%BC%9A%E5%B0%B1%E6%98%AF%E7%BB%99%E6%9C%80%E5%90%8E%E4%B8%80%E4%B8%AA%E6%B5%AE%E5%8A%A8%E5%85%83%E7%B4%A0%E5%90%8E%E6%B7%BB%E5%8A%A0%E9%A2%9D%E5%A4%96%E7%9A%84%E6%A0%87%E7%AD%BE%EF%BC%8C%E7%84%B6%E5%90%8E%E5%86%8D%E5%8E%BBclear-both"><span class="nav-number">1.6.2.</span> <span class="nav-text">clear:both 额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear:both</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#overflow-hidden"><span class="nav-number">1.6.3.</span> <span class="nav-text">overflow:hidden</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#clear-fix"><span class="nav-number">1.6.4.</span> <span class="nav-text">clear:fix</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#flex"><span class="nav-number">1.7.</span> <span class="nav-text">flex</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%93%AA%E4%BA%9B%E5%B1%9E%E6%80%A7"><span class="nav-number">1.7.1.</span> <span class="nav-text">哪些属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E5%BD%A2%E6%88%90%E5%BC%B9%E6%80%A7%E5%B8%83%E5%B1%80"><span class="nav-number">1.7.2.</span> <span class="nav-text">怎么形成弹性布局</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9E%82%E7%9B%B4%E6%B0%B4%E5%B9%B3%E5%B1%85%E4%B8%AD"><span class="nav-number">1.8.</span> <span class="nav-text">垂直水平居中</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">宋辰星</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">宋辰星</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

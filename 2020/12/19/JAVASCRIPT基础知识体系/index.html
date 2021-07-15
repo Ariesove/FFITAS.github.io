@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ffitas.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="js 基础隐式转换 ‘2’——‘0’ 可以将字符串转换为数字。（减号） ‘2’+ ‘2’可以进行字符串拼接“大数相加”  symbol: 可以用来定义一个绝对唯一的常量，避免命名冲突。就是12let s2 &#x3D; Symbol(&amp;#x27;another symbol&amp;#x27;)let s3 &#x3D; Symbol(&amp;#x27;another symbol&amp;#x27;) 模拟私有变量，就是通过这个定义的属">
+<meta property="og:type" content="article">
+<meta property="og:title" content="javascript 基础">
+<meta property="og:url" content="http://ffitas.github.io/2020/12/19/JAVASCRIPT%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E4%BD%93%E7%B3%BB/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="js 基础隐式转换 ‘2’——‘0’ 可以将字符串转换为数字。（减号） ‘2’+ ‘2’可以进行字符串拼接“大数相加”  symbol: 可以用来定义一个绝对唯一的常量，避免命名冲突。就是12let s2 &#x3D; Symbol(&amp;#x27;another symbol&amp;#x27;)let s3 &#x3D; Symbol(&amp;#x27;another symbol&amp;#x27;) 模拟私有变量，就是通过这个定义的属">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-12-19T01:20:05.000Z">
+<meta property="article:modified_time" content="2021-07-15T07:30:00.451Z">
+<meta property="article:author" content="宋辰星">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://ffitas.github.io/2020/12/19/JAVASCRIPT%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E4%BD%93%E7%B3%BB/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>javascript 基础 | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-首页">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-分类">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://ffitas.github.io/2020/12/19/JAVASCRIPT%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E4%BD%93%E7%B3%BB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="宋辰星">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          javascript 基础
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-12-19 09:20:05" itemprop="dateCreated datePublished" datetime="2020-12-19T09:20:05+08:00">2020-12-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-07-15 15:30:00" itemprop="dateModified" datetime="2021-07-15T15:30:00+08:00">2021-07-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/js%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">js基础</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="js-基础"><a href="#js-基础" class="headerlink" title="js 基础"></a>js 基础</h2><h4 id="隐式转换"><a href="#隐式转换" class="headerlink" title="隐式转换"></a>隐式转换</h4><ol>
+<li>‘2’<strong>——</strong>‘0’ 可以将字符串转换为数字。（减号）</li>
+<li>‘2’+ ‘2’可以进行字符串拼接<a href="siyuan://blocks/20210111162709-1bwitvs">“大数相加”</a></li>
+</ol>
+<h4 id="symbol"><a href="#symbol" class="headerlink" title="symbol:"></a>symbol:</h4><ol>
+<li>可以用来定义一个绝对唯一的常量，避免命名冲突。就是<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">let s2 = Symbol(&#x27;another symbol&#x27;)</span><br><span class="line">let s3 = Symbol(&#x27;another symbol&#x27;)</span><br></pre></td></tr></table></figure></li>
+<li>模拟私有变量，就是通过这个定义的属性是私有的，类似于之前通过立即执行函数，来实现的一个私有变量((20210228094815-czyjstw “闭包是如何来实现这个私有变量的”))。</li>
+</ol>
+<h3 id="如何来区分数据类型"><a href="#如何来区分数据类型" class="headerlink" title="如何来区分数据类型"></a>如何来区分数据类型</h3><p><a target="_blank" rel="noopener" href="https://www.jb51.net/article/99698.htm">typeof instance of</a>。</p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/89238840">数据类型参考</a>。</p>
+<ol>
+<li>看到这个类型（type）就联想到了这个，类型。type of instanceof</li>
+<li>typeof  弊端就是只能区分简单类型的数据，对于复杂数据数组和对象都是 object 然后 typeof null= ‘<strong>object</strong>‘  (lao 老人)type of <strong>NaN</strong> = ‘<strong>number</strong>‘ (nn)。</li>
+<li>instance of 就是对于 基本数据类型无法判断，并且只能判断无法返回具体的数据类型。//<a target="_blank" rel="noopener" href="https://www.imooc.com/article/69870">instanceof 弊端</a>。它不能返回具体的数据类型。</li>
+<li><strong>Object</strong>.prototype.<strong>tostring.call(1)</strong> // [ <strong>o</strong>bject <strong>N</strong>umber ]//更完美。</li>
+<li>补充 Object.prototype.<strong>tostring.call(1)<strong>原理：其实 Array, Boolean 也有一个 toString 方法，但是这个仅是转为字符串的,Object 上的 tostring 才是能够真正返回数据类型的，</strong>易错</strong>：不是 Array 上的，我第一次记得是 Array 原型上的不对是顶层 Object 的方法，Array 类上的方法是改写过的，搞错了。<a target="_blank" rel="noopener" href="https://blog.csdn.net/hanyanshuo/article/details/104620122">Object.propotype.tostring.call</a></li>
+<li>对于数组还可以用 **Array.isArray()**判断是否是一个数组。</li>
+<li>如何来判断这个引用类型–》数组或是对象，就是通过这个 instance of，object.prototype.toString.call().来判断</li>
+</ol>
+<h3 id="valueof-和-toString"><a href="#valueof-和-toString" class="headerlink" title="valueof 和 toString"></a>valueof 和 toString</h3><ol>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/7cb41d109b7e">valueof 和 tostring 区别</a>.</li>
+<li>value of 对于 Number string Boolean 显示其值，其它都是自身</li>
+<li>tostring 除过这个 object {} 等为其类型，其它均为值，比如这个[].tostring=== ‘ ‘.</li>
+<li>对待 隐式转换牵扯 布尔值的 首先需要：将布尔值转为 0/1  之后对另一个值调用 valueof()  之后再去调用 tostring() 花括号像不像{ }  显示为本身 之后 再去调用这个 number() 转为值这样 最终再去比较。</li>
+</ol>
+<h3 id="类数组"><a href="#类数组" class="headerlink" title="类数组"></a>类数组</h3><ol>
+<li><p>具有数组的长度，但是没有数组的方法，比如通过这个 queryselectAll  在调用 <code>getElementsByTagName</code> 和 <code>document.childNodes</code> 方法时，它们返回的 <code>NodeList</code> 对象都属于伪数组。返回的是一个类数组，通过调用 new set() 所形成的也是一个类数组</p>
+<h4 id="问题是怎么来转换这个数组，主要通过这个：slice-call-方法的补充。"><a href="#问题是怎么来转换这个数组，主要通过这个：slice-call-方法的补充。" class="headerlink" title="问题是怎么来转换这个数组，主要通过这个：slice.call 方法的补充。"></a>问题是怎么来转换这个数组，主要通过这个：<a target="_blank" rel="noopener" href="https://www.imooc.com/article/281593">slice.call 方法的补充</a>。</h4><p>1：**Array.from()**。<br>2: <strong>Array.prototype.slice.call(类数组)</strong>//就是首先 slice 会返回一个数组，然后 call 调用这个方法，然后改变 slice 里的 this,将其替换为类数组。</p>
+</li>
+</ol>
+<h3 id="requetAnimationFrame-js-动画"><a href="#requetAnimationFrame-js-动画" class="headerlink" title="requetAnimationFrame-js 动画"></a>requetAnimationFrame-js 动画</h3><ol>
+<li>这个是 js 动画用的，就是来控制动画的更新频率为 60hz/s,</li>
+<li>settimeout 是手动来控制的而 raf 是浏览器自动控制的</li>
+<li>浏览器如果切换到后台了，那么 raf 会停止，而 settimeout 会继续执行。<strong>节省资源</strong></li>
+<li>而且用 settimeout 还得算时间.</li>
+<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1633898">在页面渲染前再取调用 requetAnimationFrame</a>.</li>
+<li>我们来分析一下，为什么要在重新渲染前去调用？因为 <code>rAF</code> 是官方推荐的用来做一些流畅动画所应该使用的 API，做<strong>动画不可避免的会去更改 DOM，</strong>而如果在渲染之后再去更改 DOM，那就只能等到下一轮渲染机会的时候才能去绘制出来了，这显然是不合理的。<br><code>rAF</code> 在浏览器决定渲染之前给你最后一个机会去改变 DOM 属性，然后很快在接下来的绘制中帮你呈现出来，所以这是做流畅动画的不二选择。下面我用一个 <code>setTimeout</code> 的例子来对比。</li>
+<li>这样记忆。就是 <strong>r—&gt; 渲染</strong>前去调用，所以，就是渲染后调用，又会触发 dom 的更新，就白渲染了。</li>
+</ol>
+<h3 id="模块规范（commonJS、es6-、AMD、CMD）"><a href="#模块规范（commonJS、es6-、AMD、CMD）" class="headerlink" title="模块规范（commonJS、es6 、AMD、CMD）"></a>模块规范（commonJS、es6 、AMD、CMD）</h3><ol>
+<li><a target="_blank" rel="noopener" href="https://coding.imooc.com/lesson/320.html#mid=38779">commonjs 和 es6 之间的区别</a>。<a target="_blank" rel="noopener" href="https://www.cnblogs.com/chenwenhao/p/12153332.html">AMD CMD 区别</a><br>1。 <strong>联想</strong>记忆（看到这个 commonjs,就想这个<strong>来</strong>，此处联想自己的项目，就是<strong>执行</strong>时，才引入，而 es6 module ,就是执行代码逻辑上应该是，<strong>先编译</strong>，后执行，所以 commonjs 是执行，时引入，那 es6 就是编译时引入，然后 <strong>c</strong>md 也是，执行时加载依赖，amd 是提前加载依赖）,ES6 是支持这个异步的，（e 异步）<br>2：后端： commonjs 是执行时引入，而这个 ES6Module 是这个静态时引入编译时引用，自己理解就是，es6 比如我 vue3 的项目中全部都用的是 es6 映入放在 script 标签的最外部，如果在使用的时候再去用会报错，编译阶段就要引入完成，而不是等执行 js 语句的时候再去引用了，然后这个 commonjs 就是动态，按需用， 哪里需要再引用。<br>3 ：就是这个 path.resolve 取绝对路径,webpack entry 就是要用到这个绝对路径，join 就是这个相对路径</li>
+<li>但是 commonjs 是同步的，如果网络请求出现了阻塞那么就会导致这个页面阻塞，所以运用这个 CMD 和 AMD （addvance)，就是 提前定义加载所有依赖，CMD 是需要时再加载依赖.</li>
+<li>你觉得 CommonJS 为什么不能做 Tree-Shaking ?,就是 Webpack 打包阶段还没有</li>
+<li><strong>A</strong>MD | 速度快 | 会浪费资源 | <strong>预先加载</strong>所有的依赖，直到使用的时候才执行<br><strong>C</strong>MD | 只有真正需要才加载依赖 | 性能较差 | 直到<strong>使用</strong>的时候才定义依赖。</li>
+<li>```js<ul>
+<li>‘123’ = 123<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">6. 特点：最终结果一定是一个数字类型。</span><br><span class="line"></span><br><span class="line">[相关参考链接](https://www.imooc.com/article/281312)</span><br><span class="line"></span><br><span class="line">### 跨域</span><br><span class="line"></span><br><span class="line">有 JSONP 进行跨域。</span><br><span class="line"></span><br><span class="line">**误区**：跨域是浏览器的限制，其实在**服务端**这里，或者说服务端之间压根就没有同源限制的问题。所以，服务端这里应该是有自己得处理方式。</span><br><span class="line"></span><br><span class="line">nginx 进行跨域。//其实本质就是现在把两个域同一到一个域上了， 自然就可以实现跨域了</span><br><span class="line"></span><br><span class="line">#### CORS 跨域</span><br><span class="line"></span><br><span class="line">* CORS 中，如果没有响应头，那么数据会返回吗 --不会，为什么，因为只有返回 Access-control-allow-orgin</span><br><span class="line"></span><br><span class="line">- CORS 中，options 会发起几次</span><br><span class="line"></span><br><span class="line">* CORS 设置 cookie 的请求头是什么？</span><br><span class="line"></span><br><span class="line">[跨域知识.emmx](assets/Ajax-20210326113411-cmq3puv.emmx)</span><br><span class="line"></span><br><span class="line">### 数组方法</span><br><span class="line"></span><br><span class="line">#### weakmap weakset</span><br><span class="line"></span><br><span class="line">1. [weakmap weakset](https://mp.weixin.qq.com/s?__biz=MzA4Nzg0MDM5Nw==&amp;mid=2247492665&amp;idx=2&amp;sn=67d9d9aa7b626255c758d25d6da9bb09&amp;chksm=9031e7dba7466ecdf40e506b256a67fc6c7d548162949411ac2031cc530cb48f1755f278a90b&amp;mpshare=1&amp;scene=23&amp;srcid=0301OFYj4hmtGCIMJ6MwQZc5&amp;sharer_sharetime=1614568505112&amp;sharer_shareid=5c4cb3b03822fd6d2d2de99001875f93#rd).</span><br><span class="line">2. 首先联想这个 weak 是弱的意思，弱应用，就是键是弱引用类型，具体来讲就是一旦这个引用断开，或者说改变了地址的时候就会去销毁这个 value 值，再具体，点就是 key=null;key=new Array() 这样就可以，让 v8 引擎判断这个键值对可以销毁了。防止内存泄漏。//不是特别的理解 ❓。 （叙述的思路就是，弱应用的键，一旦断开或着改变，就会被自动回收。）</span><br><span class="line">3. join(&#x27;&amp;&#x27;)//[&quot;&#123;&#123;.text&#125;&#125;&quot;](siyuan://blocks/20210118233627-4bsg5lo)</span><br><span class="line"></span><br><span class="line">   &gt; ###### 1.join()</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; `join()` 方法用于把数组中的所有元素转换一个字符串。</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; 元素是通过指定的分隔符进行分隔的。默认使用逗号作为分隔符</span><br><span class="line">   &gt;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>var arr = [1,2,3];<br>console.log(arr.join());   // 1,2,3<br>console.log(arr.join(“-“));   // 1-2-3<br>console.log(arr);   // [1, 2, 3]（原数组不变）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">通过 **join()方法可以实现重复字符串** ，只需传入字符串以及重复的次数，就能返回重复后的字符串，函数如下：</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>function repeatString(str, n) {<br>//一个长度为n+1的空数组用string去拼接成字符串,就成了n个string的重复<br> return new Array(n + 1).join(str);<br>}<br>console.log(repeatString(“abc”, 3));   // abcabcabc<br>console.log(repeatString(“Hi”, 5));   // HiHiHiHiHi</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">  .就是将数组转换为字符串。里面的元素并以参数相隔开。[&quot;&#123;&#123;.text&#125;&#125;&quot;](siyuan://blocks/20210130225956-l66vn5n)</span><br><span class="line"></span><br><span class="line">### 手写 JSONP 的实现</span><br><span class="line"></span><br><span class="line">### 思路</span><br><span class="line"></span><br><span class="line">**编码记忆**：这个题怎么样，去编码记忆，首先这个 js 就是 **script**，**o** 就是 window,p 就是 **params.**以及 **push** 这样简化记忆量</span><br><span class="line"></span><br><span class="line">1. 就是由于这个是一个异步的请求，所以需要用这个 promise,来做；</span><br><span class="line">2. ...解构的应用： 与对象去使用就是在将里面所有可遍历的属性，进行拷贝。</span><br><span class="line">3. for in 用来循环对象的属性的  let key  for   in  object; key 就是对象里面的键；</span><br><span class="line">4. join 的用法就是说这个，将里面的值以什么来分割。</span><br><span class="line">5. 这个方法的弊端.</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>   function JSONP({ url, params, callback }) {</p>
+<pre><code> return new Promise((resolve, reject) =&gt; &#123;
+   let script = document.createElement(&#39;script&#39;)
+   window[callback] = function (data) &#123;
+     resolve(data)
+     document.body.removeChild(script)//就是类似于我在做哪个全局loading组件的时候用到的添加节点就是往这个body里添加。
+
+   &#125;
+   let arr = []
+   params = &#123; ...params, callback &#125; // a=1&amp;callback=s
+   for (let key in params) &#123;
+     arr.push(`$&#123;key&#125;=$&#123;params[key]&#125;`)
+   &#125;
+   script.src = `$&#123;url&#125;?$&#123;arr.join(&#39;&amp;&#39;)&#125;`
+   document.appendChild(script)
+
+ &#125;)
+</code></pre>
+<p>   }</p>
+<p>   JSONP({</p>
+<pre><code> url: &#39;https://loacl:2000&#39;,
+ params: &#123; a: 1 &#125;,
+ callback: &#39;s&#39;
+</code></pre>
+<p>   }<br>   ).then(data =&gt; {</p>
+<pre><code> console.log(data);
+</code></pre>
+<p>   })</p>
+   <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">  .中用到了这个方法。</span><br><span class="line">4. **set**: 就是集合，没有重复的元素，只要往里通过.add() 方法去添加元素。//并且 set 所返回的集合是一个((20210301093600-q2nch5q &quot;类数组&quot;))。所以需要转为真正的数组。((20210301093600-q2nch5q &quot;类数组转换&quot;))。</span><br><span class="line">5. push / **unshift** 这个 API 就是 push 的反向操作首先应该联想到这个 ushift.</span><br><span class="line">6. every:就是执行回调针对每一个元素，并且都通过，回调函数里的条件</span><br><span class="line">7. slice 和 splice 的区别： 就是，slice 是截取数组，**并不修改原数组**，splice，更像是拿刀看断数组，splice(2,3)从第二个元素开始，移除多个元素，并返回包含移除元素的数组。修改原数组。</span><br><span class="line">8. **split**（&quot; &quot;）将字符串转为数组。slice 是返回某个子区间， splice 是切割数组并返回子区间，也就是说会影响到原来的数组。</span><br><span class="line">9. map 和 for each 的一个区别。</span><br><span class="line"></span><br><span class="line">### 如何来看待 JavaScript</span><br><span class="line"></span><br><span class="line">1. JavaScript 借鉴了很多语言的特性，比如 C 语言的基本语法、**Java 的类型系统和内存管理**、Scheme 的函数作为**一等公民**，还有 **Self 基于原型（prototype）的继承机制**。毫无疑问，JavaScript 是一门非常优秀的语言，特别是“原型继承机制”和“函数是一等公民”这两个设计。JavaScript 的设计思想不过 JavaScript 也是一门处处是坑的语言，由于历史原因，很多错误的或者不合理的设计都被延续至今，比如使用 **new 加构造函数**来创建对象，这种方式的背后隐藏了太多的细节，非常容易增加代码出错概率，而且也大大增加了新手的学习成本；再比如初期的 JavaScript 没有块级作用域机制，使得 JavaScript 需要采取变量提升的策略，而变量提升又是非常反人性的设计。还有就是**不太适合大型项目，因为项目中变量类型错误的情况**，**动态类型**，执行时才检测数据类型的问题，所以才产生了 ts 尤其是接口的概念，减少了数据类型的问题。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">### NaN</span><br><span class="line"></span><br><span class="line">#### Number.isNaN() / IsNaN</span><br><span class="line"></span><br><span class="line">[isnan 链接参考](https://blog.csdn.net/weixin_33901641/article/details/91476575)。</span><br><span class="line"></span><br><span class="line">1. 为什么引入： NAN!==NAN 我没有办法去判断一个数值是不是 NAn</span><br><span class="line">2. 易错点就是说这个是判断不是数字的变为 true,是数字的为 false.</span><br><span class="line">3. isNan :原理是转换为数值类型(isNan)，然后再去判断是否为 NAN，**不能转换为数值型的都为 NAN**,所以对于这个，‘**aa’字符串也是一个 NAN **对于 undefined 由于也能转为这个 NAN,所以**不精确。**（联想记忆：s（is you 是你吗，数值，））</span><br><span class="line">4. Number.NaN() 不转类型，严格判断 NAN 类型，是 NAN 的那就为 true，其它都为 false.</span><br><span class="line"></span><br><span class="line">### js 栈和堆</span><br><span class="line"></span><br><span class="line">个人理解就是**简单**数据类型，都放在**栈**中，**复杂数**据类型对象的地址存放在栈中，在**堆中存储这个对象的值。**</span><br><span class="line"></span><br><span class="line">1. 如果是 **let a=1  a=&#x27;scx&#x27;** 对于简单数据类型的仅重新赋值，不会去开辟空间。</span><br><span class="line">2. **谁块**：栈块，因为栈先进后出的数据结构更加的简单，栈是编译时系统自动分配空间（也可以理解为栈的弊端），而堆是**动态分配**（运行时分配空间），所以栈的速度快。并且每次访问用类型数据都是先访问栈里的对象的引用，然后再去找堆里的对象。所以步骤多了，慢。</span><br><span class="line">3. 堆更大——联系进程--》[&quot;堆和栈与进程和线程的关系&quot;](siyuan://blocks/20210311213115-9fsgiey)</span><br><span class="line"></span><br><span class="line">### 线程之间哪些资源共享，哪些不共享</span><br><span class="line"></span><br><span class="line">1 .标识线程的线程 ID，栈空间是私有的的，堆空间是共享的，**全局变量**是共享的。由于线程相当于一个函数，那你想想，不同函数之间是不是在共享了全局的作用域。</span><br><span class="line"></span><br><span class="line">2. **栈：** 是个线程**独有**的，保存其运行状态和局部自动变量的。</span><br><span class="line">3. 堆   由于**堆**是在进程空间中开辟出来的，所以它是理所当然地被**共享**的。</span><br><span class="line">4. 那也就是说堆更大，因为线程是在进程上的，所以堆更大。((20210228115154-v6pcd1u &quot;栈和堆与进程之间的联系&quot;))。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  #### **js 数组为什么不需要去分配固定的空间**</span><br><span class="line"></span><br><span class="line">  1. [v8 如何来实现这个 js 的数组](https://juejin.cn/post/6844903943638794248#heading-12)。</span><br><span class="line">  2. js 里的**数组**是一个特殊的**对象**，为什么数组长度可变，为什么这个数组可以存储多个类型数据，因为是一个对象。**快数组**是一种线性的存储方式。新创建的空数组，默认的存储方式是快数组，快数组**长度是可变**的，可以根据元素的增加和删除来动态调整存储空间大小，内部是通过扩容和收缩机制实现，**慢数组**是用类似**哈希表**的形式创建的。</span><br><span class="line">  3. 如果 v8 引擎发现数组内部出现了大量空洞，就是比如 arr=[1,3] arr[1222]=1 ,那就转为慢数组，因为不需要去申请大量连续空间，但是是以一种 hash 表来展示的。</span><br><span class="line">  4. 慢转快；就是这个，js 数组的空洞少的时候就会去转换，这就是为什么 js 不需要分配固定长度的本质原因。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">### 内存泄漏</span><br><span class="line"></span><br><span class="line">1. 内存泄漏相关问题[内存泄漏问题](https://www.imooc.com/read/70/article/1616)。</span><br><span class="line">  1. 对于那些 ```</span><br></pre></td></tr></table></figure>
+<p>function neicun (){<br> a=1<br>}<br>//在js中如果没有声明直接赋值，会将这个变量提至全局对象，那gcroot不就可以访问到了吗，自然也没办法清除了</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ol>
+<pre><code>  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">2. 定时器忘清除了，那也就是说这个防抖和节流，如果不注意清除定时器，这就会导致内存泄漏的问题了。</span><br><span class="line"></span><br><span class="line">### 10. null 和 undefined 的区别是什么</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+</code></pre>
+<p>console.log(null==undefined)//true//注意这个是双等号，就是隐式转换了</p>
+<p>console.log(null===undefined)//false</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">`null`： Null 类型，代表“空值”，代表一个空对象指针</span><br><span class="line"></span><br><span class="line">`undefined`： Undefined 类型，当一个声明了一个变量未初始化时，得到的是 undefined</span><br><span class="line"></span><br><span class="line">undefined 表示“缺少值”，此处应该有一个值，但是还没有定义。</span><br><span class="line"></span><br><span class="line">![](assets/20210301221950-o93v758.png)</span><br><span class="line"></span><br><span class="line">null 表示“没有对象”，该处不应该有值。</span><br><span class="line"></span><br><span class="line">![](assets/20210301221950-sc04w69.png)</span><br><span class="line"></span><br><span class="line">### 遍历 for of for in</span><br><span class="line"></span><br><span class="line">1. for in 遍历的是键，也就是索引号，而且会遍历继承的属性，一般会配合 hasOwnPropoty,来去除从原型链上继承的属性，有的对象里的值会继承至原型链上的，比如 obj =&#123;a:1&#125;,Object.propotype.b=1,obj.b=1,这样不就不是自身的吗。//[hasOwnProperty](https://blog.csdn.net/weixin_33682790/article/details/91479156).</span><br><span class="line">2. 所以这个联系[&quot;深拷贝&quot;](siyuan://blocks/20210306094012-ly4dgoq)</span><br><span class="line"></span><br><span class="line">   &gt; ### 思想</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; 1. 复盘第一次判断传入参数是不是一个对象造成了混乱，应该是判断不是一个数组或对象，并且对象为空，我当时还用了 type of 判断空，其实不对，应该是直接参数等于 Null 就行，typeof 还得为一个 object ,之后用 instance of 来判断这个元素是不是这个数组，对象，做对应的处理，并且这里要用到这个递归，为什么，因为对象里面有可能去嵌套一个对象， 那么递归式，先去处理第一层的逻辑，就是直接赋值，如果还有值，那就重复逻辑，给它套一个递归，这样它就可以去继续判断里面的对象。</span><br><span class="line">   &gt; 2. 我还卡在了 这个 **for in** 循环上其实这个不管是数组，还是对象都可以用到这个，并且遍历的是键，也就是索引值，并且要配合这个 hasOwnPropoty 来剔除从原型链上继承的属性。</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; ### 深浅拷贝的区别</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; 1. 如果数组元素是**基本类型**，就会拷贝一份，互不影响，而如果是**对象或数组**，就会只拷</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; 贝对象和数组的引用，这样我们无论在新旧数组进行了修改，两者都会发生变化，我们</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; 把这种复制引用的拷贝方法称为浅拷贝，（补充：引用类型： 你可以理解为地址，就是对于对象复制的是引用，这样你修改值的话，就会通过引用，去修改堆中的内存）</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; 深拷贝就是指完全的拷贝一个对象，即使嵌套了对象，两者也互相分离，修改一个对象</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; 的属性，不会影响另一个。</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; ``` js</span><br><span class="line">   &gt; a = &#123;</span><br><span class="line">   &gt;   a: 1,</span><br><span class="line">   &gt;   b: &#123;</span><br><span class="line">   &gt;     a: 1</span><br><span class="line">   &gt;   &#125;</span><br><span class="line">   &gt; &#125;</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; function deepclone(obj) &#123;</span><br><span class="line">   &gt;</span><br><span class="line">   &gt;   if (obj !== null &amp;&amp; typeof obj !== &#x27;object&#x27;) &#123;</span><br><span class="line">   &gt;     throw new TypeError(&#x27;必须是数组或对象，并且不能为空&#x27;)</span><br><span class="line">   &gt;</span><br><span class="line">   &gt;   &#125;</span><br><span class="line">   &gt;   let res = []</span><br><span class="line">   &gt;   if (obj instanceof Array) &#123;</span><br><span class="line">   &gt;     res = []</span><br><span class="line">   &gt;   &#125; else &#123;</span><br><span class="line">   &gt;     res = &#123;&#125;</span><br><span class="line">   &gt;   &#125;</span><br><span class="line">   &gt;   for (key in obj) &#123;</span><br><span class="line">   &gt;     if (obj.hasOwnPropoty(obj[key])) &#123;</span><br><span class="line">   &gt;       continue</span><br><span class="line">   &gt;     &#125;</span><br><span class="line">   &gt;     res[key] = deepclone(obj[key]) //对于这个递归的逻辑还是不清楚</span><br><span class="line">   &gt;   &#125;</span><br><span class="line">   &gt;   return res</span><br><span class="line">   &gt;</span><br><span class="line">   &gt; &#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">deepCopy</span>(<span class="params">obj, cache = <span class="keyword">new</span> <span class="built_in">WeakMap</span>()</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (!obj <span class="keyword">instanceof</span> <span class="built_in">Object</span>) <span class="keyword">return</span> obj</span><br><span class="line">  <span class="comment">// 防止循环引用   if (cache.get(obj)) return cache.get(obj)</span></span><br><span class="line">  <span class="comment">// 支持函数   if (obj instanceof Function) &#123;</span></span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      obj.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 支持日期   if (obj instanceof Date) return new Date(obj)</span></span><br><span class="line">  <span class="comment">// 支持正则对象   if (obj instanceof RegExp) return new RegExp(obj.source, obj.flags)</span></span><br><span class="line">  <span class="comment">// 还可以增加其他对象，比如：Map, Set等，根据情况判断增加即可，面试点到为止就可以了 </span></span><br><span class="line">  <span class="comment">// 数组是 key 为数字素银的特殊对象   const res = Array.isArray(obj) ? [] : &#123;&#125;</span></span><br><span class="line">  <span class="comment">// 缓存 copy 的对象，用于处理循环引用的情况   cache.set(obj, res)</span></span><br><span class="line"></span><br><span class="line">  <span class="built_in">Object</span>.keys(obj).forEach(<span class="function">(<span class="params">key</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (obj[key] <span class="keyword">instanceof</span> <span class="built_in">Object</span>) &#123;</span><br><span class="line">      res[key] = deepCopy(obj[key], cache)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      res[key] = obj[key]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 测试 const source = &#123;</span></span><br><span class="line">  <span class="attr">name</span>: <span class="string">&#x27;Jack&#x27;</span>,</span><br><span class="line">  <span class="attr">meta</span>: &#123;</span><br><span class="line">    <span class="attr">age</span>: <span class="number">12</span>,</span><br><span class="line">    <span class="attr">birth</span>: <span class="keyword">new</span> <span class="built_in">Date</span>(<span class="string">&#x27;1997-10-10&#x27;</span>),</span><br><span class="line">    <span class="attr">ary</span>: [<span class="number">1</span>, <span class="number">2</span>, &#123; <span class="attr">a</span>: <span class="number">1</span> &#125;],</span><br><span class="line">    <span class="function"><span class="title">say</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">      <span class="built_in">console</span>.log(<span class="string">&#x27;Hello&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">source.source = source</span><br><span class="line"><span class="keyword">const</span> newObj = deepCopy(source)</span><br><span class="line"><span class="built_in">console</span>.log(newObj.meta.ary[<span class="number">2</span>] === source.meta.ary[<span class="number">2</span>]); </span><br></pre></td></tr></table></figure>
+
+</blockquote>
+<p>   。<br>3. <a target="_blank" rel="noopener" href="https://blog.csdn.net/w390058785/article/details/80522383">for of 和 for in</a>.<br>4. 那你觉得 foreach 和 for of 两个效率如何？为什么？</p>
+<h3 id="es6"><a href="#es6" class="headerlink" title="es6"></a>es6</h3><h4 id="…-运算符号"><a href="#…-运算符号" class="headerlink" title="… 运算符号"></a>… 运算符号</h4><ol>
+<li>… 第一个作用可以将数组转换为 …[1,2]= 1,2 ;写 bind 扁平化迭代实现。</li>
+<li>正因为这个特点，可以去重一层数组.</li>
+<li>还可以去拷贝一份数组，就是在迭代中实现数组扁平化中用到</li>
+<li>还可以去合并两个数组 […arr1,…arr2]。</li>
+</ol>
+<h4 id="let-const-var"><a href="#let-const-var" class="headerlink" title="let const var"></a>let const var</h4><ol>
+<li>这个看到 var 就想到了变量提升—》那就是说这个全局执行上下文的创建阶段和执行阶段两者<strong>不同步</strong>。</li>
+<li>而 let const 就是让两者时机同步了</li>
+<li>同时，let const 有了作用域的概念就是说—》同时有了<strong>暂时性死区</strong>，避免在定义之前去使用这个变量。</li>
+<li>const 的理解就是，它是一开始就确定了它的地址，也就意味着，你可以去改变引用所指向的值，但是你无法去改变它的地址，无法去覆盖，const arr=[1,2,4,]  arr=[2] ,这个会改变这个变量的地址所以不可以。</li>
+</ol>
+<h3 id="和-区别"><a href="#和-区别" class="headerlink" title="==  和===区别"></a>==  和===区别</h3><ol>
+<li><pre><code>a=&#123;a:1&#125;
+b=&#123;b:1&#125;
+</code></pre>
+</li>
+</ol>
+<p>a==b a===b  都是 false</p>
+<h3 id="window-onload-和-window-Domcontentloaded"><a href="#window-onload-和-window-Domcontentloaded" class="headerlink" title="window.onload 和 window.Domcontentloaded"></a>window.onload 和 window.<strong>Dom</strong>contentloaded</h3><ol>
+<li>其实主要区别就是 onload 事件触发时，所有资源加载完毕。</li>
+<li>而 <strong>dom</strong>content 故名思意其实就时，仅 <strong>dom</strong> 构建完毕就可以去执行了。</li>
+</ol>
+<h2 id="易混淆知识点"><a href="#易混淆知识点" class="headerlink" title="易混淆知识点"></a>易混淆知识点</h2><ol>
+<li>return ：直接跳出当前的方法,返回到该调用的方法的语句处,继续执行,在循环的语句中是去，直接返回了外部的函数。</li>
+<li>break：在循环体内结束整个循环过程</li>
+<li>continue ：结束本次的循环，直接进行下一次的循环.</li>
+</ol>
+<h3 id="let-const-var-区别"><a href="#let-const-var-区别" class="headerlink" title="let const var 区别"></a>let const var 区别</h3><ol>
+<li>const arr = [1,2,3]<br>arr.push(4);//可以<br>arr.splice(1);。//可以<br>arr[1] = 3;//可以<br>arr = [1,2,3];//改地址，不可以<br>arr = [2,3];//改地址，不可以</li>
+<li>谁可以满足允许// const.</li>
+<li>const 基础数据类型不可以修改，复杂数据类型，是可以修改的，主要通过找对应得应用所指向得地址，然后修改堆中的数据.</li>
+<li>本质是应用类型是可以更改，但是<strong>不可以改</strong>变地址，也就是说不可以去重新赋值，这样会改变它的地址。const <strong>地址</strong>一定是从一开始就<strong>确定</strong>的。</li>
+</ol>
+<h3 id="位数"><a href="#位数" class="headerlink" title="位数"></a>位数</h3><ol>
+<li>32 位和 64 位意思是处理器一次能处理的最大位数。</li>
+</ol>
+<h3 id="箭头函数"><a href="#箭头函数" class="headerlink" title="箭头函数"></a>箭头函数</h3><ol>
+<li>首先它的 this 指向，不会被更改，为什么不会被更改，原因就在于，始终继承于外部的代码块。自生是没有这个 this 的，所以</li>
+<li>没有原型对象，类比普通函数，它有 prototype 指向了它的原型对象，但是箭头函数压根就没有这个原型对象。</li>
+<li>它自生其实是没有这个 arguements 的，可以利用这个…rest（<strong>剩余</strong>运算符）参数做替代，其实原理就是你调用箭头函数然后去传递参数的时候，将其展开，然后再去，收集。</li>
+<li>首先这个思维的路径就是，由箭头联想这个 this,然后由函数想这个原型。</li>
+</ol>
+<hr>
+<ol>
+<li><strong>打桩记忆</strong>： 箭头      函数。</li>
+<li><strong>箭头</strong>—》thi<strong>s</strong> 指向—》 arguement<strong>s</strong>—-&gt; 怎么替代，re<strong>s</strong>t 剩余参数（sss）.</li>
+<li>由<strong>函数</strong>想到  函数的原型对象，它是不具备的。–》自然也没有办法用 new.）为什么不能用 New ，没有 this.无法指向实例化的对象，并且没有办法使实例化的隐式原型对象指向这个箭头函数原型对象，因为压根就没有）。</li>
+<li>补充：可以用 apply,bind,call,吗可以用，但是 this，不会被更改，因为压根自生就没有 this.</li>
+</ol>
+<h3 id="0-1-0-2-0-3"><a href="#0-1-0-2-0-3" class="headerlink" title="0.1 + 0.2 !=0.3"></a>0.1 + 0.2 !=0.3</h3><ol>
+<li><strong>由 3 看着像不像 ，镜像 E</strong> 想到了，IEEE754(你们三个人气死我了)，js 采取了其中的 64 位双精度，由于小数，转二进制有无限循环位，而 64 位又由这个 1 位符号位，11 位指数位，52 位的有效位，无法容纳无限循环的小数。</li>
+<li>怎么解决，通过这个 parseFloat(a.toFixed(4)) tofixed 是为一个字符串，所以通过 parsefloat 转为数字。</li>
+<li>其实从这里看出，其 js 最大整数的范围将是这个，-2^53 — 2 ^53  ,从这个角度来讲不适合大数运算，引出了 Big int 就是对于超出限制的大数，也可以正常存储。</li>
+<li>解释一下二进制浮点数运算过程。</li>
+</ol>
+<h3 id="addEventlistener-和-onclick-的区别"><a href="#addEventlistener-和-onclick-的区别" class="headerlink" title="addEventlistener 和 onclick 的区别"></a>addEventlistener 和 onclick 的区别</h3><ol>
+<li>由 on 想到了 one 0–&gt; 唯一，同一对象，绑定多次，会覆盖也就是说只执行一次。</li>
+<li>但是 addEventListener 可以绑定多个事件都执行。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/15/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6/" rel="prev" title="垃圾回收机制">
+      <i class="fa fa-chevron-left"></i> 垃圾回收机制
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/12/19/http(%E4%BA%8C%E6%AC%A1%E5%A4%8D%E7%9B%98%EF%BC%89/" rel="next" title="HTTP">
+      HTTP <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#js-%E5%9F%BA%E7%A1%80"><span class="nav-number">1.</span> <span class="nav-text">js 基础</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9A%90%E5%BC%8F%E8%BD%AC%E6%8D%A2"><span class="nav-number">1.0.1.</span> <span class="nav-text">隐式转换</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#symbol"><span class="nav-number">1.0.2.</span> <span class="nav-text">symbol:</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%9D%A5%E5%8C%BA%E5%88%86%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.1.</span> <span class="nav-text">如何来区分数据类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#valueof-%E5%92%8C-toString"><span class="nav-number">1.2.</span> <span class="nav-text">valueof 和 toString</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B1%BB%E6%95%B0%E7%BB%84"><span class="nav-number">1.3.</span> <span class="nav-text">类数组</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E6%98%AF%E6%80%8E%E4%B9%88%E6%9D%A5%E8%BD%AC%E6%8D%A2%E8%BF%99%E4%B8%AA%E6%95%B0%E7%BB%84%EF%BC%8C%E4%B8%BB%E8%A6%81%E9%80%9A%E8%BF%87%E8%BF%99%E4%B8%AA%EF%BC%9Aslice-call-%E6%96%B9%E6%B3%95%E7%9A%84%E8%A1%A5%E5%85%85%E3%80%82"><span class="nav-number">1.3.1.</span> <span class="nav-text">问题是怎么来转换这个数组，主要通过这个：slice.call 方法的补充。</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#requetAnimationFrame-js-%E5%8A%A8%E7%94%BB"><span class="nav-number">1.4.</span> <span class="nav-text">requetAnimationFrame-js 动画</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E5%9D%97%E8%A7%84%E8%8C%83%EF%BC%88commonJS%E3%80%81es6-%E3%80%81AMD%E3%80%81CMD%EF%BC%89"><span class="nav-number">1.5.</span> <span class="nav-text">模块规范（commonJS、es6 、AMD、CMD）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#es6"><span class="nav-number">1.6.</span> <span class="nav-text">es6</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E2%80%A6-%E8%BF%90%E7%AE%97%E7%AC%A6%E5%8F%B7"><span class="nav-number">1.6.1.</span> <span class="nav-text">… 运算符号</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#let-const-var"><span class="nav-number">1.6.2.</span> <span class="nav-text">let const var</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%92%8C-%E5%8C%BA%E5%88%AB"><span class="nav-number">1.7.</span> <span class="nav-text">&#x3D;&#x3D;  和&#x3D;&#x3D;&#x3D;区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#window-onload-%E5%92%8C-window-Domcontentloaded"><span class="nav-number">1.8.</span> <span class="nav-text">window.onload 和 window.Domcontentloaded</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%93%E6%B7%B7%E6%B7%86%E7%9F%A5%E8%AF%86%E7%82%B9"><span class="nav-number">2.</span> <span class="nav-text">易混淆知识点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#let-const-var-%E5%8C%BA%E5%88%AB"><span class="nav-number">2.1.</span> <span class="nav-text">let const var 区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%8D%E6%95%B0"><span class="nav-number">2.2.</span> <span class="nav-text">位数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%AD%E5%A4%B4%E5%87%BD%E6%95%B0"><span class="nav-number">2.3.</span> <span class="nav-text">箭头函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#0-1-0-2-0-3"><span class="nav-number">2.4.</span> <span class="nav-text">0.1 + 0.2 !&#x3D;0.3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#addEventlistener-%E5%92%8C-onclick-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">2.5.</span> <span class="nav-text">addEventlistener 和 onclick 的区别</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">宋辰星</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">宋辰星</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ffitas.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="websocket它解决了http是半双工，实现了服务端推送也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的那为了能够实现类似全双工的效果，http做出了哪些努力，轮询 其实就是说，客户端会向服务器不断的发送询问，问是否有新的数据，那么很明显这样做，效率非常的低  长轮询 意思就是说只有对方有数据才会发，每次客户端仅在接受到新数">
+<meta property="og:type" content="article">
+<meta property="og:title" content="websocket">
+<meta property="og:url" content="http://ffitas.github.io/2020/07/19/websocket/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="websocket它解决了http是半双工，实现了服务端推送也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的那为了能够实现类似全双工的效果，http做出了哪些努力，轮询 其实就是说，客户端会向服务器不断的发送询问，问是否有新的数据，那么很明显这样做，效率非常的低  长轮询 意思就是说只有对方有数据才会发，每次客户端仅在接受到新数">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-07-19T06:20:05.000Z">
+<meta property="article:modified_time" content="2021-07-15T07:21:08.684Z">
+<meta property="article:author" content="宋辰星">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://ffitas.github.io/2020/07/19/websocket/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>websocket | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-首页">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-分类">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://ffitas.github.io/2020/07/19/websocket/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="宋辰星">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          websocket
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-07-19 14:20:05" itemprop="dateCreated datePublished" datetime="2020-07-19T14:20:05+08:00">2020-07-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-07-15 15:21:08" itemprop="dateModified" datetime="2021-07-15T15:21:08+08:00">2021-07-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/HTTP/" itemprop="url" rel="index"><span itemprop="name">HTTP</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="websocket"><a href="#websocket" class="headerlink" title="websocket"></a>websocket</h1><h2 id="它解决了http是半双工，实现了服务端推送"><a href="#它解决了http是半双工，实现了服务端推送" class="headerlink" title="它解决了http是半双工，实现了服务端推送"></a>它解决了http是半双工，实现了服务端推送</h2><h3 id="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"><a href="#也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的" class="headerlink" title="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"></a>也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的</h3><h2 id="那为了能够实现类似全双工的效果，http做出了哪些努力，"><a href="#那为了能够实现类似全双工的效果，http做出了哪些努力，" class="headerlink" title="那为了能够实现类似全双工的效果，http做出了哪些努力，"></a>那为了能够实现类似全双工的效果，http做出了哪些努力，</h2><h3 id="轮询"><a href="#轮询" class="headerlink" title="轮询"></a>轮询</h3><ul>
+<li>其实就是说，客户端会向服务器不断的发送询问，问是否有新的数据，那么很明显这样做，效率非常的低</li>
+</ul>
+<h3 id="长轮询"><a href="#长轮询" class="headerlink" title="长轮询"></a>长轮询</h3><ul>
+<li>意思就是说只有对方有数据才会发，每次客户端仅在接受到新数据才会去询问，如果，没有那就不询问了</li>
+</ul>
+<h2 id="那么websocket是怎么来建立连接的（握手）"><a href="#那么websocket是怎么来建立连接的（握手）" class="headerlink" title="那么websocket是怎么来建立连接的（握手）"></a>那么websocket是怎么来建立连接的（握手）</h2><h3 id="其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"><a href="#其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接" class="headerlink" title="其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"></a>其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接</h3><h3 id="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"><a href="#建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了" class="headerlink" title="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"></a>建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了</h3><h2 id="这个协议更多的是对http的一种优化"><a href="#这个协议更多的是对http的一种优化" class="headerlink" title="这个协议更多的是对http的一种优化"></a>这个协议更多的是对http的一种优化</h2><h2 id="二进制帧格式？"><a href="#二进制帧格式？" class="headerlink" title="二进制帧格式？"></a>二进制帧格式？</h2>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/07/12/css/" rel="prev" title="垃圾回收机制">
+      <i class="fa fa-chevron-left"></i> 垃圾回收机制
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/08/19/TCP/" rel="next" title="TCP">
+      TCP <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#websocket"><span class="nav-number">1.</span> <span class="nav-text">websocket</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%83%E8%A7%A3%E5%86%B3%E4%BA%86http%E6%98%AF%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8C%E5%AE%9E%E7%8E%B0%E4%BA%86%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%8E%A8%E9%80%81"><span class="nav-number">1.1.</span> <span class="nav-text">它解决了http是半双工，实现了服务端推送</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B9%9F%E5%B0%B1%E6%98%AF%E8%AF%B4%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%92%8C%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B9%8B%E9%97%B4%E6%97%A0%E6%B3%95%EF%BC%8C%E9%9A%8F%E6%84%8F%E4%BA%92%E7%9B%B8%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE%EF%BC%8C%E5%8F%AA%E8%83%BD%E6%98%AF%E5%AE%A2%E6%88%B7%E7%AB%AF%EF%BC%8C%E5%8F%91%EF%BC%8C%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8E%BB%E6%8E%A5%E5%8F%97%EF%BC%8C%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%97%A0%E6%B3%95%E4%B8%BB%E5%8A%A8%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE%EF%BC%8C%E5%8F%AA%E8%83%BD%E6%98%AF%E8%A2%AB%E5%8A%A8%E7%9A%84"><span class="nav-number">1.1.1.</span> <span class="nav-text">也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%82%A3%E4%B8%BA%E4%BA%86%E8%83%BD%E5%A4%9F%E5%AE%9E%E7%8E%B0%E7%B1%BB%E4%BC%BC%E5%85%A8%E5%8F%8C%E5%B7%A5%E7%9A%84%E6%95%88%E6%9E%9C%EF%BC%8Chttp%E5%81%9A%E5%87%BA%E4%BA%86%E5%93%AA%E4%BA%9B%E5%8A%AA%E5%8A%9B%EF%BC%8C"><span class="nav-number">1.2.</span> <span class="nav-text">那为了能够实现类似全双工的效果，http做出了哪些努力，</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BD%AE%E8%AF%A2"><span class="nav-number">1.2.1.</span> <span class="nav-text">轮询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%95%BF%E8%BD%AE%E8%AF%A2"><span class="nav-number">1.2.2.</span> <span class="nav-text">长轮询</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%82%A3%E4%B9%88websocket%E6%98%AF%E6%80%8E%E4%B9%88%E6%9D%A5%E5%BB%BA%E7%AB%8B%E8%BF%9E%E6%8E%A5%E7%9A%84%EF%BC%88%E6%8F%A1%E6%89%8B%EF%BC%89"><span class="nav-number">1.3.</span> <span class="nav-text">那么websocket是怎么来建立连接的（握手）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E5%AE%9E%E9%A6%96%E5%85%88%E5%88%9D%E5%A7%8B%E6%9C%AC%E8%B4%A8%E5%B0%B1%E6%98%AF%E4%B8%80%E4%B8%AAhttp%E7%9A%84get-%E8%AF%B7%E6%B1%82%EF%BC%88%E4%B9%8B%E6%89%80%E4%BB%A5%E8%BF%99%E6%A0%B7%E5%81%9A%E5%85%B6%E5%AE%9E%E6%98%AF%E4%B8%BA%E4%BA%86%E8%83%BD%E5%A4%9F%EF%BC%8C%E7%BB%95%E8%BF%87%E6%B5%8F%E8%A7%88%E5%99%A8%EF%BC%8C%E9%98%B2%E7%81%AB%E5%A2%99%E7%9A%84%E9%99%90%E5%88%B6%EF%BC%8C%E5%9B%A0%E4%B8%BA%E8%BF%99%E6%A0%B7%E5%81%9A%EF%BC%8C%E4%BD%86%E6%98%AF%E8%BF%99%E9%87%8C%E4%B8%BA%E4%BA%86%E8%83%BD%E5%A4%9F%E5%91%8A%E8%AF%89%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%B6%E5%AE%9E%E5%B9%B6%E4%B8%8D%E6%98%AFhttp%E5%8D%8F%E8%AE%AE%EF%BC%8C%E4%BC%9A%E5%8A%A0%E5%85%A5%E4%B8%A4%E4%B8%AA%E5%AD%97%E6%AE%B5%EF%BC%9A%E5%B9%B6%E4%B8%94%E8%BF%98%E4%BC%9A%E5%8A%A0%E5%85%A5%E4%B8%80%E4%BA%9B%E9%AA%8C%E8%AF%81%E6%B6%88%E6%81%AF%EF%BC%8C%E7%9B%AE%E7%9A%84%E5%B0%B1%E6%98%AF%E4%B8%BA%E4%BA%86%E8%83%BD%E5%A4%9F%E9%98%B2%E6%AD%A2%E8%AF%AF%E8%BF%9E%E6%8E%A5"><span class="nav-number">1.3.1.</span> <span class="nav-text">其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BB%BA%E7%AB%8B%E4%BA%86%E8%BF%9E%E6%8E%A5%EF%BC%8C%E5%B9%B6%E4%B8%94%E7%A1%AE%E8%AE%A4%E4%BA%86%E5%B0%B1%E6%98%AFwebsocket%E5%8D%8F%E8%AE%AE%EF%BC%8C%E4%B9%8B%E5%90%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%92%8C%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B9%8B%E9%97%B4%E5%B0%B1%E5%8F%AF%E4%BB%A5%E9%9A%8F%E6%84%8F%E4%BA%92%E5%8F%91%E4%BF%A1%E6%81%AF%E4%BA%86"><span class="nav-number">1.3.2.</span> <span class="nav-text">建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%99%E4%B8%AA%E5%8D%8F%E8%AE%AE%E6%9B%B4%E5%A4%9A%E7%9A%84%E6%98%AF%E5%AF%B9http%E7%9A%84%E4%B8%80%E7%A7%8D%E4%BC%98%E5%8C%96"><span class="nav-number">1.4.</span> <span class="nav-text">这个协议更多的是对http的一种优化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%B8%A7%E6%A0%BC%E5%BC%8F%EF%BC%9F"><span class="nav-number">1.5.</span> <span class="nav-text">二进制帧格式？</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">宋辰星</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">宋辰星</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

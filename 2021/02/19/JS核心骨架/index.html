@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ffitas.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="闭包体系切入点词法作用域 首先我需要从作用域的底层机制说起，首先在 V8 引擎中是有编译阶段的，  V8 引擎如何执行一段代码编译阶段 那在执行一段代码执行之前，得做些准备工作，（你做事情不也得需要做准备工作吗），具体就是需要准备基础环境。 那现在有了基础环境后，就可以来执行这个代码。 由于 v8 引擎并不识别代码，所以需要来，将其结构化， 转化为 AST 树，再最终转换为字节码，也就是说中间代码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="js核心梳理">
+<meta property="og:url" content="http://ffitas.github.io/2021/02/19/JS%E6%A0%B8%E5%BF%83%E9%AA%A8%E6%9E%B6/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="闭包体系切入点词法作用域 首先我需要从作用域的底层机制说起，首先在 V8 引擎中是有编译阶段的，  V8 引擎如何执行一段代码编译阶段 那在执行一段代码执行之前，得做些准备工作，（你做事情不也得需要做准备工作吗），具体就是需要准备基础环境。 那现在有了基础环境后，就可以来执行这个代码。 由于 v8 引擎并不识别代码，所以需要来，将其结构化， 转化为 AST 树，再最终转换为字节码，也就是说中间代码">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-02-19T11:20:05.000Z">
+<meta property="article:modified_time" content="2021-07-15T07:34:52.246Z">
+<meta property="article:author" content="宋辰星">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://ffitas.github.io/2021/02/19/JS%E6%A0%B8%E5%BF%83%E9%AA%A8%E6%9E%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>js核心梳理 | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-首页">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-分类">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://ffitas.github.io/2021/02/19/JS%E6%A0%B8%E5%BF%83%E9%AA%A8%E6%9E%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="宋辰星">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          js核心梳理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-02-19 19:20:05" itemprop="dateCreated datePublished" datetime="2021-02-19T19:20:05+08:00">2021-02-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-07-15 15:34:52" itemprop="dateModified" datetime="2021-07-15T15:34:52+08:00">2021-07-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/js%E6%A0%B8%E5%BF%83/" itemprop="url" rel="index"><span itemprop="name">js核心</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="闭包体系"><a href="#闭包体系" class="headerlink" title="闭包体系"></a>闭包体系</h2><h3 id="切入点词法作用域"><a href="#切入点词法作用域" class="headerlink" title="切入点词法作用域"></a>切入点词法作用域</h3><ol>
+<li><p>首先我需要从作用域的底层机制说起，首先在 V8 引擎中是有编译阶段的，</p>
+<blockquote>
+<h2 id="V8-引擎如何执行一段代码"><a href="#V8-引擎如何执行一段代码" class="headerlink" title="V8 引擎如何执行一段代码"></a>V8 引擎如何执行一段代码</h2><h3 id="编译阶段"><a href="#编译阶段" class="headerlink" title="编译阶段"></a>编译阶段</h3><ol>
+<li>那在执行一段代码执行之前，得做些准备工作，（你做事情不也得需要做准备工作吗），具体就是需要准备<strong>基础环境</strong>。</li>
+<li>那现在有了基础环境后，就可以来执行这个代码。</li>
+<li>由于 v8 引擎并不识别代码，所以需要来，将其<strong>结构化</strong>， 转化为 <strong>AST 树</strong>，再<strong>最终转换为字节码</strong>，也就是说<strong>中间代码</strong>（介于 AST 和机器码中间的一种产物） ，但是 v8 引擎为了节省资源，它不会去将声明的函数内部的所有代码转换为中间代码。很<strong>懒惰</strong>，所以又称惰性解析阶段。只有当其函数调用的时候才会去将其内部的代码，转换为中间代码</li>
+</ol>
+<h3 id="执行阶段"><a href="#执行阶段" class="headerlink" title="执行阶段"></a>执行阶段</h3><ol>
+<li>同时要说明一点由于 V8 引擎属于jit，所以会有一个监控器，来判断是否有重复代码执行，如果有将其标记为热点代码，将其转换为二进制代码，当下次再次执行，解释器直接执行优化过的代码，提高效率。</li>
+</ol>
+</blockquote>
+<blockquote>
+<h3 id="字节码"><a href="#字节码" class="headerlink" title="字节码"></a>字节码</h3><p>由字节码，想象，字节–去了字节，能跨越时间空间去，所以时间上，早期编译为二进制代码太慢，所以时间上更快，空间上，所占内存小，早期为了防止重复编译将结果，缓存，而字节码所占空间很少。</p>
+</blockquote>
+<blockquote>
+</blockquote>
+<blockquote>
+<h3 id="v8-引擎如何来执行一段代码"><a href="#v8-引擎如何来执行一段代码" class="headerlink" title="v8 引擎如何来执行一段代码"></a>v8 引擎如何来执行一段代码</h3></blockquote>
+</li>
+<li><p>这里还有一点就是此时引擎会在当前的作用域去寻找有没有所声明的变量，如果有那就忽略它，这也是为什么，var 可以重复声明的本质原因，如果没有的话就将这个变量存放在当前作用域，赋值阶段。</p>
+</li>
+</ol>
+<h4 id="如何来叙述闭包"><a href="#如何来叙述闭包" class="headerlink" title="如何来叙述闭包"></a>如何来叙述闭包</h4><ol>
+<li>切入点<strong>词法作用域</strong>，那么词法作用域是怎样生成的（此时联想作用域里面有声明了一个变量），那么在编译阶段首先会来判断，当前的作用域有没有这个变量，有了就忽略，继续，没有就直接将变量放置当前作用域内并赋值 undefined.</li>
+<li>那你不能光找到它，还得赋值，在当前作用域能找到直接赋值，没找到就不断向外部作用域找形成作用域链。</li>
+<li><strong>（谈到作用域本质就联想一个调用栈，里面压入了全局执行上下文，和函数执行上下文））</strong>作用域的<strong>本质</strong>到底是什么，从<strong>表层意思</strong>来讲，它是一套规则，存放相应变量的规则，从本质上来讲，它是当前所处执行上下文，从这一点可以明白，为什么闭包中，可以从内部访问外部的变量，而外部无法访问内部的变量，全局执行上下文首先会推入调用栈中，之后每当调用一个函数，就会将函数上下文推入栈中，所以即便调用栈中，栈顶执行上下文，执行完毕后出栈，但是内部执行上下文依然可以通过，作用域链来访问，但由于栈顶执行上下文出栈了作用域链也被销毁了，所以无法访问调用栈中上下文的变量。</li>
+</ol>
+<h4 id="补充词法作用域"><a href="#补充词法作用域" class="headerlink" title="补充词法作用域"></a>补充词法作用域</h4><ol>
+<li>什么是<strong>词法作用域</strong>，由作用域想到了，作用域链，也就是说查找变量的时候一定是沿着，比如你所定义的位置，然后不断向外去延申，而动态作用域是沿着调用栈去查找的。</li>
+<li>补充函数的作用域是执行阶段就会去形成。但是查找一定是沿着定义的作用域，不断向外去延申。</li>
+<li>闭包引用的变量一定不会被回收吗，其实不对，当把这个变量直接赋值 null 就会被回收，这样相当于引用了一个空的变量自然会被回收</li>
+</ol>
+<h3 id="闭包应用。"><a href="#闭包应用。" class="headerlink" title="闭包应用。"></a>闭包应用。</h3><ol>
+<li><p>``` js<br>var a = [];<br>for(let i = 0;i&lt;10;i++){<br>a[i]=function(){<br>console.log(i)<br>}<br>};<br>a<a href="">2</a>;</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">   let 定义的 i 会运行 for 的块级作用域中，每次执行一次循环，都会创建一个块级作用域。</span><br><span class="line">   在这个块级作用域中，你又定义了一个函数，而这个函数又引用了函数外部的 i 变量，那么这就产生了闭包，也就是说，所有块级作用域中的 i 都不会被销毁，你在这里执行了 10 次循环，那么也就创建了 10 个块级作用域，这十个块级作用域中的变量 i 都会被保存在内存中。</span><br><span class="line">   那么当你再次调用该 a[n]() 时，v8 就会拿出闭包中的变量 i，并将其打印出来，因为每个闭包中的 i 值都不同，所以 a[n]() 时，打印出来的值就是 n，这个就非常符合直觉了。</span><br><span class="line">   但是如果你将 for 循环中的 i 变量声明改成 var，那么并不会产生块级作用域，那么函数引用的 i 就是全局作用域中的了，由于全局作用域中只有一个，那么在执行 for 循环的时候，i 的值会一直被改变，最后是 10，所以最终你执行 a[n]() 时，无论 n 是多少，打印出来的都是 10. 那么这就是 bug 之源了。</span><br><span class="line">2. 循环打印 1，2，3，4，5</span><br><span class="line">   和第二种思路比较相似，同样是在 setTimeout 外面再套一层函数，只不过这个函数是一个**立即执行函数** 。利用立即执行函数的入参来缓存每一个循环中的 i 值：</span><br><span class="line">   ```js</span><br><span class="line">   for (var i = 0; i &lt; 5; i++) &#123;</span><br><span class="line">       // 这里的 i 被赋值给了立即执行函数作用域内的变量 j</span><br><span class="line">       (function(j) &#123;  </span><br><span class="line">           setTimeout(function() &#123;</span><br><span class="line">               console.log(j);</span><br><span class="line">           &#125;, 1000);</span><br><span class="line">       &#125;)(i);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>//就是每一次 settimeout 里的 j 对外部立即执行函数里的变量造成了引用，所以，缓存了这个值，因为 v8 不再回收这个被引用的值了，缓存下来了。</p>
+</li>
+<li><p>还可以用 promise 来实现闭包</p>
+</li>
+</ol>
+<p>高阶函数</p>
+<h3 id="闭包的应用"><a href="#闭包的应用" class="headerlink" title="闭包的应用"></a>闭包的应用</h3><h4 id="模拟私有变量"><a href="#模拟私有变量" class="headerlink" title="模拟私有变量"></a>模拟私有变量</h4><ol>
+<li><strong>模拟私有变量</strong>：就是之前像是 Java c++ 这些，有 private 私有变量， 就是不是这个类的其它成员，你无法去访问这些私有变量。</li>
+<li>在 js 生成一个类是依赖于这个构造函数，但是你实例化一个类会发现，你通过这个类可以访问到这些这个类的属性，但是这个有一个问题就是说，万一我在这个这个构造函数里定义了一些私密数据，那不就可以在这个对象去访问到这个属性了吗。</li>
+<li>用立即执行函数，形成一个闭包，返回一个类，然后将私有属性放在函数里，不去通过 this 来赋值，直接进行赋值操作；a=privatedata，这样外部是无法拿到这个私有变量的。</li>
+<li>还可以用symbol来模拟一个私有的变量。</li>
+</ol>
+<h4 id="偏函数-bind-的实现"><a href="#偏函数-bind-的实现" class="headerlink" title="偏函数 bind 的实现"></a>偏函数 bind 的实现</h4><ol>
+<li><p>[“bind”]</p>
+<blockquote>
+<h3 id="思路详解"><a href="#思路详解" class="headerlink" title="思路详解"></a>思路详解</h3><p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1m54y1q7hc/?spm_id_from=333.788.videocard.1">bli 易懂题解</a>.</p>
+<h3 id="个人理解"><a href="#个人理解" class="headerlink" title="个人理解"></a>个人理解</h3><ol>
+<li><p>二刷理解：</p>
+<ol>
+<li>第一点： 记住执行 bind 会返回一个函数，为什么为了之后的偏函数的应用，s.（a）（b）</li>
+<li>返回的函数需要调用它并且来改变它的 this 指向，利用 apply</li>
+<li>此时来考虑一下，类数组的问题，就是说，bind 函数里面有许多参数，被 arguements 所收集，你现在想传参数，但是 arguements 是一个类数组，需要转换为真正的数组，利用 array.propotype.slice.call()</li>
+<li>此时 bind 还具有偏函数的特性就是 bind 函数第一个括号内部，偏函数就是在第二个括号里的参数,为什么第一个括号里的参数要截取，因为我不需要第一个括号里面的第一个参数，所以要截取，对于第二个括号，只需要将其转化为数组就好，但是所谓偏函数的本质依然要将其两个参数里的东西转换为一个括号里的参数，所以我们需要合并 concat</li>
+<li>可以通过 bind 所返回的函数，实例化一个对象</li>
+<li>也就是说你需要在 Bind 所返回的函数里，去判断 this 是否是构造函数的实例，</li>
+<li>这里的构造函数指的是 person，不是你返回的函数，而且</li>
+</ol>
+</li>
+</ol>
+</blockquote>
+</li>
+</ol>
+<h4 id="柯里化"><a href="#柯里化" class="headerlink" title="柯里化"></a>柯里化</h4><h4 id="防抖节流"><a href="#防抖节流" class="headerlink" title="防抖节流"></a>防抖节流</h4><blockquote>
+<h3 id="防抖-节流"><a href="#防抖-节流" class="headerlink" title="防抖/节流"></a>防抖/节流</h3><h4 id="思想"><a href="#思想" class="headerlink" title="思想"></a>思想</h4><ol>
+<li>节流就是，n 秒内，只触发一次。（timer 无值了，说明第一次的定时任务执行完毕）</li>
+<li>防抖就是 n 秒内，触发多次只看最后一次触发，的中间多次触发，会重新计时。（timer 有值得情况会删除之前的定时器）</li>
+<li>执行 fn，this 就指向 window 了，要指向触发的 dom 节点，所以要调用 apply 绑定 this。</li>
+<li>一定要把这个 timer 放在外面，因为要形成一个闭包，这样在内存中由于闭包，就不会导致这个变量被销毁，这样能够保证多次触发函数所引用的变量是一个 timer.</li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/cc84f7594b47">防抖节流细节</a>。</li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/KangTongShun/article/details/105316227">防抖节流为什么要用闭包</a>。</li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/ywjbokeyuan/p/14231894.html">防抖和节流和闭包的关系</a>。</li>
+</ol>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">throter</span>(<span class="params">callback, delay</span>) </span>&#123;<span class="comment">//节流</span></span><br><span class="line">  <span class="keyword">let</span> timer;<span class="comment">//闭包应用</span></span><br><span class="line">   <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!timer) &#123;</span><br><span class="line">      timer = <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        callback.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>)</span><br><span class="line">      &#125;, delay);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">input.addEventListerener(<span class="string">&#x27;keyup&#x27;</span>, throter(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(input.value);</span><br><span class="line">&#125;, <span class="number">1000</span>))</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">debance</span>(<span class="params">callback, delay</span>) </span>&#123;<span class="comment">//防抖</span></span><br><span class="line">  <span class="keyword">let</span> timer = <span class="literal">null</span>;<span class="comment">//闭包的应用</span></span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (timer) &#123;</span><br><span class="line">      <span class="built_in">clearTimeout</span>(timer)<span class="comment">//清空定时器操作</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      timer = <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        callback.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>)</span><br><span class="line">        timer = <span class="literal">null</span><span class="comment">//这里用这个timer===null，//这里为什么要清空就是因为，如果你不清空的话</span></span><br><span class="line"><span class="comment">//，就会导致这个timer始终是有值的，那就没有办法紧接着，继续去，重新设置定时器了。/</span></span><br><span class="line"><span class="comment">//或者这样想就是，轮回，每次输入框输入完内容后，</span></span><br><span class="line">      &#125;, delay);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">input.addEventListener(<span class="string">&#x27;keyup&#x27;</span>, debance(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(input.value);</span><br><span class="line">&#125;, <span class="number">1000</span>))</span><br></pre></td></tr></table></figure>
+
+</blockquote>
+<p>   。</p>
+<h4 id="手写一个闭包"><a href="#手写一个闭包" class="headerlink" title="手写一个闭包"></a>手写一个闭包</h4><ol>
+<li><p>``` js<br>function cache(){<br>let res={}<br>return {<br>set: function(key,value){</p>
+<pre><code>res[key]=value
+</code></pre>
+<p>}<br>get: function(key,value){</p>
+<pre><code>return     res[key]
+</code></pre>
+<p>}</p>
+<p>}</p>
+<p>}//这里函数作为了返回值，并且这个内部返回的函数引用了外部的局部变量。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">高阶函数</span><br><span class="line"></span><br><span class="line">1. **高阶**函数是指使用其他函数作为参数、或者返回一个函数作为结果的函数。比如这个 map,reduce 等.</span><br><span class="line">2. **联想记忆**：为什么**高阶**，因为是属于，函数**一等公民**：所以高级---》就是函数可以做数据类型也能做的事情，比如这个，参数和返回值。</span><br><span class="line"></span><br><span class="line">### 继承</span><br><span class="line"></span><br><span class="line">1. [js 继承易懂](https://www.bilibili.com/video/BV1a5411a7n3?t=1656)</span><br><span class="line">2. [js 继承可参考视频](https://www.bilibili.com/video/BV1J54y1y7u9?from=search&amp;seid=7963754240755905813)。</span><br><span class="line">3. 首先来理解这个原型链继承就是将子类的原型对象直接变为，父类的实例，这样就可以通过**原型链实现继承**，从而拿到一些属性和方法，但是无法传递参数，而且会修改原型上的属性和方法，这里要注意一点就是要改变这个子类构造函数的指向，否则就顺着原型链指向了父类构造函数了，这个组合继承，寄生组合继承都要。</span><br><span class="line">4. 对于这个**组合继承**就是通过这个 call/apply 实现继承，首先子类实例一个对象，然后调用这个子类构造函数，之后再去调用这个父构造函数，改变这个父构造函数的 this 指向，这样并可以传递参数，这样，就给子类赋予了父类的属性和方法，并且由于构造函数声明的属性和方法都是私有的所以其它实例无法改变。并且还可以依赖原型链，去拿到这个**父类原型上的方法**，**弊端就是父类构造函数调用了两次，**一次是原型链上的，一次是这个 call 调用父构造函数的时候。</span><br><span class="line">5. **寄生组合继承**：就是由于父构造函数调用了两次所以我需要，通过 object.create(父构造函数的 propotype),就是先来创建一个对象，然后让这个对象的_proto_指向这个参数。这样就跳过了这个父的实例，完美，不过也需要修改构造函数的指向。</span><br><span class="line">6. ```js</span><br><span class="line">   function parent(name, sex) &#123;//组合继承</span><br><span class="line">     this.name = name</span><br><span class="line">     this.sex = sex</span><br><span class="line"></span><br><span class="line">     parent.prototype.say = function () &#123;</span><br><span class="line">       console.log(111);</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   function child(name, age) &#123;</span><br><span class="line">     parent.call(this, name)</span><br><span class="line"></span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   child.prototype = new parent()//第一次调用这个父构造函数</span><br><span class="line">   child.prototype.constructor = child//修改这个原型constructor指向</span><br><span class="line"></span><br><span class="line">   let a = new child()//第二次调用这个父构造函数</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">parent</span>(<span class="params">name, sex</span>) </span>&#123;<span class="comment">//寄生组合继承</span></span><br><span class="line">  <span class="built_in">this</span>.name = name</span><br><span class="line">  <span class="built_in">this</span>.sex = sex</span><br><span class="line"></span><br><span class="line">  parent.prototype.say = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="number">111</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">child</span>(<span class="params">name, age</span>) </span>&#123;</span><br><span class="line">  parent.call(<span class="built_in">this</span>, name)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">child.prototype = <span class="built_in">Object</span>.create(parent.prototype)<span class="comment">//修改子类原型对象的__proto__为父构造函数的原型对象实现继承父的原型方法</span></span><br><span class="line">child.prototype.constructor = child<span class="comment">//修改这个原型constructor指向</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<h4 id="ES6-和-ES5-继承的关系"><a href="#ES6-和-ES5-继承的关系" class="headerlink" title="ES6 和 ES5 继承的关系"></a>ES6 和 ES5 继承的关系</h4><ol>
+<li>ES5 和 ES6 子类 <code>this</code> 生成顺序不同。ES5 的继承先生成了子类实例，再调用父类的构造函数修饰子类实例，ES6 的继承先生成父类实例，再调用子类的构造函数修饰父类实例。这个差别使得 ES6 可以继承内置对象。</li>
+<li><strong>这样记忆</strong>，就是 es5 是我熟悉的先去，生成子类实例，再去调用父构造函数，es6 这个正好相反。简化记忆</li>
+<li><a target="_blank" rel="noopener" href="https://muyiy.cn/question/js/7.html">es6 和 es5 的继承</a></li>
+</ol>
+<h2 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h2><h3 id="async-await"><a href="#async-await" class="headerlink" title="async await"></a>async await</h3><p>这里的代码执行，就是记得去，画流程图。然后对于 await 如果是直接调用函数了记得，直接调用即可，之后再去，当微任务，还有 settimeout 的优先级要高于这个 settimmediate.这个要记得</p>
+<h3 id="Generator"><a href="#Generator" class="headerlink" title="Generator"></a>Generator</h3><ol>
+<li>手写 co 函数：<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1sZ4y1j71K?from=search&seid=4431131485538593786">手写 co 函数的视频</a>。</li>
+</ol>
+<h3 id="Promise"><a href="#Promise" class="headerlink" title="Promise"></a>Promise</h3><ol>
+<li><a target="_blank" rel="noopener" href="https://juejin.cn/post/6856213486633304078#heading-4">补充 promise 的细节补充及常见看代码读题</a>。</li>
+<li>怎么来中断这个 then 的链式调用，首先明确什么时候会去调用 then 也就是说，这成功的时候，那也就是说这个题的本质是让它去，失败，所以的话就是说，主动 reject，之后会去执行，then 里失败的回调，那如果是失败的回调，then 一定是成功状态的 promise 才会去调用，所以失败的回调执行后会变为失败态，所以的话，就是说会终止调用，还可以去主动抛错。然后改变这个当前 promise 的状态。</li>
+</ol>
+<h2 id="宏任务微任务"><a href="#宏任务微任务" class="headerlink" title="宏任务微任务"></a>宏任务微任务</h2><ol>
+<li>首先明确 js 为什么是单线程，一个线程删除 dom，另一个线程添加 dom 到底是删还是不删</li>
+<li>联想 左边一个调用栈，右边各一个微任务队列，和宏任务队列，</li>
+<li>就是调用栈不断的从队列中取任务，然后再去执行。</li>
+<li>为什么会有微任务队列和宏任务队列两种，为了插队，为了让一些任务插队优先执行。让任务执行的时机变的可控。</li>
+</ol>
+<h4 id="浏览器事件循环机制"><a href="#浏览器事件循环机制" class="headerlink" title="浏览器事件循环机制"></a>浏览器事件循环机制</h4><ol>
+<li>首先宏任务（script 整体代码）推入调用栈中，先同步，遇到异步代码分别投放至宏微任务队列，执行所有微任务，然后再去检查宏任务（易错：如果遇到定时器，这个要根据这个设定时间排一个顺序）。</li>
+<li>如果我想在异步任务中去更新 dom，应该是包装为微任务，如果是微任务，就是执行后会立即渲染，而宏任务，整体代码（宏）之后微–》渲染更新而此时压根就没有更新 dom，得等下一次任务循环也就意味着，多渲染了一次。</li>
+<li>引出这个 vue.nexttick,异步更新，就是不会   立刻去更新，避免多次重复渲染。</li>
+<li>那对于需要包装为宏任务的，那就直接派发为任务，默认都包装为微任务依赖于 promise.then</li>
+</ol>
+<h3 id="js-作用域链"><a href="#js-作用域链" class="headerlink" title="js 作用域链"></a>js 作用域链</h3><ol>
+<li>首先想到何时形成。</li>
+<li>作用域嵌套的时候就，可以形成这个作用域链了，想象（函数嵌套内部函数引用了外部变量）w–》闭包</li>
+<li>同时引出为什么为什么外部变量不能访问到内部的变量。</li>
+</ol>
+<h3 id="函数式编程"><a href="#函数式编程" class="headerlink" title="函数式编程"></a>函数式编程</h3><ol>
+<li>js 更多的是具有函数式编程的特点而不是纯粹的</li>
+<li>闭包</li>
+<li>偏函数柯里化</li>
+<li>高阶函数。</li>
+<li>纯<strong>函数</strong>： 三点： <strong>函数</strong>有确定的一个返回值，并且不使用全局的变量，并且不会去修改全局变量。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/01/19/V8%E5%BC%95%E6%93%8E/" rel="prev" title="v8引擎基础梳理">
+      <i class="fa fa-chevron-left"></i> v8引擎基础梳理
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AD%E5%8C%85%E4%BD%93%E7%B3%BB"><span class="nav-number">1.</span> <span class="nav-text">闭包体系</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%87%E5%85%A5%E7%82%B9%E8%AF%8D%E6%B3%95%E4%BD%9C%E7%94%A8%E5%9F%9F"><span class="nav-number">1.1.</span> <span class="nav-text">切入点词法作用域</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#V8-%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%AE%B5%E4%BB%A3%E7%A0%81"><span class="nav-number">2.</span> <span class="nav-text">V8 引擎如何执行一段代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E9%98%B6%E6%AE%B5"><span class="nav-number">2.1.</span> <span class="nav-text">编译阶段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E9%98%B6%E6%AE%B5"><span class="nav-number">2.2.</span> <span class="nav-text">执行阶段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%97%E8%8A%82%E7%A0%81"><span class="nav-number">2.3.</span> <span class="nav-text">字节码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#v8-%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%9D%A5%E6%89%A7%E8%A1%8C%E4%B8%80%E6%AE%B5%E4%BB%A3%E7%A0%81"><span class="nav-number">2.4.</span> <span class="nav-text">v8 引擎如何来执行一段代码</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%9D%A5%E5%8F%99%E8%BF%B0%E9%97%AD%E5%8C%85"><span class="nav-number">2.4.1.</span> <span class="nav-text">如何来叙述闭包</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A1%A5%E5%85%85%E8%AF%8D%E6%B3%95%E4%BD%9C%E7%94%A8%E5%9F%9F"><span class="nav-number">2.4.2.</span> <span class="nav-text">补充词法作用域</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%AD%E5%8C%85%E5%BA%94%E7%94%A8%E3%80%82"><span class="nav-number">2.5.</span> <span class="nav-text">闭包应用。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%AD%E5%8C%85%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">2.6.</span> <span class="nav-text">闭包的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A8%A1%E6%8B%9F%E7%A7%81%E6%9C%89%E5%8F%98%E9%87%8F"><span class="nav-number">2.6.1.</span> <span class="nav-text">模拟私有变量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%81%8F%E5%87%BD%E6%95%B0-bind-%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.6.2.</span> <span class="nav-text">偏函数 bind 的实现</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%9D%E8%B7%AF%E8%AF%A6%E8%A7%A3"><span class="nav-number">2.7.</span> <span class="nav-text">思路详解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%AA%E4%BA%BA%E7%90%86%E8%A7%A3"><span class="nav-number">2.8.</span> <span class="nav-text">个人理解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%AF%E9%87%8C%E5%8C%96"><span class="nav-number">2.8.1.</span> <span class="nav-text">柯里化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%98%B2%E6%8A%96%E8%8A%82%E6%B5%81"><span class="nav-number">2.8.2.</span> <span class="nav-text">防抖节流</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%98%B2%E6%8A%96-%E8%8A%82%E6%B5%81"><span class="nav-number">2.9.</span> <span class="nav-text">防抖&#x2F;节流</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%80%9D%E6%83%B3"><span class="nav-number">2.9.1.</span> <span class="nav-text">思想</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%89%8B%E5%86%99%E4%B8%80%E4%B8%AA%E9%97%AD%E5%8C%85"><span class="nav-number">2.9.2.</span> <span class="nav-text">手写一个闭包</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ES6-%E5%92%8C-ES5-%E7%BB%A7%E6%89%BF%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="nav-number">2.9.3.</span> <span class="nav-text">ES6 和 ES5 继承的关系</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E6%AD%A5"><span class="nav-number">3.</span> <span class="nav-text">异步</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#async-await"><span class="nav-number">3.1.</span> <span class="nav-text">async await</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Generator"><span class="nav-number">3.2.</span> <span class="nav-text">Generator</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Promise"><span class="nav-number">3.3.</span> <span class="nav-text">Promise</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8F%E4%BB%BB%E5%8A%A1%E5%BE%AE%E4%BB%BB%E5%8A%A1"><span class="nav-number">4.</span> <span class="nav-text">宏任务微任务</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B5%8F%E8%A7%88%E5%99%A8%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF%E6%9C%BA%E5%88%B6"><span class="nav-number">4.0.1.</span> <span class="nav-text">浏览器事件循环机制</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#js-%E4%BD%9C%E7%94%A8%E5%9F%9F%E9%93%BE"><span class="nav-number">4.1.</span> <span class="nav-text">js 作用域链</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B"><span class="nav-number">4.2.</span> <span class="nav-text">函数式编程</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">宋辰星</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">宋辰星</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

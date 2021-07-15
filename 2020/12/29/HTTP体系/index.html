@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ffitas.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="👱 GET 和 post 本质区别HTTP 常见的请求头字段叙述思路 首先属于 HTTP 协议—–》 引出本质是 TCP 连接——》 引出 tcp 连接次数问题—–&gt; 由次数问题：想到幂等。 其次想到安全幂等，GET 安全幂等，POST 不安全也不幂等。 同时还有一点 get 请求能够缓存比如第一次请求时浏览器会把相应数据缓存到本地，方便之后能直接命中：强缓存逻辑，而 post 请求时无法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP">
+<meta property="og:url" content="http://ffitas.github.io/2020/12/29/HTTP%E4%BD%93%E7%B3%BB/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="👱 GET 和 post 本质区别HTTP 常见的请求头字段叙述思路 首先属于 HTTP 协议—–》 引出本质是 TCP 连接——》 引出 tcp 连接次数问题—–&gt; 由次数问题：想到幂等。 其次想到安全幂等，GET 安全幂等，POST 不安全也不幂等。 同时还有一点 get 请求能够缓存比如第一次请求时浏览器会把相应数据缓存到本地，方便之后能直接命中：强缓存逻辑，而 post 请求时无法">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-12-29T04:20:05.000Z">
+<meta property="article:modified_time" content="2021-07-15T07:15:54.508Z">
+<meta property="article:author" content="宋辰星">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://ffitas.github.io/2020/12/29/HTTP%E4%BD%93%E7%B3%BB/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>HTTP | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-首页">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-分类">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://ffitas.github.io/2020/12/29/HTTP%E4%BD%93%E7%B3%BB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="宋辰星">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          HTTP
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-12-29 12:20:05" itemprop="dateCreated datePublished" datetime="2020-12-29T12:20:05+08:00">2020-12-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-07-15 15:15:54" itemprop="dateModified" datetime="2021-07-15T15:15:54+08:00">2021-07-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/HTTP/" itemprop="url" rel="index"><span itemprop="name">HTTP</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="👱-GET-和-post-本质区别"><a href="#👱-GET-和-post-本质区别" class="headerlink" title="👱 GET 和 post 本质区别"></a>👱 GET 和 post 本质区别</h2><h3 id="HTTP-常见的请求头字段"><a href="#HTTP-常见的请求头字段" class="headerlink" title="HTTP 常见的请求头字段"></a>HTTP 常见的请求头字段</h3><h3 id="叙述思路"><a href="#叙述思路" class="headerlink" title="叙述思路"></a>叙述思路</h3><ol>
+<li>首先属于 HTTP 协议—–》 引出本质是 TCP 连接——》 引出 tcp 连接次数问题—–&gt; 由次数问题：想到幂等。</li>
+<li>其次想到安全幂等，GET 安全幂等，POST 不安全也不幂等。</li>
+<li>同时还有一点 get 请求能够<strong>缓存</strong>比如第一次请求时浏览器会把相应数据缓存到本地，方便之后能直接命中：强缓存逻辑，而 post 请求时无法被缓存的。</li>
+<li>其次想到想起它们属于 HTTP 协议，也就是说也是基于 TCP 链接的，所以它们的<strong>本质</strong>都是 <strong>TCP 连接。</strong></li>
+<li>GET 请求是<strong>一个 tcp 报文</strong>  :(对于 GET 方式的请求，浏览器会把 http <strong>header</strong> 和 data 一并发送出去，服务器响应 200（返回数据）。) //你请求肯定要有请求头吗，对吧</li>
+<li>而 POST 请求是<strong>两个 tcp 报文</strong>，(浏览器先发送 header，服务器响应 100，浏览器再发送 data，服务器响应 200 ok（返回数据）。)</li>
+<li>所谓<strong>安全</strong>就是不会改变服务器资源，所谓的<strong><strong>幂</strong></strong>想起次幂，也就是说<strong>多次</strong>的意思</li>
+<li>所谓的<strong>不安全</strong>其实就是会改变，服务器的资源，所谓的不幂等就是，多次操作结果不相同。</li>
+</ol>
+<h4 id="💯-100-continue"><a href="#💯-100-continue" class="headerlink" title="💯 100 continue"></a>💯 100 continue</h4><ol>
+<li>HTTP <strong><code>100 Continue</code></strong> 信息型状态响应码表示目前为止一切正常, 客户端应该继续请求, 如果已完成请求则忽略.// 自己的话就是:👌  因为是 <strong>100</strong> 分所以<strong>目前状态正常，可以继续请求。</strong></li>
+</ol>
+<h3 id="为什么-http1-不能实现多路复用"><a href="#为什么-http1-不能实现多路复用" class="headerlink" title="为什么 http1 不能实现多路复用"></a>为什么 http1 不能实现多路复用</h3><ol>
+<li>HTTP/1.1 不是二进制传输，而是通过文本进行传输。由于没有流的概念，在使用并行传输（多路复用）传递数据时，接收端在接收到响应后，并不能区分多个响应分别对应的请求，所以无法将多个响应的结果重新进行组装，也就实现不了多路复用。</li>
+</ol>
+<h3 id="请求响应头怎么记忆"><a href="#请求响应头怎么记忆" class="headerlink" title="请求响应头怎么记忆"></a>请求响应头怎么记忆</h3><ol>
+<li>首先得联想到这个登录的场景，由登录联想到 cookies, c–》联想 coonection-keepalive,e 发音 accecpt–accept-encoding, s 联想到这个 useragent, o–&gt; 联想到这个 host 。</li>
+<li>接收方–&gt; 接受请求返回数据。所以联想到内容格式，及大小 –》content ,以及为了能提升用户的访问速率.</li>
+<li>首先是 header - cookies   –  connection: –&gt; user-agent–&gt;accept–&gt;   hc(缓存)：if-none-match, if-modify-since;</li>
+</ol>
+<h3 id="响应码"><a href="#响应码" class="headerlink" title="响应码"></a>响应码</h3><ol>
+<li>301 : 就是永久重定向，就是从 seo 优化的角度更好，会<strong>转移权重</strong>。（联想一个旧网址的 seo 和新网址的 seo）.</li>
+<li>但是 302 就是临时的重定向，<strong>不会转移权重</strong>不会去更新这个，等于是搜索权重下降了，因为 seo 不允许多个，域名指向一个地址，作弊提升这个权重排名。</li>
+<li>叙述思路：就是，301–》seo ，转移权重（就是将旧地址的搜索权重转移到新的）。. 重定向之后会做什么？读取浏览器缓存，强缓存和协商缓存</li>
+<li>302–》临时的重定向，不会把旧网址的，权重进行转移。但是会改变请求的方法把 post 改为了 get 请求，所以出现了 307 的临时重定向，不会去改变这个请求的方法。</li>
+</ol>
+<h3 id="http-持久连接"><a href="#http-持久连接" class="headerlink" title="http 持久连接"></a>http 持久连接</h3><ol>
+<li>首先第一点，何时断开服务器会去设定一个时间然后，在 keep-alive 中添加这个断开的时间。</li>
+<li>其次何时数据传输完毕，数据联想为一个 length,是不是只有长度符合你的 length 才能够判断，数据传输完毕，追问—》如果说没有 content-length;怎么来判断，就是说看编码快，如果</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/19/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%9D%A5%E4%BC%98%E5%8C%96%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%C2%B7/" rel="prev" title="优化垃圾回收机制">
+      <i class="fa fa-chevron-left"></i> 优化垃圾回收机制
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/01/12/%E5%BC%82%E6%AD%A5/" rel="next" title="垃圾回收机制">
+      垃圾回收机制 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%91%B1-GET-%E5%92%8C-post-%E6%9C%AC%E8%B4%A8%E5%8C%BA%E5%88%AB"><span class="nav-number">1.</span> <span class="nav-text">👱 GET 和 post 本质区别</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP-%E5%B8%B8%E8%A7%81%E7%9A%84%E8%AF%B7%E6%B1%82%E5%A4%B4%E5%AD%97%E6%AE%B5"><span class="nav-number">1.1.</span> <span class="nav-text">HTTP 常见的请求头字段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%99%E8%BF%B0%E6%80%9D%E8%B7%AF"><span class="nav-number">1.2.</span> <span class="nav-text">叙述思路</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%F0%9F%92%AF-100-continue"><span class="nav-number">1.2.1.</span> <span class="nav-text">💯 100 continue</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88-http1-%E4%B8%8D%E8%83%BD%E5%AE%9E%E7%8E%B0%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8"><span class="nav-number">1.3.</span> <span class="nav-text">为什么 http1 不能实现多路复用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82%E5%93%8D%E5%BA%94%E5%A4%B4%E6%80%8E%E4%B9%88%E8%AE%B0%E5%BF%86"><span class="nav-number">1.4.</span> <span class="nav-text">请求响应头怎么记忆</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%93%8D%E5%BA%94%E7%A0%81"><span class="nav-number">1.5.</span> <span class="nav-text">响应码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#http-%E6%8C%81%E4%B9%85%E8%BF%9E%E6%8E%A5"><span class="nav-number">1.6.</span> <span class="nav-text">http 持久连接</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">宋辰星</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">宋辰星</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

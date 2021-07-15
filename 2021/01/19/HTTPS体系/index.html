@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ffitas.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改 首先由认证想到了身份认证，在 tls 握手阶段为了能够表明自己的身份，首先依赖于数字签名算法，就是首先会将密文用摘要算法，这些算法的特点就是单向性，和雪崩性，也就是说一旦中间人篡改一点点，摘要就会改变，然后此时用私钥（因为是唯一的）加密摘要，以及将公钥发送给对方，那么为了能够让客户端清楚是对的人发 的。 需要依赖于 ca 机构的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTPS">
+<meta property="og:url" content="http://ffitas.github.io/2021/01/19/HTTPS%E4%BD%93%E7%B3%BB/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改 首先由认证想到了身份认证，在 tls 握手阶段为了能够表明自己的身份，首先依赖于数字签名算法，就是首先会将密文用摘要算法，这些算法的特点就是单向性，和雪崩性，也就是说一旦中间人篡改一点点，摘要就会改变，然后此时用私钥（因为是唯一的）加密摘要，以及将公钥发送给对方，那么为了能够让客户端清楚是对的人发 的。 需要依赖于 ca 机构的">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-01-19T01:20:05.000Z">
+<meta property="article:modified_time" content="2021-07-15T07:16:12.705Z">
+<meta property="article:author" content="宋辰星">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://ffitas.github.io/2021/01/19/HTTPS%E4%BD%93%E7%B3%BB/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>HTTPS | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-首页">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-分类">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://ffitas.github.io/2021/01/19/HTTPS%E4%BD%93%E7%B3%BB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="宋辰星">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          HTTPS
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-01-19 09:20:05" itemprop="dateCreated datePublished" datetime="2021-01-19T09:20:05+08:00">2021-01-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-07-15 15:16:12" itemprop="dateModified" datetime="2021-07-15T15:16:12+08:00">2021-07-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/HTTPS/" itemprop="url" rel="index"><span itemprop="name">HTTPS</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改"><a href="#问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改" class="headerlink" title="问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改"></a>问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改</h4><ol>
+<li>首先由认证想到了<strong>身份认证</strong>，在 tls 握手阶段为了能够表明自己的身份，首先依赖于<strong>数字签名算法</strong>，就是首先会将密文用摘要算法，这些算法的特点就是单向性，和雪崩性，也就是说一旦中间人篡改一点点，摘要就会改变，然后此时用<strong>私钥</strong>（因为是唯一的）<strong>加密摘要</strong>，以及将<strong>公钥</strong>发送给对方，那么为了能够让客户端清楚是对的人发 的。</li>
+<li>需要依赖于 ca 机构的证书，那么我将数字签名和公钥，都发给对方，对方接收到之后取出公钥然后验签，确认是对方了，就继续握手阶段。</li>
+<li>那么它的加密过程是什么就是说在开始阶段，双方发给对方，发送 client random,server random ,验证身份阶段，服务器会发送 server params ，，客户端验签后会发送 client params  , 彼此通过 ecdhe 算法算法出一个 pre-master.</li>
+<li>双方此时具有三个参数（client random server random pre-master ） 生成 Master 主密钥，之后就用这个密钥进行加密信息。</li>
+</ol>
+<h4 id="那根证书怎么保证签发的证书是有安全有效的"><a href="#那根证书怎么保证签发的证书是有安全有效的" class="headerlink" title="那根证书怎么保证签发的证书是有安全有效的"></a>那根证书怎么保证签发的证书是有安全有效的</h4><ol>
+<li>此时联想一个证书链，浏览器是具备各大机构的<strong>根证书</strong>的，走证书链找对应的根证书</li>
+<li>易错点就是自己这个，这个证书发布是服务器不是这个机构，机构只是给申请者颁布证书的，并且就是 ca 机构页会对服务器发的公钥来加密，然后接受方用内置的 ca 公钥来解密 ca 的私钥</li>
+</ol>
+<h4 id="前面你说到-CA-机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解"><a href="#前面你说到-CA-机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解" class="headerlink" title="前面你说到 CA 机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解"></a>前面你说到 CA 机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解</h4><ol>
+<li>就是 ca 机构拿到这个，服务器发来的公钥，会用自己的私钥加密，形成证书的签名算法，之后呢就是，客户端保存有各大 ca 机构的公钥，然后进行解密，验证这个 ca 机构，这里是证书的签名，不是之前那个服务器，的签名算法，不要弄混了</li>
+</ol>
+<h4 id="如果发生无限套娃的情况，根证书都被篡改怎么办-或者说-https-一定是安全的吗？"><a href="#如果发生无限套娃的情况，根证书都被篡改怎么办-或者说-https-一定是安全的吗？" class="headerlink" title="如果发生无限套娃的情况，根证书都被篡改怎么办/或者说 https 一定是安全的吗？"></a>如果发生无限套娃的情况，根证书都被篡改怎么办/或者说 https 一定是安全的吗？</h4><ol>
+<li>无解，因为证书体系的保障就是依赖于根证书的，这个都无法保障的话，确实无解。</li>
+</ol>
+<h3 id="你讲到-HTTPS-用到了加密算法，加密算法都有哪些类型，说说看"><a href="#你讲到-HTTPS-用到了加密算法，加密算法都有哪些类型，说说看" class="headerlink" title="你讲到 HTTPS 用到了加密算法，加密算法都有哪些类型，说说看"></a>你讲到 HTTPS 用到了加密算法，加密算法都有哪些类型，说说看</h3><ol>
+<li>首先对称加密算法，非对称加密算法，摘要算法里的单向加密也就是说只能加密不能解密。</li>
+<li>对称加密：ACE chacha20</li>
+<li>非对称加密： RSA ECDH</li>
+<li>摘要算法： MD5 SHA-2</li>
+</ol>
+<h3 id="对称加密和非对称加密有什么区别吗"><a href="#对称加密和非对称加密有什么区别吗" class="headerlink" title="对称加密和非对称加密有什么区别吗"></a>对称加密和非对称加密有什么区别吗</h3><ol>
+<li>对称加密简单来讲就是用同一个公钥进行加密</li>
+<li>非对称加密就是公钥加密，私钥解密，因为私钥是唯一的。补充：其实也可以用私钥加密公钥解密，就是数字签名算法了。</li>
+</ol>
+<h3 id="MD5、SHA、Base64-和-RSA-属于什么类型的算法，对称还是非对称？"><a href="#MD5、SHA、Base64-和-RSA-属于什么类型的算法，对称还是非对称？" class="headerlink" title="MD5、SHA、Base64 和 RSA 属于什么类型的算法，对称还是非对称？"></a>MD5、SHA、Base64 和 RSA 属于什么类型的算法，对称还是非对称？</h3><ol>
+<li>MD5,SHA 属于摘要算法，，RSA 常用非对称加密算法。</li>
+<li><strong>Base64,用 64 个字符表示二进制（B）不是加密算法</strong>。</li>
+</ol>
+<h4 id="1-HTTP-和-HTTPS-之间有什么区别或者说改进"><a href="#1-HTTP-和-HTTPS-之间有什么区别或者说改进" class="headerlink" title="1. HTTP 和 HTTPS 之间有什么区别或者说改进"></a>1. HTTP 和 HTTPS 之间有什么区别或者说改进</h4><ol>
+<li>首先 TLS—》 是什么： 网景公司开发，一个协议，在哪： TCP/IP 协议栈中 HTTP 层之下，TCP 协议层之上，解决了 HTTP 安全性问题， 在 TLS1.2 握手协议（HTTP 和 HTTPS 是好兄弟需要握手）中由于身份认证，需要向 <strong>CA 机构申请证书</strong>。</li>
+<li>然后还有一个细节就是 HTTPS 的端口号是 443，HTTP 是 80（S4，P 的吧（8））</li>
+</ol>
+<h4 id="联想记忆路径："><a href="#联想记忆路径：" class="headerlink" title="联想记忆路径："></a>联想记忆路径：</h4><ol>
+<li>由 S 联想到了 TLS， 把它想象一个人，查它户口，是谁，在哪，解决了什么问题，同时为了表明自己的身份，需要向 CA 机构申请证书。</li>
+</ol>
+<h4 id="2-HTTPS-具体是如何解决-HTTP-的安全性问题的"><a href="#2-HTTPS-具体是如何解决-HTTP-的安全性问题的" class="headerlink" title="2. HTTPS 具体是如何解决 HTTP 的安全性问题的"></a>2. HTTPS 具体是如何解决 HTTP 的安全性问题的</h4><ol>
+<li>这个题就得从机密性，不可否认性，完整性，身份认证四个点来答（这里首先得想起来有哪四点 https 怎么做到这么安全的肯定是 😂‘<strong>饥不择食</strong>’择对应的是完整性，食对应的是身 ，首字母发音，想不起来了就想想 https 是通过饥不择食的手段达到安全性的目的）</li>
+</ol>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/9QrphQhq_N3OxySzf2wWOg">2020 抖音架构组前端实习生面经(offer)</a>。</p>
+<h3 id="HTTPS-1-2-ECEH-握手过程"><a href="#HTTPS-1-2-ECEH-握手过程" class="headerlink" title="HTTPS 1.2 ECEH 握手过程"></a>HTTPS 1.2 ECEH 握手过程</h3><p><a href="assets/HTTPS%E7%B3%BB%E7%BB%9F-20210305211818-o5hst6h.emmx">HTTPS Ecdh 握手思维导图</a>。</p>
+<h3 id="tls1-3-握手"><a href="#tls1-3-握手" class="headerlink" title="tls1.3 握手"></a>tls1.3 握手</h3><ol>
+<li>简单来讲就是说讲之前的 hello 阶段与密钥交换阶段合并。一次信息交换，就可以产生 两个 random 随机数，以及两个 params。</li>
+</ol>
+<h3 id="https-为什么可以预防这个中间人的攻击"><a href="#https-为什么可以预防这个中间人的攻击" class="headerlink" title="https 为什么可以预防这个中间人的攻击"></a>https 为什么可以预防这个中间人的攻击</h3><ol>
+<li>依赖摘要算法防止被篡改，依赖 ca 机构，来防止身份的一个伪造。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/01/12/%E5%BC%82%E6%AD%A5/" rel="prev" title="垃圾回收机制">
+      <i class="fa fa-chevron-left"></i> 垃圾回收机制
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/01/19/%E6%89%A7%E8%A1%8C%E4%B8%8A%E4%B8%8B%E6%96%87/" rel="next" title="垃圾回收机制">
+      垃圾回收机制 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E4%B8%80%EF%BC%9AHTTPS-%E5%AE%83%E7%9A%84%E8%AE%A4%E8%AF%81%E5%8A%A0%E5%AF%86%E8%BF%87%E7%A8%8B%E6%98%AF%E6%80%8E%E6%A0%B7%EF%BC%8C%E5%AE%83%E6%80%8E%E4%B9%88%E4%BF%9D%E8%AF%81%E5%86%85%E5%AE%B9%E4%B8%8D%E4%BC%9A%E8%A2%AB%E7%AF%A1%E6%94%B9"><span class="nav-number">1.</span> <span class="nav-text">问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%82%A3%E6%A0%B9%E8%AF%81%E4%B9%A6%E6%80%8E%E4%B9%88%E4%BF%9D%E8%AF%81%E7%AD%BE%E5%8F%91%E7%9A%84%E8%AF%81%E4%B9%A6%E6%98%AF%E6%9C%89%E5%AE%89%E5%85%A8%E6%9C%89%E6%95%88%E7%9A%84"><span class="nav-number">2.</span> <span class="nav-text">那根证书怎么保证签发的证书是有安全有效的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%89%8D%E9%9D%A2%E4%BD%A0%E8%AF%B4%E5%88%B0-CA-%E6%9C%BA%E6%9E%84%E4%BC%9A%E7%94%A8%E5%AF%86%E9%92%A5%E5%AF%B9%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E5%85%AC%E9%92%A5%E8%BF%9B%E8%A1%8C%E7%AD%BE%E5%90%8D%EF%BC%8C%E7%AD%BE%E5%90%8D%E5%92%8C%E5%8A%A0%E5%AF%86%EF%BC%8C%E4%BD%A0%E6%98%AF%E6%80%8E%E4%B9%88%E7%90%86%E8%A7%A3"><span class="nav-number">3.</span> <span class="nav-text">前面你说到 CA 机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E6%9E%9C%E5%8F%91%E7%94%9F%E6%97%A0%E9%99%90%E5%A5%97%E5%A8%83%E7%9A%84%E6%83%85%E5%86%B5%EF%BC%8C%E6%A0%B9%E8%AF%81%E4%B9%A6%E9%83%BD%E8%A2%AB%E7%AF%A1%E6%94%B9%E6%80%8E%E4%B9%88%E5%8A%9E-%E6%88%96%E8%80%85%E8%AF%B4-https-%E4%B8%80%E5%AE%9A%E6%98%AF%E5%AE%89%E5%85%A8%E7%9A%84%E5%90%97%EF%BC%9F"><span class="nav-number">4.</span> <span class="nav-text">如果发生无限套娃的情况，根证书都被篡改怎么办&#x2F;或者说 https 一定是安全的吗？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%A0%E8%AE%B2%E5%88%B0-HTTPS-%E7%94%A8%E5%88%B0%E4%BA%86%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%EF%BC%8C%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E9%83%BD%E6%9C%89%E5%93%AA%E4%BA%9B%E7%B1%BB%E5%9E%8B%EF%BC%8C%E8%AF%B4%E8%AF%B4%E7%9C%8B"><span class="nav-number"></span> <span class="nav-text">你讲到 HTTPS 用到了加密算法，加密算法都有哪些类型，说说看</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E5%92%8C%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB%E5%90%97"><span class="nav-number"></span> <span class="nav-text">对称加密和非对称加密有什么区别吗</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MD5%E3%80%81SHA%E3%80%81Base64-%E5%92%8C-RSA-%E5%B1%9E%E4%BA%8E%E4%BB%80%E4%B9%88%E7%B1%BB%E5%9E%8B%E7%9A%84%E7%AE%97%E6%B3%95%EF%BC%8C%E5%AF%B9%E7%A7%B0%E8%BF%98%E6%98%AF%E9%9D%9E%E5%AF%B9%E7%A7%B0%EF%BC%9F"><span class="nav-number"></span> <span class="nav-text">MD5、SHA、Base64 和 RSA 属于什么类型的算法，对称还是非对称？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-HTTP-%E5%92%8C-HTTPS-%E4%B9%8B%E9%97%B4%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB%E6%88%96%E8%80%85%E8%AF%B4%E6%94%B9%E8%BF%9B"><span class="nav-number">1.</span> <span class="nav-text">1. HTTP 和 HTTPS 之间有什么区别或者说改进</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%81%94%E6%83%B3%E8%AE%B0%E5%BF%86%E8%B7%AF%E5%BE%84%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">联想记忆路径：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-HTTPS-%E5%85%B7%E4%BD%93%E6%98%AF%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3-HTTP-%E7%9A%84%E5%AE%89%E5%85%A8%E6%80%A7%E9%97%AE%E9%A2%98%E7%9A%84"><span class="nav-number">3.</span> <span class="nav-text">2. HTTPS 具体是如何解决 HTTP 的安全性问题的</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTPS-1-2-ECEH-%E6%8F%A1%E6%89%8B%E8%BF%87%E7%A8%8B"><span class="nav-number"></span> <span class="nav-text">HTTPS 1.2 ECEH 握手过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tls1-3-%E6%8F%A1%E6%89%8B"><span class="nav-number"></span> <span class="nav-text">tls1.3 握手</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#https-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8F%AF%E4%BB%A5%E9%A2%84%E9%98%B2%E8%BF%99%E4%B8%AA%E4%B8%AD%E9%97%B4%E4%BA%BA%E7%9A%84%E6%94%BB%E5%87%BB"><span class="nav-number"></span> <span class="nav-text">https 为什么可以预防这个中间人的攻击</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">宋辰星</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">宋辰星</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

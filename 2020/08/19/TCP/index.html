@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ffitas.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="TCP如何来理解 tcp 是面向流的 所谓的流就是说无“消息保护边界的”   由于 tcp 无消息保护边界，（个人理解就是不知道消息从哪里开始，也不知道消息从哪里结束）需要在接收端来处理消息边界问题，这也就是说粘包，拆包问题。 什么是粘包，就是说有可能两个信息包，粘在了一起 有些包被拆成几块因为大于了 MSS,所以需要拆包，，然后与其它包粘在一起。   ，这里通俗理解就是说接受方无法去界定这个消息">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP">
+<meta property="og:url" content="http://ffitas.github.io/2020/08/19/TCP/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="TCP如何来理解 tcp 是面向流的 所谓的流就是说无“消息保护边界的”   由于 tcp 无消息保护边界，（个人理解就是不知道消息从哪里开始，也不知道消息从哪里结束）需要在接收端来处理消息边界问题，这也就是说粘包，拆包问题。 什么是粘包，就是说有可能两个信息包，粘在了一起 有些包被拆成几块因为大于了 MSS,所以需要拆包，，然后与其它包粘在一起。   ，这里通俗理解就是说接受方无法去界定这个消息">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://ffitas.github.io/2020/08/19/TCP/assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_2021-03-18_085843-20210318085932-amu0bbp.png">
+<meta property="article:published_time" content="2020-08-19T07:20:05.000Z">
+<meta property="article:modified_time" content="2021-07-15T07:19:37.752Z">
+<meta property="article:author" content="宋辰星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://ffitas.github.io/2020/08/19/TCP/assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_2021-03-18_085843-20210318085932-amu0bbp.png">
+
+<link rel="canonical" href="http://ffitas.github.io/2020/08/19/TCP/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>TCP | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-首页">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-分类">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://ffitas.github.io/2020/08/19/TCP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="宋辰星">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TCP
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-08-19 15:20:05" itemprop="dateCreated datePublished" datetime="2020-08-19T15:20:05+08:00">2020-08-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-07-15 15:19:37" itemprop="dateModified" datetime="2021-07-15T15:19:37+08:00">2021-07-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/TCP/" itemprop="url" rel="index"><span itemprop="name">TCP</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h2><h3 id="如何来理解-tcp-是面向流的"><a href="#如何来理解-tcp-是面向流的" class="headerlink" title="如何来理解 tcp 是面向流的"></a>如何来理解 tcp 是面向流的</h3><ol>
+<li><p>所谓的流就是说无<a href="siyuan://blocks/20210130110417-7sbw2pb">“消息保护边界的”</a></p>
+<blockquote>
+<ol>
+<li>由于 tcp 无消息保护边界，（个人理解就是不知道消息从哪里开始，也不知道消息从哪里结束）需要在接收端来处理消息边界问题，这也就是说粘包，拆包问题。</li>
+<li>什么是粘包，就是说有可能两个信息包，粘在了一起</li>
+<li>有些包被拆成几块因为大于了 MSS,所以需要拆包，，然后与其它包粘在一起。</li>
+</ol>
+</blockquote>
+<p>，这里通俗理解就是说接受方无法去界定这个消息的开始和结尾，而有消息保护边界就是说消息之间是独立的，因为消息与消息之间有边界。</p>
+</li>
+</ol>
+<h3 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h3><ol>
+<li>首先（先联想图）客户端向服务器发出序列号 SYN ，seq（随机发出一个序列号）</li>
+<li>服务器收到后会基于客户端的序列号，发出一个 ACK 确认号。为了表示一个回礼，还需要发 Seq</li>
+<li>客户端会再次对服务器的序列号产生一个确认。</li>
+</ol>
+<h3 id="为什么建立连接是三次，而不是两次。"><a href="#为什么建立连接是三次，而不是两次。" class="headerlink" title="为什么建立连接是三次，而不是两次。"></a>为什么建立连接是三次，而不是两次。</h3><h4 id="防止历史请求初始化-tcp-连接"><a href="#防止历史请求初始化-tcp-连接" class="headerlink" title="防止历史请求初始化 tcp 连接"></a>防止历史请求初始化 tcp 连接</h4><ol>
+<li><strong>反向验证两次为什么不行</strong>：如果只有两次，客户端这里对于服务器发来的报文，无法来判断这个报文是否有效（是否过期，是否超时）因为网路拥塞这样的事情很常见。</li>
+<li>所以客户端这里没有足够的<strong>上下文</strong>来判断，是否是如期的请求。</li>
+<li>此时从三次说，那为什么三次避免了这样的问题，当客户端收到服务器的请求的时候，<strong>客户端</strong>本身会<strong>存储</strong>自己所发出的<strong>序列号</strong>，所以可以依据所收到的 ack 来判断是否是如期的，如果是就正常连接。</li>
+<li>但如果不是，那就发送 <strong>RST</strong> （有重置的意思）报文，来结束这个连接。</li>
+</ol>
+<h4 id="确认彼此的系列号"><a href="#确认彼此的系列号" class="headerlink" title="确认彼此的系列号"></a>确认彼此的系列号</h4><ol>
+<li>其实 tcp 能够实现可靠连接的本质其实是能够确认彼此的序列号，那你如果只有两次，只能单向确认，无法互相确认，所以需要三次。</li>
+</ol>
+<h4 id="防止（服务器）资源浪费"><a href="#防止（服务器）资源浪费" class="headerlink" title="防止（服务器）资源浪费"></a>防止（服务器）资源浪费</h4><ol>
+<li>由于仅有两次，服务器是没有办法判断对方是否收到了正确的序号</li>
+<li>客户端如果因为网路阻塞，发出了多个 SYN 信号，那客户端有可能收到，也有可能收不到，所以为了确保对方收到，服务器只能建立多个重复的 tcp 链接。极大的浪费资源。</li>
+</ol>
+<h4 id="TCP-四次挥手"><a href="#TCP-四次挥手" class="headerlink" title="TCP 四次挥手"></a>TCP 四次挥手</h4><ol>
+<li>（首先看到<strong>四</strong>先想想哪四次，<strong>两对 FIN-ACK</strong> ，为什么一定要四次，就是说客户端向服务器先发 FIN 表示两个人关系淡了想分了，所以<strong>发出 FIN 终止报文</strong>。</li>
+<li>服务区器先对终止报文发出确认</li>
+<li>但服务器收到还可能对收到的信进行处理并发送，意味着此时不能立刻终止关系。</li>
+<li>在处理完信息后再去发出 FIN，自身进入 closed 状态。</li>
+<li>客户端收到信息后再次，向服务器发出一个 ACK,后它不会立刻进入到 closed 状态，它需要等待两个 <strong>MSL</strong>（最大报文生存时间）为什么是两个主要是因为网络时常会发生阻塞，对方没有收到一个 ACK,客户端会重发，那么重发之后一个来回就对应了两个 MSL。第二个原因：<a target="_blank" rel="noopener" href="https://blog.csdn.net/LF_2016/article/details/60468161">防止历史报文骚扰服务器</a>。</li>
+<li><a target="_blank" rel="noopener" href="http://www.bubuko.com/infodetail-3143286.html">易理解第二个原因</a></li>
+<li>补充：TIME——wait 等待过程。</li>
+</ol>
+<h3 id="TCP-流量控制"><a href="#TCP-流量控制" class="headerlink" title="TCP 流量控制"></a>TCP 流量控制</h3><h5 id="知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。"><a href="#知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。" class="headerlink" title="知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。"></a>知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。</h5><ol>
+<li>（此处联想 tcp 连接的一个过程）首先滑动窗口受限于接收方的接收能力大小，就是发送方每发送数据后，服务器就会去移动滑动窗口的指针，之后可用窗口会减小，并且会将当前可用窗口的大小发送给客户端，用来控制发送方发送的数据量以达到，流量控制。</li>
+</ol>
+<p><strong>讲述思路：</strong></p>
+<ol>
+<li>首先想到滑动窗口首先<strong>联想接收方有一个滑动窗口</strong>，也就是说这个主要是和接收方有关，防止对方发送的数据超出了接收方的数据。</li>
+</ol>
+<h5 id="发送窗口和接收窗口分别由哪些构成"><a href="#发送窗口和接收窗口分别由哪些构成" class="headerlink" title="发送窗口和接收窗口分别由哪些构成"></a>发送窗口和接收窗口分别由哪些构成</h5><ol>
+<li>发送窗口：由<strong>发送</strong>想到了<strong>已发送</strong>到并得到确认的字段区域，那有得到确认的自然还有<strong>没有接收到确认的</strong>，<strong>可用窗口</strong>，那由于自身肯定还有好多数据好多话想告诉接收方所以自然还会有许多数据等待发送，但是这个会超出对方的接收范围。也就 是<strong>不可用窗口</strong>。（两个发送，可不可以）4 个</li>
+<li>接收方窗口：已经接受到的数据并确认，<strong>理解有一个误区就是说接收方没有接收到数据但是没有得到确认的</strong>，发送方有是因为它自己是发送数据的，接收到的 ack 是有可能阻塞的，未确认，接收方不考虑这个，只管接收就好。<strong>还有未接收到，并是可接受范围内</strong>，<strong>未接收但是，超出了可用窗口大小的区域</strong>。（三个）</li>
+</ol>
+<h5 id="那你知道滑动窗口和拥塞窗口有什么区别不"><a href="#那你知道滑动窗口和拥塞窗口有什么区别不" class="headerlink" title="那你知道滑动窗口和拥塞窗口有什么区别不"></a>那你知道滑动窗口和拥塞窗口有什么区别不</h5><ol>
+<li>由拥塞想到了网络拥塞，也就是说主要应用于解决网络拥塞问题的，主要由发送方控制，防止它发多了导致了网络拥塞。</li>
+<li>而滑动窗口主要是因为解决防止发送方数据量超过了接收方的能力，也就是说其大小取决于接收方。</li>
+</ol>
+<h3 id="如果对方问到这个-tcp-流量控制我该怎么回答"><a href="#如果对方问到这个-tcp-流量控制我该怎么回答" class="headerlink" title="如果对方问到这个 tcp 流量控制我该怎么回答"></a>如果对方问到这个 tcp 流量控制我该怎么回答</h3><ol>
+<li>流量控制依赖于<strong>滑动窗口</strong>来控制发送方发送的速率不要太快（联想一个窗口，里面有有两个指针，然后再作答）</li>
+<li><img src="assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_2021-03-18_085843-20210318085932-amu0bbp.png" alt="屏幕截图_2021-03-18_085843.png">。</li>
+<li>你怎么理解这个窗口就是缓存区的<strong>剩余</strong>大小，只有收到确认才能将已经发送的数据进行发送。</li>
+<li>所谓的流量控制其实就是面试以服务端发送举例子（此时假定发送窗口可接收窗口都不变的情况），客户端接收做例子，这里我概括说就是，每当服务器发送完数据后，相应的可用窗口大小就会减少，相对应的指针也会发送变化，就是 snd.next 指向的是<strong>可用窗口</strong>大小的头指针，右移，当收到了对方的<strong>确认</strong>后，自生的 snd.una 也会右移，那么此时可用窗口大小自然增大。</li>
+<li>此时接收方再接收到信息后 rsv.next,也会发送移动，如果发送方的数据超过了其可用窗口就会导致窗口关闭也就是说起到了<strong>流量控制</strong>。在接收到接收方的确认后才可以据悉的发送数据。</li>
+<li>实际上如果应用层没有及时的读取缓存区里的数据就会导致，每次接收方接收到数据后，其<strong>接收</strong>窗口大小会变得更小，并且会将这个大小以 <strong>window 字段</strong>来告诉，发送方来达到流量控制，以此控制发送方的速率。</li>
+<li>但是窗口大小其实会动态变化的，如果先减少了接收缓存区，又收缩了窗口，最终没有多余接收缓存，可以接收数据，就会导致丢包，那为了解决这个问题，就是先<strong>来收缩窗口</strong>，再去<strong>减少</strong>接收缓存。（这里就是说这个，窗口）</li>
+<li>窗口局面就是说如果说在窗口关闭后，应用应用进程如果没有及时读取缓冲区里的数据会导致窗口收缩，</li>
+<li>那么在窗口关闭后应用进程及时读取消息，就会恢复其接收窗口大小，并且会通知发送方以 window 字段，但是这里有一个问题就是，如果这个消息丢失了，就会导致，<strong>死锁</strong>现象。</li>
+<li><strong>坚持定时器</strong>，就是一旦接收方窗口大小变为 0 就会启动，并每隔一段时间来进行探测报文探测对方目前可用窗口大小，这样就可以来避免死锁了。</li>
+</ol>
+<h3 id="糊涂窗口"><a href="#糊涂窗口" class="headerlink" title="糊涂窗口"></a>糊涂窗口</h3><ol>
+<li>糊涂窗口就是为了<strong>避免</strong>发送方发送<strong>小数据</strong>，因为 tcp ip 头部太大为了发送小数据而导致资源浪费。</li>
+<li>一般采取 Nagle 算法来解决就是通过这个 1：只有当窗口值<strong>大于 MSS</strong>，的长度，以及收到之前数据的<strong>确认</strong>之前，一直再囤积想要发送的数据。</li>
+</ol>
+<h3 id="拥塞控制（联想折线上升图）"><a href="#拥塞控制（联想折线上升图）" class="headerlink" title="拥塞控制（联想折线上升图）"></a>拥塞控制（联想折线上升图）</h3><ol>
+<li>首先来复盘一下自己的知识点，就是首先由拥塞想到了为什么拥塞窗口也就是说 crwd,</li>
+<li>那么也就是说所谓的拥塞窗口主要是来解决网络拥塞的。</li>
+<li>那么首先达到慢启动阶段，以指数增加。<a target="_blank" rel="noopener" href="https://blog.csdn.net/linweixuan/article/details/4353015">慢启动为什么是指数增加</a>。</li>
+<li>之后到达了门限值，之后进入了拥塞避免阶段，每接收到一个 ack 就拥塞窗口加拥塞窗口分之一。线性增加</li>
+<li>但是还是会拥塞，先有超时重传，门限值减半，拥塞窗口初始化为 1</li>
+<li>还有一种就是快重传会接收到三个重复的 ack，cwnd 减半，然后门限值为拥塞窗口一半，到达快恢复后，其拥塞窗口在此基础上加三（三个重复的 ack）。</li>
+</ol>
+<h3 id="粘包拆包问题"><a href="#粘包拆包问题" class="headerlink" title="粘包拆包问题"></a>粘包拆包问题</h3><h3 id="tcp-粘包，"><a href="#tcp-粘包，" class="headerlink" title="tcp 粘包，"></a>tcp 粘包，</h3><ol>
+<li>由于 tcp 无消息保护边界，（个人理解就是不知道消息从哪里开始，也不知道消息从哪里结束）需要在接收端来处理消息边界问题，这也就是说粘包，拆包问题。</li>
+<li>什么是粘包，就是说有可能两个信息包，粘在了一起</li>
+<li>有些包被拆成几块因为大于了 MSS,所以需要拆包，，然后与其它包粘在一起。</li>
+</ol>
+<h3 id="为什么会出现这个奇怪的现象"><a href="#为什么会出现这个奇怪的现象" class="headerlink" title="为什么会出现这个奇怪的现象"></a>为什么会出现这个奇怪的现象</h3><ol>
+<li>对于接受方就是，<strong>接受数据到缓存的</strong>速率<strong>大于</strong>了<strong>应用进程读取数据</strong>的速率，就会导致多个包粘连在一起。</li>
+<li>发送方的 Nagel 算法。导致出现了在接收到一个确认后，收集多个分组数据再去发送。/粘包。</li>
+</ol>
+<p>怎么解决这个问题</p>
+<ol>
+<li>发送方 去关闭 nagel 算法。</li>
+<li>由于接收方不清楚，一个完整消息的大小，所以发送端会给数据包，<strong>添加一个包首部</strong>，这个首部，会<strong>包含数据包的长度</strong>，这样接收方通过首部消息就可以知道了类似于有了消息边界。</li>
+<li>发送端将每个数据包大小固定，这样接收方就可以知道这个了。</li>
+<li>也可以在<strong>数据包之间设置边界</strong>，如添加特殊的符号，接收方就可以清楚一个完整数据包的大小了。</li>
+</ol>
+<h3 id="tcp-重传机制"><a href="#tcp-重传机制" class="headerlink" title="tcp 重传机制"></a>tcp 重传机制</h3><ol>
+<li>D-SACK<br>[http tcp](assets/http tcp.pdf?page=65).</li>
+</ol>
+<h3 id="tcp-的包一定是按照顺序的吗"><a href="#tcp-的包一定是按照顺序的吗" class="headerlink" title="tcp 的包一定是按照顺序的吗"></a>tcp 的包一定是按照顺序的吗</h3><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/jiujiu372/article/details/76855199">tcp 的包一定是按照顺序的吗</a></p>
+<p><a href="https://"></a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/07/19/websocket/" rel="prev" title="websocket">
+      <i class="fa fa-chevron-left"></i> websocket
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/09/15/HTML%E4%BD%93%E7%B3%BB/" rel="next" title="HTML">
+      HTML <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP"><span class="nav-number">1.</span> <span class="nav-text">TCP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%9D%A5%E7%90%86%E8%A7%A3-tcp-%E6%98%AF%E9%9D%A2%E5%90%91%E6%B5%81%E7%9A%84"><span class="nav-number">1.1.</span> <span class="nav-text">如何来理解 tcp 是面向流的</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%87%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BB%BA%E7%AB%8B%E8%BF%9E%E6%8E%A5%E6%98%AF%E4%B8%89%E6%AC%A1%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E4%B8%A4%E6%AC%A1%E3%80%82"><span class="nav-number">1.3.</span> <span class="nav-text">为什么建立连接是三次，而不是两次。</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%98%B2%E6%AD%A2%E5%8E%86%E5%8F%B2%E8%AF%B7%E6%B1%82%E5%88%9D%E5%A7%8B%E5%8C%96-tcp-%E8%BF%9E%E6%8E%A5"><span class="nav-number">1.3.1.</span> <span class="nav-text">防止历史请求初始化 tcp 连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A1%AE%E8%AE%A4%E5%BD%BC%E6%AD%A4%E7%9A%84%E7%B3%BB%E5%88%97%E5%8F%B7"><span class="nav-number">1.3.2.</span> <span class="nav-text">确认彼此的系列号</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%98%B2%E6%AD%A2%EF%BC%88%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%89%E8%B5%84%E6%BA%90%E6%B5%AA%E8%B4%B9"><span class="nav-number">1.3.3.</span> <span class="nav-text">防止（服务器）资源浪费</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TCP-%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B"><span class="nav-number">1.3.4.</span> <span class="nav-text">TCP 四次挥手</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP-%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6"><span class="nav-number">1.4.</span> <span class="nav-text">TCP 流量控制</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%9F%A5%E9%81%93%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E4%B8%8D%EF%BC%8C%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%92%8C%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%8E%A7%E5%88%B6%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E7%9A%84%E8%BF%87%E7%A8%8B%E6%98%AF%E6%80%8E%E6%A0%B7%E7%9A%84%E3%80%82"><span class="nav-number">1.4.0.1.</span> <span class="nav-text">知道滑动窗口不，客户端和服务端控制滑动窗口的过程是怎样的。</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8F%91%E9%80%81%E7%AA%97%E5%8F%A3%E5%92%8C%E6%8E%A5%E6%94%B6%E7%AA%97%E5%8F%A3%E5%88%86%E5%88%AB%E7%94%B1%E5%93%AA%E4%BA%9B%E6%9E%84%E6%88%90"><span class="nav-number">1.4.0.2.</span> <span class="nav-text">发送窗口和接收窗口分别由哪些构成</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%82%A3%E4%BD%A0%E7%9F%A5%E9%81%93%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%92%8C%E6%8B%A5%E5%A1%9E%E7%AA%97%E5%8F%A3%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB%E4%B8%8D"><span class="nav-number">1.4.0.3.</span> <span class="nav-text">那你知道滑动窗口和拥塞窗口有什么区别不</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E6%9E%9C%E5%AF%B9%E6%96%B9%E9%97%AE%E5%88%B0%E8%BF%99%E4%B8%AA-tcp-%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E6%88%91%E8%AF%A5%E6%80%8E%E4%B9%88%E5%9B%9E%E7%AD%94"><span class="nav-number">1.5.</span> <span class="nav-text">如果对方问到这个 tcp 流量控制我该怎么回答</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B3%8A%E6%B6%82%E7%AA%97%E5%8F%A3"><span class="nav-number">1.6.</span> <span class="nav-text">糊涂窗口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6%EF%BC%88%E8%81%94%E6%83%B3%E6%8A%98%E7%BA%BF%E4%B8%8A%E5%8D%87%E5%9B%BE%EF%BC%89"><span class="nav-number">1.7.</span> <span class="nav-text">拥塞控制（联想折线上升图）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B2%98%E5%8C%85%E6%8B%86%E5%8C%85%E9%97%AE%E9%A2%98"><span class="nav-number">1.8.</span> <span class="nav-text">粘包拆包问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tcp-%E7%B2%98%E5%8C%85%EF%BC%8C"><span class="nav-number">1.9.</span> <span class="nav-text">tcp 粘包，</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E5%87%BA%E7%8E%B0%E8%BF%99%E4%B8%AA%E5%A5%87%E6%80%AA%E7%9A%84%E7%8E%B0%E8%B1%A1"><span class="nav-number">1.10.</span> <span class="nav-text">为什么会出现这个奇怪的现象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tcp-%E9%87%8D%E4%BC%A0%E6%9C%BA%E5%88%B6"><span class="nav-number">1.11.</span> <span class="nav-text">tcp 重传机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tcp-%E7%9A%84%E5%8C%85%E4%B8%80%E5%AE%9A%E6%98%AF%E6%8C%89%E7%85%A7%E9%A1%BA%E5%BA%8F%E7%9A%84%E5%90%97"><span class="nav-number">1.12.</span> <span class="nav-text">tcp 的包一定是按照顺序的吗</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">宋辰星</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">宋辰星</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
