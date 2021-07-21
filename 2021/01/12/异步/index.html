@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"ffitas.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="异步异步发展阶段回调函数generator() Subtopic 子主题 子主题  promise 为什么有promise  避免出现回调地狱  它是如何避免的  通过.then的链式调用，从而避免的了不断嵌套的回调地狱     它有哪些状态  pending  new&#x2F;创建 一个promise后的状态   fulfilled  调用promise.resolve()的方法后   rejected">
+  <meta name="description" content="异步异步发展阶段回调函数generator()promise 为什么有promise  避免出现回调地狱  它是如何避免的  通过.then的链式调用，从而避免的了不断嵌套的回调地狱     它有哪些状态  pending  new&#x2F;创建 一个promise后的状态   fulfilled  调用promise.resolve()的方法后   rejected  异步任务出错&#x2F;或是抛出异常后&#x2F;&#x2F;但">
 <meta property="og:type" content="article">
 <meta property="og:title" content="垃圾回收机制">
 <meta property="og:url" content="http://ffitas.github.io/2021/01/12/%E5%BC%82%E6%AD%A5/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="异步异步发展阶段回调函数generator() Subtopic 子主题 子主题  promise 为什么有promise  避免出现回调地狱  它是如何避免的  通过.then的链式调用，从而避免的了不断嵌套的回调地狱     它有哪些状态  pending  new&#x2F;创建 一个promise后的状态   fulfilled  调用promise.resolve()的方法后   rejected">
+<meta property="og:description" content="异步异步发展阶段回调函数generator()promise 为什么有promise  避免出现回调地狱  它是如何避免的  通过.then的链式调用，从而避免的了不断嵌套的回调地狱     它有哪些状态  pending  new&#x2F;创建 一个promise后的状态   fulfilled  调用promise.resolve()的方法后   rejected  异步任务出错&#x2F;或是抛出异常后&#x2F;&#x2F;但">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-01-12T06:20:05.000Z">
-<meta property="article:modified_time" content="2021-07-15T07:12:29.106Z">
+<meta property="article:modified_time" content="2021-07-21T07:10:37.526Z">
 <meta property="article:author" content="宋辰星">
 <meta name="twitter:card" content="summary">
 
@@ -229,12 +229,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h1><h2 id="异步发展阶段"><a href="#异步发展阶段" class="headerlink" title="异步发展阶段"></a>异步发展阶段</h2><h3 id="回调函数"><a href="#回调函数" class="headerlink" title="回调函数"></a>回调函数</h3><h3 id="generator"><a href="#generator" class="headerlink" title="generator()"></a>generator()</h3><ul>
-<li>Subtopic</li>
-<li>子主题</li>
-<li>子主题</li>
-</ul>
-<h3 id="promise"><a href="#promise" class="headerlink" title="promise"></a>promise</h3><ul>
+        <h1 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h1><h2 id="异步发展阶段"><a href="#异步发展阶段" class="headerlink" title="异步发展阶段"></a>异步发展阶段</h2><h3 id="回调函数"><a href="#回调函数" class="headerlink" title="回调函数"></a>回调函数</h3><h3 id="generator"><a href="#generator" class="headerlink" title="generator()"></a>generator()</h3><h3 id="promise"><a href="#promise" class="headerlink" title="promise"></a>promise</h3><ul>
 <li><p>为什么有promise</p>
 <ul>
 <li><p>避免出现回调地狱</p>
