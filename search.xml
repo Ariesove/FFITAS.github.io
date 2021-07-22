@@ -1,6 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>HTTPS</title>
+    <url>/2021/01/19/HTTPS%E4%BD%93%E7%B3%BB/</url>
+    <content><![CDATA[<h4 id="问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改"><a href="#问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改" class="headerlink" title="问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改"></a>问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改</h4><ol>
+<li>首先由认证想到了<strong>身份认证</strong>，在 tls 握手阶段为了能够表明自己的身份，首先依赖于<strong>数字签名算法</strong>，就是首先会将密文用摘要算法，这些算法的特点就是单向性，和雪崩性，也就是说一旦中间人篡改一点点，摘要就会改变，然后此时用<strong>私钥</strong>（因为是唯一的）<strong>加密摘要</strong>，以及将<strong>公钥</strong>发送给对方，那么为了能够让客户端清楚是对的人发 的。</li>
+<li>需要依赖于 ca 机构的证书，那么我将数字签名和公钥，都发给对方，对方接收到之后取出公钥然后验签，确认是对方了，就继续握手阶段。</li>
+<li>那么它的加密过程是什么就是说在开始阶段，双方发给对方，发送 client random,server random ,验证身份阶段，服务器会发送 server params ，，客户端验签后会发送 client params  , 彼此通过 ecdhe 算法算法出一个 pre-master.</li>
+<li>双方此时具有三个参数（client random server random pre-master ） 生成 Master 主密钥，之后就用这个密钥进行加密信息。</li>
+</ol>
+<h4 id="那根证书怎么保证签发的证书是有安全有效的"><a href="#那根证书怎么保证签发的证书是有安全有效的" class="headerlink" title="那根证书怎么保证签发的证书是有安全有效的"></a>那根证书怎么保证签发的证书是有安全有效的</h4><ol>
+<li>此时联想一个证书链，浏览器是具备各大机构的<strong>根证书</strong>的，走证书链找对应的根证书</li>
+<li>易错点就是自己这个，这个证书发布是服务器不是这个机构，机构只是给申请者颁布证书的，并且就是 ca 机构页会对服务器发的公钥来加密，然后接受方用内置的 ca 公钥来解密 ca 的私钥</li>
+</ol>
+<h4 id="前面你说到-CA-机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解"><a href="#前面你说到-CA-机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解" class="headerlink" title="前面你说到 CA 机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解"></a>前面你说到 CA 机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解</h4><ol>
+<li>就是 ca 机构拿到这个，服务器发来的公钥，会用自己的私钥加密，形成证书的签名算法，之后呢就是，客户端保存有各大 ca 机构的公钥，然后进行解密，验证这个 ca 机构，这里是证书的签名，不是之前那个服务器，的签名算法，不要弄混了</li>
+</ol>
+<h4 id="如果发生无限套娃的情况，根证书都被篡改怎么办-或者说-https-一定是安全的吗？"><a href="#如果发生无限套娃的情况，根证书都被篡改怎么办-或者说-https-一定是安全的吗？" class="headerlink" title="如果发生无限套娃的情况，根证书都被篡改怎么办/或者说 https 一定是安全的吗？"></a>如果发生无限套娃的情况，根证书都被篡改怎么办/或者说 https 一定是安全的吗？</h4><ol>
+<li>无解，因为证书体系的保障就是依赖于根证书的，这个都无法保障的话，确实无解。</li>
+</ol>
+<h3 id="你讲到-HTTPS-用到了加密算法，加密算法都有哪些类型，说说看"><a href="#你讲到-HTTPS-用到了加密算法，加密算法都有哪些类型，说说看" class="headerlink" title="你讲到 HTTPS 用到了加密算法，加密算法都有哪些类型，说说看"></a>你讲到 HTTPS 用到了加密算法，加密算法都有哪些类型，说说看</h3><ol>
+<li>首先对称加密算法，非对称加密算法，摘要算法里的单向加密也就是说只能加密不能解密。</li>
+<li>对称加密：ACE chacha20</li>
+<li>非对称加密： RSA ECDH</li>
+<li>摘要算法： MD5 SHA-2</li>
+</ol>
+<h3 id="对称加密和非对称加密有什么区别吗"><a href="#对称加密和非对称加密有什么区别吗" class="headerlink" title="对称加密和非对称加密有什么区别吗"></a>对称加密和非对称加密有什么区别吗</h3><ol>
+<li>对称加密简单来讲就是用同一个公钥进行加密</li>
+<li>非对称加密就是公钥加密，私钥解密，因为私钥是唯一的。补充：其实也可以用私钥加密公钥解密，就是数字签名算法了。</li>
+</ol>
+<h3 id="MD5、SHA、Base64-和-RSA-属于什么类型的算法，对称还是非对称？"><a href="#MD5、SHA、Base64-和-RSA-属于什么类型的算法，对称还是非对称？" class="headerlink" title="MD5、SHA、Base64 和 RSA 属于什么类型的算法，对称还是非对称？"></a>MD5、SHA、Base64 和 RSA 属于什么类型的算法，对称还是非对称？</h3><ol>
+<li>MD5,SHA 属于摘要算法，，RSA 常用非对称加密算法。</li>
+<li><strong>Base64,用 64 个字符表示二进制（B）不是加密算法</strong>。</li>
+</ol>
+<h4 id="1-HTTP-和-HTTPS-之间有什么区别或者说改进"><a href="#1-HTTP-和-HTTPS-之间有什么区别或者说改进" class="headerlink" title="1. HTTP 和 HTTPS 之间有什么区别或者说改进"></a>1. HTTP 和 HTTPS 之间有什么区别或者说改进</h4><ol>
+<li>首先 TLS—》 是什么： 网景公司开发，一个协议，在哪： TCP/IP 协议栈中 HTTP 层之下，TCP 协议层之上，解决了 HTTP 安全性问题， 在 TLS1.2 握手协议（HTTP 和 HTTPS 是好兄弟需要握手）中由于身份认证，需要向 <strong>CA 机构申请证书</strong>。</li>
+<li>然后还有一个细节就是 HTTPS 的端口号是 443，HTTP 是 80（S4，P 的吧（8））</li>
+</ol>
+<h4 id="联想记忆路径："><a href="#联想记忆路径：" class="headerlink" title="联想记忆路径："></a>联想记忆路径：</h4><ol>
+<li>由 S 联想到了 TLS， 把它想象一个人，查它户口，是谁，在哪，解决了什么问题，同时为了表明自己的身份，需要向 CA 机构申请证书。</li>
+</ol>
+<h4 id="2-HTTPS-具体是如何解决-HTTP-的安全性问题的"><a href="#2-HTTPS-具体是如何解决-HTTP-的安全性问题的" class="headerlink" title="2. HTTPS 具体是如何解决 HTTP 的安全性问题的"></a>2. HTTPS 具体是如何解决 HTTP 的安全性问题的</h4><ol>
+<li>这个题就得从机密性，不可否认性，完整性，身份认证四个点来答（这里首先得想起来有哪四点 https 怎么做到这么安全的肯定是 😂‘<strong>饥不择食</strong>’择对应的是完整性，食对应的是身 ，首字母发音，想不起来了就想想 https 是通过饥不择食的手段达到安全性的目的）</li>
+</ol>
+<p><a href="https://mp.weixin.qq.com/s/9QrphQhq_N3OxySzf2wWOg">2020 抖音架构组前端实习生面经(offer)</a>。</p>
+<h3 id="HTTPS-1-2-ECEH-握手过程"><a href="#HTTPS-1-2-ECEH-握手过程" class="headerlink" title="HTTPS 1.2 ECEH 握手过程"></a>HTTPS 1.2 ECEH 握手过程</h3><p><a href="assets/HTTPS%E7%B3%BB%E7%BB%9F-20210305211818-o5hst6h.emmx">HTTPS Ecdh 握手思维导图</a>。</p>
+<h3 id="tls1-3-握手"><a href="#tls1-3-握手" class="headerlink" title="tls1.3 握手"></a>tls1.3 握手</h3><ol>
+<li>简单来讲就是说讲之前的 hello 阶段与密钥交换阶段合并。一次信息交换，就可以产生 两个 random 随机数，以及两个 params。</li>
+</ol>
+<h3 id="https-为什么可以预防这个中间人的攻击"><a href="#https-为什么可以预防这个中间人的攻击" class="headerlink" title="https 为什么可以预防这个中间人的攻击"></a>https 为什么可以预防这个中间人的攻击</h3><ol>
+<li>依赖摘要算法防止被篡改，依赖 ca 机构，来防止身份的一个伪造。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>HTTPS</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>HTTP</title>
+    <url>/2020/12/29/HTTP%E4%BD%93%E7%B3%BB/</url>
+    <content><![CDATA[<h2 id="👱-GET-和-post-本质区别"><a href="#👱-GET-和-post-本质区别" class="headerlink" title="👱 GET 和 post 本质区别"></a>👱 GET 和 post 本质区别</h2><h3 id="HTTP-常见的请求头字段"><a href="#HTTP-常见的请求头字段" class="headerlink" title="HTTP 常见的请求头字段"></a>HTTP 常见的请求头字段</h3><h3 id="叙述思路"><a href="#叙述思路" class="headerlink" title="叙述思路"></a>叙述思路</h3><ol>
+<li>首先属于 HTTP 协议—–》 引出本质是 TCP 连接——》 引出 tcp 连接次数问题—–&gt; 由次数问题：想到幂等。</li>
+<li>其次想到安全幂等，GET 安全幂等，POST 不安全也不幂等。</li>
+<li>同时还有一点 get 请求能够<strong>缓存</strong>比如第一次请求时浏览器会把相应数据缓存到本地，方便之后能直接命中：强缓存逻辑，而 post 请求时无法被缓存的。</li>
+<li>其次想到想起它们属于 HTTP 协议，也就是说也是基于 TCP 链接的，所以它们的<strong>本质</strong>都是 <strong>TCP 连接。</strong></li>
+<li>GET 请求是<strong>一个 tcp 报文</strong>  :(对于 GET 方式的请求，浏览器会把 http <strong>header</strong> 和 data 一并发送出去，服务器响应 200（返回数据）。) //你请求肯定要有请求头吗，对吧</li>
+<li>而 POST 请求是<strong>两个 tcp 报文</strong>，(浏览器先发送 header，服务器响应 100，浏览器再发送 data，服务器响应 200 ok（返回数据）。)</li>
+<li>所谓<strong>安全</strong>就是不会改变服务器资源，所谓的<strong><strong>幂</strong></strong>想起次幂，也就是说<strong>多次</strong>的意思</li>
+<li>所谓的<strong>不安全</strong>其实就是会改变，服务器的资源，所谓的不幂等就是，多次操作结果不相同。</li>
+</ol>
+<h4 id="💯-100-continue"><a href="#💯-100-continue" class="headerlink" title="💯 100 continue"></a>💯 100 continue</h4><ol>
+<li>HTTP <strong><code>100 Continue</code></strong> 信息型状态响应码表示目前为止一切正常, 客户端应该继续请求, 如果已完成请求则忽略.// 自己的话就是:👌  因为是 <strong>100</strong> 分所以<strong>目前状态正常，可以继续请求。</strong></li>
+</ol>
+<h3 id="为什么-http1-不能实现多路复用"><a href="#为什么-http1-不能实现多路复用" class="headerlink" title="为什么 http1 不能实现多路复用"></a>为什么 http1 不能实现多路复用</h3><ol>
+<li>HTTP/1.1 不是二进制传输，而是通过文本进行传输。由于没有流的概念，在使用并行传输（多路复用）传递数据时，接收端在接收到响应后，并不能区分多个响应分别对应的请求，所以无法将多个响应的结果重新进行组装，也就实现不了多路复用。</li>
+</ol>
+<h3 id="响应码"><a href="#响应码" class="headerlink" title="响应码"></a>响应码</h3><ol>
+<li>301 : 就是永久重定向，就是从 seo 优化的角度更好，会<strong>转移权重</strong>。（联想一个旧网址的 seo 和新网址的 seo）.</li>
+<li>但是 302 就是临时的重定向，<strong>不会转移权重</strong>不会去更新这个，等于是搜索权重下降了，因为 seo 不允许多个，域名指向一个地址，作弊提升这个权重排名。</li>
+<li>叙述思路：就是，301–》seo ，转移权重（就是将旧地址的搜索权重转移到新的）。. 重定向之后会做什么？读取浏览器缓存，强缓存和协商缓存</li>
+<li>302–》临时的重定向，不会把旧网址的，权重进行转移。但是会改变请求的方法把 post 改为了 get 请求，所以出现了 307 的临时重定向，不会去改变这个请求的方法。</li>
+</ol>
+<h3 id="http-持久连接"><a href="#http-持久连接" class="headerlink" title="http 持久连接"></a>http 持久连接</h3><ol>
+<li>首先第一点，何时断开服务器会去设定一个时间然后，在 keep-alive 中添加这个断开的时间。</li>
+<li>其次何时数据传输完毕，数据联想为一个 length,是不是只有长度符合你的 length 才能够判断，数据传输完毕，追问—》如果说没有 content-length;怎么来判断，就是说看编码快，如果出现了0块那就为结束</li>
+</ol>
+]]></content>
+      <categories>
+        <category>HTTP</category>
+      </categories>
+  </entry>
+  <entry>
     <title>HTML</title>
     <url>/2020/09/15/HTML%E4%BD%93%E7%B3%BB/</url>
     <content><![CDATA[<!DOCTYPE html>
@@ -98,93 +188,117 @@
       </categories>
   </entry>
   <entry>
-    <title>HTTPS</title>
-    <url>/2021/01/19/HTTPS%E4%BD%93%E7%B3%BB/</url>
-    <content><![CDATA[<h4 id="问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改"><a href="#问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改" class="headerlink" title="问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改"></a>问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改</h4><ol>
-<li>首先由认证想到了<strong>身份认证</strong>，在 tls 握手阶段为了能够表明自己的身份，首先依赖于<strong>数字签名算法</strong>，就是首先会将密文用摘要算法，这些算法的特点就是单向性，和雪崩性，也就是说一旦中间人篡改一点点，摘要就会改变，然后此时用<strong>私钥</strong>（因为是唯一的）<strong>加密摘要</strong>，以及将<strong>公钥</strong>发送给对方，那么为了能够让客户端清楚是对的人发 的。</li>
-<li>需要依赖于 ca 机构的证书，那么我将数字签名和公钥，都发给对方，对方接收到之后取出公钥然后验签，确认是对方了，就继续握手阶段。</li>
-<li>那么它的加密过程是什么就是说在开始阶段，双方发给对方，发送 client random,server random ,验证身份阶段，服务器会发送 server params ，，客户端验签后会发送 client params  , 彼此通过 ecdhe 算法算法出一个 pre-master.</li>
-<li>双方此时具有三个参数（client random server random pre-master ） 生成 Master 主密钥，之后就用这个密钥进行加密信息。</li>
+    <title>TCP</title>
+    <url>/2020/08/19/TCP/</url>
+    <content><![CDATA[<h2 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h2><h3 id="如何来理解-tcp-是面向流的"><a href="#如何来理解-tcp-是面向流的" class="headerlink" title="如何来理解 tcp 是面向流的"></a>如何来理解 tcp 是面向流的</h3><ol>
+<li><p>所谓的流就是说无<a href="siyuan://blocks/20210130110417-7sbw2pb">“消息保护边界的”</a></p>
+<blockquote>
+<ol>
+<li>由于 tcp 无消息保护边界，（个人理解就是不知道消息从哪里开始，也不知道消息从哪里结束）需要在接收端来处理消息边界问题，这也就是说粘包，拆包问题。</li>
+<li>什么是粘包，就是说有可能两个信息包，粘在了一起</li>
+<li>有些包被拆成几块因为大于了 MSS,所以需要拆包，，然后与其它包粘在一起。</li>
 </ol>
-<h4 id="那根证书怎么保证签发的证书是有安全有效的"><a href="#那根证书怎么保证签发的证书是有安全有效的" class="headerlink" title="那根证书怎么保证签发的证书是有安全有效的"></a>那根证书怎么保证签发的证书是有安全有效的</h4><ol>
-<li>此时联想一个证书链，浏览器是具备各大机构的<strong>根证书</strong>的，走证书链找对应的根证书</li>
-<li>易错点就是自己这个，这个证书发布是服务器不是这个机构，机构只是给申请者颁布证书的，并且就是 ca 机构页会对服务器发的公钥来加密，然后接受方用内置的 ca 公钥来解密 ca 的私钥</li>
+</blockquote>
+<p>，这里通俗理解就是说接受方无法去界定这个消息的开始和结尾，而有消息保护边界就是说消息之间是独立的，因为消息与消息之间有边界。</p>
+</li>
 </ol>
-<h4 id="前面你说到-CA-机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解"><a href="#前面你说到-CA-机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解" class="headerlink" title="前面你说到 CA 机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解"></a>前面你说到 CA 机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解</h4><ol>
-<li>就是 ca 机构拿到这个，服务器发来的公钥，会用自己的私钥加密，形成证书的签名算法，之后呢就是，客户端保存有各大 ca 机构的公钥，然后进行解密，验证这个 ca 机构，这里是证书的签名，不是之前那个服务器，的签名算法，不要弄混了</li>
+<h3 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h3><ol>
+<li>首先（先联想图）客户端向服务器发出序列号 SYN ，seq（随机发出一个序列号）</li>
+<li>服务器收到后会基于客户端的序列号，发出一个 ACK 确认号。为了表示一个回礼，还需要发 Seq</li>
+<li>客户端会再次对服务器的序列号产生一个确认。</li>
 </ol>
-<h4 id="如果发生无限套娃的情况，根证书都被篡改怎么办-或者说-https-一定是安全的吗？"><a href="#如果发生无限套娃的情况，根证书都被篡改怎么办-或者说-https-一定是安全的吗？" class="headerlink" title="如果发生无限套娃的情况，根证书都被篡改怎么办/或者说 https 一定是安全的吗？"></a>如果发生无限套娃的情况，根证书都被篡改怎么办/或者说 https 一定是安全的吗？</h4><ol>
-<li>无解，因为证书体系的保障就是依赖于根证书的，这个都无法保障的话，确实无解。</li>
+<h3 id="为什么建立连接是三次，而不是两次。"><a href="#为什么建立连接是三次，而不是两次。" class="headerlink" title="为什么建立连接是三次，而不是两次。"></a>为什么建立连接是三次，而不是两次。</h3><h4 id="防止历史请求初始化-tcp-连接"><a href="#防止历史请求初始化-tcp-连接" class="headerlink" title="防止历史请求初始化 tcp 连接"></a>防止历史请求初始化 tcp 连接</h4><ol>
+<li><strong>反向验证两次为什么不行</strong>：如果只有两次，客户端这里对于服务器发来的报文，无法来判断这个报文是否有效（是否过期，是否超时）因为网路拥塞这样的事情很常见。</li>
+<li>所以客户端这里没有足够的<strong>上下文</strong>来判断，是否是如期的请求。</li>
+<li>此时从三次说，那为什么三次避免了这样的问题，当客户端收到服务器的请求的时候，<strong>客户端</strong>本身会<strong>存储</strong>自己所发出的<strong>序列号</strong>，所以可以依据所收到的 ack 来判断是否是如期的，如果是就正常连接。</li>
+<li>但如果不是，那就发送 <strong>RST</strong> （有重置的意思）报文，来结束这个连接。</li>
 </ol>
-<h3 id="你讲到-HTTPS-用到了加密算法，加密算法都有哪些类型，说说看"><a href="#你讲到-HTTPS-用到了加密算法，加密算法都有哪些类型，说说看" class="headerlink" title="你讲到 HTTPS 用到了加密算法，加密算法都有哪些类型，说说看"></a>你讲到 HTTPS 用到了加密算法，加密算法都有哪些类型，说说看</h3><ol>
-<li>首先对称加密算法，非对称加密算法，摘要算法里的单向加密也就是说只能加密不能解密。</li>
-<li>对称加密：ACE chacha20</li>
-<li>非对称加密： RSA ECDH</li>
-<li>摘要算法： MD5 SHA-2</li>
+<h4 id="确认彼此的系列号"><a href="#确认彼此的系列号" class="headerlink" title="确认彼此的系列号"></a>确认彼此的系列号</h4><ol>
+<li>其实 tcp 能够实现可靠连接的本质其实是能够确认彼此的序列号，那你如果只有两次，只能单向确认，无法互相确认，所以需要三次。</li>
 </ol>
-<h3 id="对称加密和非对称加密有什么区别吗"><a href="#对称加密和非对称加密有什么区别吗" class="headerlink" title="对称加密和非对称加密有什么区别吗"></a>对称加密和非对称加密有什么区别吗</h3><ol>
-<li>对称加密简单来讲就是用同一个公钥进行加密</li>
-<li>非对称加密就是公钥加密，私钥解密，因为私钥是唯一的。补充：其实也可以用私钥加密公钥解密，就是数字签名算法了。</li>
+<h4 id="防止（服务器）资源浪费"><a href="#防止（服务器）资源浪费" class="headerlink" title="防止（服务器）资源浪费"></a>防止（服务器）资源浪费</h4><ol>
+<li>由于仅有两次，服务器是没有办法判断对方是否收到了正确的序号</li>
+<li>客户端如果因为网路阻塞，发出了多个 SYN 信号，那客户端有可能收到，也有可能收不到，所以为了确保对方收到，服务器只能建立多个重复的 tcp 链接。极大的浪费资源。</li>
 </ol>
-<h3 id="MD5、SHA、Base64-和-RSA-属于什么类型的算法，对称还是非对称？"><a href="#MD5、SHA、Base64-和-RSA-属于什么类型的算法，对称还是非对称？" class="headerlink" title="MD5、SHA、Base64 和 RSA 属于什么类型的算法，对称还是非对称？"></a>MD5、SHA、Base64 和 RSA 属于什么类型的算法，对称还是非对称？</h3><ol>
-<li>MD5,SHA 属于摘要算法，，RSA 常用非对称加密算法。</li>
-<li><strong>Base64,用 64 个字符表示二进制（B）不是加密算法</strong>。</li>
+<h4 id="TCP-四次挥手"><a href="#TCP-四次挥手" class="headerlink" title="TCP 四次挥手"></a>TCP 四次挥手</h4><ol>
+<li>（首先看到<strong>四</strong>先想想哪四次，<strong>两对 FIN-ACK</strong> ，为什么一定要四次，就是说客户端向服务器先发 FIN 表示两个人关系淡了想分了，所以<strong>发出 FIN 终止报文</strong>。</li>
+<li>服务区器先对终止报文发出确认</li>
+<li>但服务器收到还可能对收到的信进行处理并发送，意味着此时不能立刻终止关系。</li>
+<li>在处理完信息后再去发出 FIN，自身进入 closed 状态。</li>
+<li>客户端收到信息后再次，向服务器发出一个 ACK,后它不会立刻进入到 closed 状态，它需要等待两个 <strong>MSL</strong>（最大报文生存时间）为什么是两个主要是因为网络时常会发生阻塞，对方没有收到一个 ACK,客户端会重发，那么重发之后一个来回就对应了两个 MSL。第二个原因：<a href="https://blog.csdn.net/LF_2016/article/details/60468161">防止历史报文骚扰服务器</a>。</li>
+<li><a href="http://www.bubuko.com/infodetail-3143286.html">易理解第二个原因</a></li>
+<li>补充：TIME——wait 等待过程。</li>
 </ol>
-<h4 id="1-HTTP-和-HTTPS-之间有什么区别或者说改进"><a href="#1-HTTP-和-HTTPS-之间有什么区别或者说改进" class="headerlink" title="1. HTTP 和 HTTPS 之间有什么区别或者说改进"></a>1. HTTP 和 HTTPS 之间有什么区别或者说改进</h4><ol>
-<li>首先 TLS—》 是什么： 网景公司开发，一个协议，在哪： TCP/IP 协议栈中 HTTP 层之下，TCP 协议层之上，解决了 HTTP 安全性问题， 在 TLS1.2 握手协议（HTTP 和 HTTPS 是好兄弟需要握手）中由于身份认证，需要向 <strong>CA 机构申请证书</strong>。</li>
-<li>然后还有一个细节就是 HTTPS 的端口号是 443，HTTP 是 80（S4，P 的吧（8））</li>
+<h3 id="TCP-流量控制"><a href="#TCP-流量控制" class="headerlink" title="TCP 流量控制"></a>TCP 流量控制</h3><h5 id="客户端和服务端控制滑动窗口的过程是怎样的。"><a href="#客户端和服务端控制滑动窗口的过程是怎样的。" class="headerlink" title="客户端和服务端控制滑动窗口的过程是怎样的。"></a>客户端和服务端控制滑动窗口的过程是怎样的。</h5><ol>
+<li>首先滑动窗口受限于接收方的接收能力大小，就是发送方每发送数据后，服务器就会去移动滑动窗口的指针，之后可用窗口会减小，并且会将当前可用窗口的大小发送给客户端，用来控制发送方发送的数据量以达到，流量控制。</li>
 </ol>
-<h4 id="联想记忆路径："><a href="#联想记忆路径：" class="headerlink" title="联想记忆路径："></a>联想记忆路径：</h4><ol>
-<li>由 S 联想到了 TLS， 把它想象一个人，查它户口，是谁，在哪，解决了什么问题，同时为了表明自己的身份，需要向 CA 机构申请证书。</li>
+<p><strong>讲述思路：</strong></p>
+<ol>
+<li>首先想到滑动窗口首先<strong>联想接收方有一个滑动窗口</strong>，也就是说这个主要是和接收方有关，防止对方发送的数据超出了接收方的数据。</li>
 </ol>
-<h4 id="2-HTTPS-具体是如何解决-HTTP-的安全性问题的"><a href="#2-HTTPS-具体是如何解决-HTTP-的安全性问题的" class="headerlink" title="2. HTTPS 具体是如何解决 HTTP 的安全性问题的"></a>2. HTTPS 具体是如何解决 HTTP 的安全性问题的</h4><ol>
-<li>这个题就得从机密性，不可否认性，完整性，身份认证四个点来答（这里首先得想起来有哪四点 https 怎么做到这么安全的肯定是 😂‘<strong>饥不择食</strong>’择对应的是完整性，食对应的是身 ，首字母发音，想不起来了就想想 https 是通过饥不择食的手段达到安全性的目的）</li>
+<h5 id="发送窗口和接收窗口分别由哪些构成"><a href="#发送窗口和接收窗口分别由哪些构成" class="headerlink" title="发送窗口和接收窗口分别由哪些构成"></a>发送窗口和接收窗口分别由哪些构成</h5><ol>
+<li>发送窗口：由<strong>发送</strong>想到了<strong>已发送</strong>到并得到确认的字段区域，那有得到确认的自然还有<strong>没有接收到确认的</strong>，<strong>可用窗口</strong>，那由于自身肯定还有好多数据好多话想告诉接收方所以自然还会有许多数据等待发送，但是这个会超出对方的接收范围。也就 是<strong>不可用窗口</strong>。（两个发送，可不可以）4 个</li>
+<li>接收方窗口：已经接受到的数据并确认，<strong>理解有一个误区就是说接收方没有接收到数据但是没有得到确认的</strong>，发送方有是因为它自己是发送数据的，接收到的 ack 是有可能阻塞的，未确认，接收方不考虑这个，只管接收就好。<strong>还有未接收到，并是可接受范围内</strong>，<strong>未接收但是，超出了可用窗口大小的区域</strong>。（三个）</li>
 </ol>
-<p><a href="https://mp.weixin.qq.com/s/9QrphQhq_N3OxySzf2wWOg">2020 抖音架构组前端实习生面经(offer)</a>。</p>
-<h3 id="HTTPS-1-2-ECEH-握手过程"><a href="#HTTPS-1-2-ECEH-握手过程" class="headerlink" title="HTTPS 1.2 ECEH 握手过程"></a>HTTPS 1.2 ECEH 握手过程</h3><p><a href="assets/HTTPS%E7%B3%BB%E7%BB%9F-20210305211818-o5hst6h.emmx">HTTPS Ecdh 握手思维导图</a>。</p>
-<h3 id="tls1-3-握手"><a href="#tls1-3-握手" class="headerlink" title="tls1.3 握手"></a>tls1.3 握手</h3><ol>
-<li>简单来讲就是说讲之前的 hello 阶段与密钥交换阶段合并。一次信息交换，就可以产生 两个 random 随机数，以及两个 params。</li>
+<h5 id="滑动窗口和拥塞窗口有什么区别"><a href="#滑动窗口和拥塞窗口有什么区别" class="headerlink" title="滑动窗口和拥塞窗口有什么区别"></a>滑动窗口和拥塞窗口有什么区别</h5><ol>
+<li>由拥塞想到了网络拥塞，也就是说主要应用于解决网络拥塞问题的，主要由发送方控制，防止它发多了导致了网络拥塞。</li>
+<li>而滑动窗口主要是因为解决防止发送方数据量超过了接收方的能力，也就是说其大小取决于接收方。</li>
 </ol>
-<h3 id="https-为什么可以预防这个中间人的攻击"><a href="#https-为什么可以预防这个中间人的攻击" class="headerlink" title="https 为什么可以预防这个中间人的攻击"></a>https 为什么可以预防这个中间人的攻击</h3><ol>
-<li>依赖摘要算法防止被篡改，依赖 ca 机构，来防止身份的一个伪造。</li>
+<h3 id="tcp流量控制"><a href="#tcp流量控制" class="headerlink" title="tcp流量控制"></a>tcp流量控制</h3><ol>
+<li><p>流量控制依赖于<strong>滑动窗口</strong>来控制发送方发送的速率不要太快（联想一个窗口，里面有有两个指针，然后再作答）</p>
+</li>
+<li><p>你怎么理解这个窗口就是缓存区的<strong>剩余</strong>大小，只有收到确认才能将已经发送的数据进行发送。</p>
+</li>
+<li><p>所谓的流量控制其实就是面试以服务端发送举例子（此时假定发送窗口可接收窗口都不变的情况），客户端接收做例子，这里我概括说就是，每当服务器发送完数据后，相应的可用窗口大小就会减少，相对应的指针也会发送变化，就是 snd.next 指向的是<strong>可用窗口</strong>大小的头指针，右移，当收到了对方的<strong>确认</strong>后，自生的 snd.una 也会右移，那么此时可用窗口大小自然增大。</p>
+</li>
+<li><p>此时接收方再接收到信息后 rsv.next,也会发送移动，如果发送方的数据超过了其可用窗口就会导致窗口关闭也就是说起到了<strong>流量控制</strong>。在接收到接收方的确认后才可以据悉的发送数据。</p>
+</li>
+<li><p>实际上如果应用层没有及时的读取缓存区里的数据就会导致，每次接收方接收到数据后，其<strong>接收</strong>窗口大小会变得更小，并且会将这个大小以 <strong>window 字段</strong>来告诉，发送方来达到流量控制，以此控制发送方的速率。</p>
+</li>
+<li><p>但是窗口大小其实会动态变化的，如果先减少了接收缓存区，又收缩了窗口，最终没有多余接收缓存，可以接收数据，就会导致丢包，那为了解决这个问题，就是先<strong>来收缩窗口</strong>，再去<strong>减少</strong>接收缓存。（这里就是说这个，窗口）</p>
+</li>
+<li><p>窗口局面就是说如果说在窗口关闭后，应用应用进程如果没有及时读取缓冲区里的数据会导致窗口收缩，</p>
+</li>
+<li><p>那么在窗口关闭后应用进程及时读取消息，就会恢复其接收窗口大小，并且会通知发送方以 window 字段，但是这里有一个问题就是，如果这个消息丢失了，就会导致，<strong>死锁</strong>现象。</p>
+</li>
+<li><p><strong>坚持定时器</strong>，就是一旦接收方窗口大小变为 0 就会启动，并每隔一段时间来进行探测报文探测对方目前可用窗口大小，这样就可以来避免死锁了。</p>
+</li>
 </ol>
+<h3 id="糊涂窗口"><a href="#糊涂窗口" class="headerlink" title="糊涂窗口"></a>糊涂窗口</h3><ol>
+<li>糊涂窗口就是为了<strong>避免</strong>发送方发送<strong>小数据</strong>，因为 tcp ip 头部太大为了发送小数据而导致资源浪费。</li>
+<li>一般采取 Nagle 算法来解决就是通过这个 1：只有当窗口值<strong>大于 MSS</strong>，的长度，以及收到之前数据的<strong>确认</strong>之前，一直再囤积想要发送的数据。</li>
+</ol>
+<h3 id="拥塞控制（联想折线上升图）"><a href="#拥塞控制（联想折线上升图）" class="headerlink" title="拥塞控制（联想折线上升图）"></a>拥塞控制（联想折线上升图）</h3><ol>
+<li>首先来复盘一下自己的知识点，就是首先由拥塞想到了为什么拥塞窗口也就是说 crwd,</li>
+<li>那么也就是说所谓的拥塞窗口主要是来解决网络拥塞的。</li>
+<li>那么首先达到慢启动阶段，以指数增加。<a href="https://blog.csdn.net/linweixuan/article/details/4353015">慢启动为什么是指数增加</a>。</li>
+<li>之后到达了门限值，之后进入了拥塞避免阶段，每接收到一个 ack 就拥塞窗口加拥塞窗口分之一。线性增加</li>
+<li>但是还是会拥塞，先有超时重传，门限值减半，拥塞窗口初始化为 1</li>
+<li>还有一种就是快重传会接收到三个重复的 ack，cwnd 减半，然后门限值为拥塞窗口一半，到达快恢复后，其拥塞窗口在此基础上加三（三个重复的 ack）。</li>
+</ol>
+<h3 id="粘包拆包问题"><a href="#粘包拆包问题" class="headerlink" title="粘包拆包问题"></a>粘包拆包问题</h3><h3 id="tcp-粘包，"><a href="#tcp-粘包，" class="headerlink" title="tcp 粘包，"></a>tcp 粘包，</h3><ol>
+<li>由于 tcp 无消息保护边界，（个人理解就是不知道消息从哪里开始，也不知道消息从哪里结束）需要在接收端来处理消息边界问题，这也就是说粘包，拆包问题。</li>
+<li>什么是粘包，就是说有可能两个信息包，粘在了一起</li>
+<li>有些包被拆成几块因为大于了 MSS,所以需要拆包，，然后与其它包粘在一起。</li>
+</ol>
+<h3 id="为什么会出现这个奇怪的现象"><a href="#为什么会出现这个奇怪的现象" class="headerlink" title="为什么会出现这个奇怪的现象"></a>为什么会出现这个奇怪的现象</h3><ol>
+<li>对于接受方就是，<strong>接受数据到缓存的</strong>速率<strong>大于</strong>了<strong>应用进程读取数据</strong>的速率，就会导致多个包粘连在一起。</li>
+<li>发送方的 Nagel 算法。导致出现了在接收到一个确认后，收集多个分组数据再去发送。/粘包。</li>
+</ol>
+<p>怎么解决这个问题</p>
+<ol>
+<li>发送方 去关闭 nagel 算法。</li>
+<li>由于接收方不清楚，一个完整消息的大小，所以发送端会给数据包，<strong>添加一个包首部</strong>，这个首部，会<strong>包含数据包的长度</strong>，这样接收方通过首部消息就可以知道了类似于有了消息边界。</li>
+<li>发送端将每个数据包大小固定，这样接收方就可以知道这个了。</li>
+<li>也可以在<strong>数据包之间设置边界</strong>，如添加特殊的符号，接收方就可以清楚一个完整数据包的大小了。</li>
+</ol>
+<h3 id="tcp-重传机制"><a href="#tcp-重传机制" class="headerlink" title="tcp 重传机制"></a>tcp 重传机制</h3><ol>
+<li>D-SACK<br>[http tcp](assets/http tcp.pdf?page=65).</li>
+</ol>
+<h3 id="tcp-的包一定是按照顺序的吗"><a href="#tcp-的包一定是按照顺序的吗" class="headerlink" title="tcp 的包一定是按照顺序的吗"></a>tcp 的包一定是按照顺序的吗</h3><p><a href="https://blog.csdn.net/jiujiu372/article/details/76855199">tcp 的包一定是按照顺序的吗</a></p>
 ]]></content>
       <categories>
-        <category>HTTPS</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>HTTP</title>
-    <url>/2020/12/29/HTTP%E4%BD%93%E7%B3%BB/</url>
-    <content><![CDATA[<h2 id="👱-GET-和-post-本质区别"><a href="#👱-GET-和-post-本质区别" class="headerlink" title="👱 GET 和 post 本质区别"></a>👱 GET 和 post 本质区别</h2><h3 id="HTTP-常见的请求头字段"><a href="#HTTP-常见的请求头字段" class="headerlink" title="HTTP 常见的请求头字段"></a>HTTP 常见的请求头字段</h3><h3 id="叙述思路"><a href="#叙述思路" class="headerlink" title="叙述思路"></a>叙述思路</h3><ol>
-<li>首先属于 HTTP 协议—–》 引出本质是 TCP 连接——》 引出 tcp 连接次数问题—–&gt; 由次数问题：想到幂等。</li>
-<li>其次想到安全幂等，GET 安全幂等，POST 不安全也不幂等。</li>
-<li>同时还有一点 get 请求能够<strong>缓存</strong>比如第一次请求时浏览器会把相应数据缓存到本地，方便之后能直接命中：强缓存逻辑，而 post 请求时无法被缓存的。</li>
-<li>其次想到想起它们属于 HTTP 协议，也就是说也是基于 TCP 链接的，所以它们的<strong>本质</strong>都是 <strong>TCP 连接。</strong></li>
-<li>GET 请求是<strong>一个 tcp 报文</strong>  :(对于 GET 方式的请求，浏览器会把 http <strong>header</strong> 和 data 一并发送出去，服务器响应 200（返回数据）。) //你请求肯定要有请求头吗，对吧</li>
-<li>而 POST 请求是<strong>两个 tcp 报文</strong>，(浏览器先发送 header，服务器响应 100，浏览器再发送 data，服务器响应 200 ok（返回数据）。)</li>
-<li>所谓<strong>安全</strong>就是不会改变服务器资源，所谓的<strong><strong>幂</strong></strong>想起次幂，也就是说<strong>多次</strong>的意思</li>
-<li>所谓的<strong>不安全</strong>其实就是会改变，服务器的资源，所谓的不幂等就是，多次操作结果不相同。</li>
-</ol>
-<h4 id="💯-100-continue"><a href="#💯-100-continue" class="headerlink" title="💯 100 continue"></a>💯 100 continue</h4><ol>
-<li>HTTP <strong><code>100 Continue</code></strong> 信息型状态响应码表示目前为止一切正常, 客户端应该继续请求, 如果已完成请求则忽略.// 自己的话就是:👌  因为是 <strong>100</strong> 分所以<strong>目前状态正常，可以继续请求。</strong></li>
-</ol>
-<h3 id="为什么-http1-不能实现多路复用"><a href="#为什么-http1-不能实现多路复用" class="headerlink" title="为什么 http1 不能实现多路复用"></a>为什么 http1 不能实现多路复用</h3><ol>
-<li>HTTP/1.1 不是二进制传输，而是通过文本进行传输。由于没有流的概念，在使用并行传输（多路复用）传递数据时，接收端在接收到响应后，并不能区分多个响应分别对应的请求，所以无法将多个响应的结果重新进行组装，也就实现不了多路复用。</li>
-</ol>
-<h3 id="响应码"><a href="#响应码" class="headerlink" title="响应码"></a>响应码</h3><ol>
-<li>301 : 就是永久重定向，就是从 seo 优化的角度更好，会<strong>转移权重</strong>。（联想一个旧网址的 seo 和新网址的 seo）.</li>
-<li>但是 302 就是临时的重定向，<strong>不会转移权重</strong>不会去更新这个，等于是搜索权重下降了，因为 seo 不允许多个，域名指向一个地址，作弊提升这个权重排名。</li>
-<li>叙述思路：就是，301–》seo ，转移权重（就是将旧地址的搜索权重转移到新的）。. 重定向之后会做什么？读取浏览器缓存，强缓存和协商缓存</li>
-<li>302–》临时的重定向，不会把旧网址的，权重进行转移。但是会改变请求的方法把 post 改为了 get 请求，所以出现了 307 的临时重定向，不会去改变这个请求的方法。</li>
-</ol>
-<h3 id="http-持久连接"><a href="#http-持久连接" class="headerlink" title="http 持久连接"></a>http 持久连接</h3><ol>
-<li>首先第一点，何时断开服务器会去设定一个时间然后，在 keep-alive 中添加这个断开的时间。</li>
-<li>其次何时数据传输完毕，数据联想为一个 length,是不是只有长度符合你的 length 才能够判断，数据传输完毕，追问—》如果说没有 content-length;怎么来判断，就是说看编码快，如果出现了0块那就为结束</li>
-</ol>
-]]></content>
-      <categories>
-        <category>HTTP</category>
+        <category>TCP</category>
       </categories>
   </entry>
   <entry>
@@ -341,6 +455,27 @@
 ]]></content>
       <categories>
         <category>TCP</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>V8引擎执行代码</title>
+    <url>/2020/12/01/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%AE%B5%E4%BB%A3%E7%A0%81/</url>
+    <content><![CDATA[<h2 id="V8-引擎如何执行一段代码"><a href="#V8-引擎如何执行一段代码" class="headerlink" title="V8 引擎如何执行一段代码"></a>V8 引擎如何执行一段代码</h2><h3 id="编译阶段"><a href="#编译阶段" class="headerlink" title="编译阶段"></a>编译阶段</h3><ol>
+<li><p>那在执行一段代码执行之前，得做些准备工作，（你做事情不也得需要做准备工作吗），具体就是需要准备<strong>基础环境</strong>。</p>
+</li>
+<li><p>全局执行上下文，创建阶段，首先会创建一个全局对象window，创建一个this 然后让它指向这个window，之后为变量和函数分配空间/并且要为变量赋一个undefined，创建作用域链，全局作用域里面有全局变量，全局函数，想来存储对象，不得需要创建存储的空间吗/堆 —栈，事件循环系系统web-api。</p>
+</li>
+<li><p>那现在有了基础环境后，就可以来执行这个代码。</p>
+</li>
+<li><p>由于 v8 引擎并不识别代码，所以需要来，将其<strong>结构化</strong>， 转化为 <strong>AST 树</strong>，再<strong>最终转换为字节码</strong>，也就是说<strong>中间代码</strong>（介于 AST 和机器码中间的一种产物） ，但是 v8 引擎为了节省资源，它不会去将声明的函数内部的所有代码转换为中间代码。很<strong>懒惰</strong>，所以又称<strong>惰性解析</strong>，阶段。</p>
+</li>
+</ol>
+<h3 id="执行阶段"><a href="#执行阶段" class="headerlink" title="执行阶段"></a>执行阶段</h3><ol>
+<li>同时要说明一点由于 V8 引擎属于&amp;混合编译执行/解释执行，所以会有一个监控器，来判断是否有重复代码执行，如果有将其标记为热点代码，将其转换为二进制代码，当下次再次执行，解释器直接执行优化过的代码，提高效率</li>
+</ol>
+]]></content>
+      <categories>
+        <category>v8引擎</category>
       </categories>
   </entry>
   <entry>
@@ -701,141 +836,6 @@
       </categories>
   </entry>
   <entry>
-    <title>TCP</title>
-    <url>/2020/08/19/TCP/</url>
-    <content><![CDATA[<h2 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h2><h3 id="如何来理解-tcp-是面向流的"><a href="#如何来理解-tcp-是面向流的" class="headerlink" title="如何来理解 tcp 是面向流的"></a>如何来理解 tcp 是面向流的</h3><ol>
-<li><p>所谓的流就是说无<a href="siyuan://blocks/20210130110417-7sbw2pb">“消息保护边界的”</a></p>
-<blockquote>
-<ol>
-<li>由于 tcp 无消息保护边界，（个人理解就是不知道消息从哪里开始，也不知道消息从哪里结束）需要在接收端来处理消息边界问题，这也就是说粘包，拆包问题。</li>
-<li>什么是粘包，就是说有可能两个信息包，粘在了一起</li>
-<li>有些包被拆成几块因为大于了 MSS,所以需要拆包，，然后与其它包粘在一起。</li>
-</ol>
-</blockquote>
-<p>，这里通俗理解就是说接受方无法去界定这个消息的开始和结尾，而有消息保护边界就是说消息之间是独立的，因为消息与消息之间有边界。</p>
-</li>
-</ol>
-<h3 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h3><ol>
-<li>首先（先联想图）客户端向服务器发出序列号 SYN ，seq（随机发出一个序列号）</li>
-<li>服务器收到后会基于客户端的序列号，发出一个 ACK 确认号。为了表示一个回礼，还需要发 Seq</li>
-<li>客户端会再次对服务器的序列号产生一个确认。</li>
-</ol>
-<h3 id="为什么建立连接是三次，而不是两次。"><a href="#为什么建立连接是三次，而不是两次。" class="headerlink" title="为什么建立连接是三次，而不是两次。"></a>为什么建立连接是三次，而不是两次。</h3><h4 id="防止历史请求初始化-tcp-连接"><a href="#防止历史请求初始化-tcp-连接" class="headerlink" title="防止历史请求初始化 tcp 连接"></a>防止历史请求初始化 tcp 连接</h4><ol>
-<li><strong>反向验证两次为什么不行</strong>：如果只有两次，客户端这里对于服务器发来的报文，无法来判断这个报文是否有效（是否过期，是否超时）因为网路拥塞这样的事情很常见。</li>
-<li>所以客户端这里没有足够的<strong>上下文</strong>来判断，是否是如期的请求。</li>
-<li>此时从三次说，那为什么三次避免了这样的问题，当客户端收到服务器的请求的时候，<strong>客户端</strong>本身会<strong>存储</strong>自己所发出的<strong>序列号</strong>，所以可以依据所收到的 ack 来判断是否是如期的，如果是就正常连接。</li>
-<li>但如果不是，那就发送 <strong>RST</strong> （有重置的意思）报文，来结束这个连接。</li>
-</ol>
-<h4 id="确认彼此的系列号"><a href="#确认彼此的系列号" class="headerlink" title="确认彼此的系列号"></a>确认彼此的系列号</h4><ol>
-<li>其实 tcp 能够实现可靠连接的本质其实是能够确认彼此的序列号，那你如果只有两次，只能单向确认，无法互相确认，所以需要三次。</li>
-</ol>
-<h4 id="防止（服务器）资源浪费"><a href="#防止（服务器）资源浪费" class="headerlink" title="防止（服务器）资源浪费"></a>防止（服务器）资源浪费</h4><ol>
-<li>由于仅有两次，服务器是没有办法判断对方是否收到了正确的序号</li>
-<li>客户端如果因为网路阻塞，发出了多个 SYN 信号，那客户端有可能收到，也有可能收不到，所以为了确保对方收到，服务器只能建立多个重复的 tcp 链接。极大的浪费资源。</li>
-</ol>
-<h4 id="TCP-四次挥手"><a href="#TCP-四次挥手" class="headerlink" title="TCP 四次挥手"></a>TCP 四次挥手</h4><ol>
-<li>（首先看到<strong>四</strong>先想想哪四次，<strong>两对 FIN-ACK</strong> ，为什么一定要四次，就是说客户端向服务器先发 FIN 表示两个人关系淡了想分了，所以<strong>发出 FIN 终止报文</strong>。</li>
-<li>服务区器先对终止报文发出确认</li>
-<li>但服务器收到还可能对收到的信进行处理并发送，意味着此时不能立刻终止关系。</li>
-<li>在处理完信息后再去发出 FIN，自身进入 closed 状态。</li>
-<li>客户端收到信息后再次，向服务器发出一个 ACK,后它不会立刻进入到 closed 状态，它需要等待两个 <strong>MSL</strong>（最大报文生存时间）为什么是两个主要是因为网络时常会发生阻塞，对方没有收到一个 ACK,客户端会重发，那么重发之后一个来回就对应了两个 MSL。第二个原因：<a href="https://blog.csdn.net/LF_2016/article/details/60468161">防止历史报文骚扰服务器</a>。</li>
-<li><a href="http://www.bubuko.com/infodetail-3143286.html">易理解第二个原因</a></li>
-<li>补充：TIME——wait 等待过程。</li>
-</ol>
-<h3 id="TCP-流量控制"><a href="#TCP-流量控制" class="headerlink" title="TCP 流量控制"></a>TCP 流量控制</h3><h5 id="客户端和服务端控制滑动窗口的过程是怎样的。"><a href="#客户端和服务端控制滑动窗口的过程是怎样的。" class="headerlink" title="客户端和服务端控制滑动窗口的过程是怎样的。"></a>客户端和服务端控制滑动窗口的过程是怎样的。</h5><ol>
-<li>首先滑动窗口受限于接收方的接收能力大小，就是发送方每发送数据后，服务器就会去移动滑动窗口的指针，之后可用窗口会减小，并且会将当前可用窗口的大小发送给客户端，用来控制发送方发送的数据量以达到，流量控制。</li>
-</ol>
-<p><strong>讲述思路：</strong></p>
-<ol>
-<li>首先想到滑动窗口首先<strong>联想接收方有一个滑动窗口</strong>，也就是说这个主要是和接收方有关，防止对方发送的数据超出了接收方的数据。</li>
-</ol>
-<h5 id="发送窗口和接收窗口分别由哪些构成"><a href="#发送窗口和接收窗口分别由哪些构成" class="headerlink" title="发送窗口和接收窗口分别由哪些构成"></a>发送窗口和接收窗口分别由哪些构成</h5><ol>
-<li>发送窗口：由<strong>发送</strong>想到了<strong>已发送</strong>到并得到确认的字段区域，那有得到确认的自然还有<strong>没有接收到确认的</strong>，<strong>可用窗口</strong>，那由于自身肯定还有好多数据好多话想告诉接收方所以自然还会有许多数据等待发送，但是这个会超出对方的接收范围。也就 是<strong>不可用窗口</strong>。（两个发送，可不可以）4 个</li>
-<li>接收方窗口：已经接受到的数据并确认，<strong>理解有一个误区就是说接收方没有接收到数据但是没有得到确认的</strong>，发送方有是因为它自己是发送数据的，接收到的 ack 是有可能阻塞的，未确认，接收方不考虑这个，只管接收就好。<strong>还有未接收到，并是可接受范围内</strong>，<strong>未接收但是，超出了可用窗口大小的区域</strong>。（三个）</li>
-</ol>
-<h5 id="滑动窗口和拥塞窗口有什么区别"><a href="#滑动窗口和拥塞窗口有什么区别" class="headerlink" title="滑动窗口和拥塞窗口有什么区别"></a>滑动窗口和拥塞窗口有什么区别</h5><ol>
-<li>由拥塞想到了网络拥塞，也就是说主要应用于解决网络拥塞问题的，主要由发送方控制，防止它发多了导致了网络拥塞。</li>
-<li>而滑动窗口主要是因为解决防止发送方数据量超过了接收方的能力，也就是说其大小取决于接收方。</li>
-</ol>
-<h3 id="tcp流量控制"><a href="#tcp流量控制" class="headerlink" title="tcp流量控制"></a>tcp流量控制</h3><ol>
-<li><p>流量控制依赖于<strong>滑动窗口</strong>来控制发送方发送的速率不要太快（联想一个窗口，里面有有两个指针，然后再作答）</p>
-</li>
-<li><p>你怎么理解这个窗口就是缓存区的<strong>剩余</strong>大小，只有收到确认才能将已经发送的数据进行发送。</p>
-</li>
-<li><p>所谓的流量控制其实就是面试以服务端发送举例子（此时假定发送窗口可接收窗口都不变的情况），客户端接收做例子，这里我概括说就是，每当服务器发送完数据后，相应的可用窗口大小就会减少，相对应的指针也会发送变化，就是 snd.next 指向的是<strong>可用窗口</strong>大小的头指针，右移，当收到了对方的<strong>确认</strong>后，自生的 snd.una 也会右移，那么此时可用窗口大小自然增大。</p>
-</li>
-<li><p>此时接收方再接收到信息后 rsv.next,也会发送移动，如果发送方的数据超过了其可用窗口就会导致窗口关闭也就是说起到了<strong>流量控制</strong>。在接收到接收方的确认后才可以据悉的发送数据。</p>
-</li>
-<li><p>实际上如果应用层没有及时的读取缓存区里的数据就会导致，每次接收方接收到数据后，其<strong>接收</strong>窗口大小会变得更小，并且会将这个大小以 <strong>window 字段</strong>来告诉，发送方来达到流量控制，以此控制发送方的速率。</p>
-</li>
-<li><p>但是窗口大小其实会动态变化的，如果先减少了接收缓存区，又收缩了窗口，最终没有多余接收缓存，可以接收数据，就会导致丢包，那为了解决这个问题，就是先<strong>来收缩窗口</strong>，再去<strong>减少</strong>接收缓存。（这里就是说这个，窗口）</p>
-</li>
-<li><p>窗口局面就是说如果说在窗口关闭后，应用应用进程如果没有及时读取缓冲区里的数据会导致窗口收缩，</p>
-</li>
-<li><p>那么在窗口关闭后应用进程及时读取消息，就会恢复其接收窗口大小，并且会通知发送方以 window 字段，但是这里有一个问题就是，如果这个消息丢失了，就会导致，<strong>死锁</strong>现象。</p>
-</li>
-<li><p><strong>坚持定时器</strong>，就是一旦接收方窗口大小变为 0 就会启动，并每隔一段时间来进行探测报文探测对方目前可用窗口大小，这样就可以来避免死锁了。</p>
-</li>
-</ol>
-<h3 id="糊涂窗口"><a href="#糊涂窗口" class="headerlink" title="糊涂窗口"></a>糊涂窗口</h3><ol>
-<li>糊涂窗口就是为了<strong>避免</strong>发送方发送<strong>小数据</strong>，因为 tcp ip 头部太大为了发送小数据而导致资源浪费。</li>
-<li>一般采取 Nagle 算法来解决就是通过这个 1：只有当窗口值<strong>大于 MSS</strong>，的长度，以及收到之前数据的<strong>确认</strong>之前，一直再囤积想要发送的数据。</li>
-</ol>
-<h3 id="拥塞控制（联想折线上升图）"><a href="#拥塞控制（联想折线上升图）" class="headerlink" title="拥塞控制（联想折线上升图）"></a>拥塞控制（联想折线上升图）</h3><ol>
-<li>首先来复盘一下自己的知识点，就是首先由拥塞想到了为什么拥塞窗口也就是说 crwd,</li>
-<li>那么也就是说所谓的拥塞窗口主要是来解决网络拥塞的。</li>
-<li>那么首先达到慢启动阶段，以指数增加。<a href="https://blog.csdn.net/linweixuan/article/details/4353015">慢启动为什么是指数增加</a>。</li>
-<li>之后到达了门限值，之后进入了拥塞避免阶段，每接收到一个 ack 就拥塞窗口加拥塞窗口分之一。线性增加</li>
-<li>但是还是会拥塞，先有超时重传，门限值减半，拥塞窗口初始化为 1</li>
-<li>还有一种就是快重传会接收到三个重复的 ack，cwnd 减半，然后门限值为拥塞窗口一半，到达快恢复后，其拥塞窗口在此基础上加三（三个重复的 ack）。</li>
-</ol>
-<h3 id="粘包拆包问题"><a href="#粘包拆包问题" class="headerlink" title="粘包拆包问题"></a>粘包拆包问题</h3><h3 id="tcp-粘包，"><a href="#tcp-粘包，" class="headerlink" title="tcp 粘包，"></a>tcp 粘包，</h3><ol>
-<li>由于 tcp 无消息保护边界，（个人理解就是不知道消息从哪里开始，也不知道消息从哪里结束）需要在接收端来处理消息边界问题，这也就是说粘包，拆包问题。</li>
-<li>什么是粘包，就是说有可能两个信息包，粘在了一起</li>
-<li>有些包被拆成几块因为大于了 MSS,所以需要拆包，，然后与其它包粘在一起。</li>
-</ol>
-<h3 id="为什么会出现这个奇怪的现象"><a href="#为什么会出现这个奇怪的现象" class="headerlink" title="为什么会出现这个奇怪的现象"></a>为什么会出现这个奇怪的现象</h3><ol>
-<li>对于接受方就是，<strong>接受数据到缓存的</strong>速率<strong>大于</strong>了<strong>应用进程读取数据</strong>的速率，就会导致多个包粘连在一起。</li>
-<li>发送方的 Nagel 算法。导致出现了在接收到一个确认后，收集多个分组数据再去发送。/粘包。</li>
-</ol>
-<p>怎么解决这个问题</p>
-<ol>
-<li>发送方 去关闭 nagel 算法。</li>
-<li>由于接收方不清楚，一个完整消息的大小，所以发送端会给数据包，<strong>添加一个包首部</strong>，这个首部，会<strong>包含数据包的长度</strong>，这样接收方通过首部消息就可以知道了类似于有了消息边界。</li>
-<li>发送端将每个数据包大小固定，这样接收方就可以知道这个了。</li>
-<li>也可以在<strong>数据包之间设置边界</strong>，如添加特殊的符号，接收方就可以清楚一个完整数据包的大小了。</li>
-</ol>
-<h3 id="tcp-重传机制"><a href="#tcp-重传机制" class="headerlink" title="tcp 重传机制"></a>tcp 重传机制</h3><ol>
-<li>D-SACK<br>[http tcp](assets/http tcp.pdf?page=65).</li>
-</ol>
-<h3 id="tcp-的包一定是按照顺序的吗"><a href="#tcp-的包一定是按照顺序的吗" class="headerlink" title="tcp 的包一定是按照顺序的吗"></a>tcp 的包一定是按照顺序的吗</h3><p><a href="https://blog.csdn.net/jiujiu372/article/details/76855199">tcp 的包一定是按照顺序的吗</a></p>
-]]></content>
-      <categories>
-        <category>TCP</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>V8引擎执行代码</title>
-    <url>/2020/12/01/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%AE%B5%E4%BB%A3%E7%A0%81/</url>
-    <content><![CDATA[<h2 id="V8-引擎如何执行一段代码"><a href="#V8-引擎如何执行一段代码" class="headerlink" title="V8 引擎如何执行一段代码"></a>V8 引擎如何执行一段代码</h2><h3 id="编译阶段"><a href="#编译阶段" class="headerlink" title="编译阶段"></a>编译阶段</h3><ol>
-<li><p>那在执行一段代码执行之前，得做些准备工作，（你做事情不也得需要做准备工作吗），具体就是需要准备<strong>基础环境</strong>。</p>
-</li>
-<li><p>全局执行上下文，创建阶段，首先会创建一个全局对象window，创建一个this 然后让它指向这个window，之后为变量和函数分配空间/并且要为变量赋一个undefined，创建作用域链，全局作用域里面有全局变量，全局函数，想来存储对象，不得需要创建存储的空间吗/堆 —栈，事件循环系系统web-api。</p>
-</li>
-<li><p>那现在有了基础环境后，就可以来执行这个代码。</p>
-</li>
-<li><p>由于 v8 引擎并不识别代码，所以需要来，将其<strong>结构化</strong>， 转化为 <strong>AST 树</strong>，再<strong>最终转换为字节码</strong>，也就是说<strong>中间代码</strong>（介于 AST 和机器码中间的一种产物） ，但是 v8 引擎为了节省资源，它不会去将声明的函数内部的所有代码转换为中间代码。很<strong>懒惰</strong>，所以又称<strong>惰性解析</strong>，阶段。</p>
-</li>
-</ol>
-<h3 id="执行阶段"><a href="#执行阶段" class="headerlink" title="执行阶段"></a>执行阶段</h3><ol>
-<li>同时要说明一点由于 V8 引擎属于&amp;混合编译执行/解释执行，所以会有一个监控器，来判断是否有重复代码执行，如果有将其标记为热点代码，将其转换为二进制代码，当下次再次执行，解释器直接执行优化过的代码，提高效率</li>
-</ol>
-]]></content>
-      <categories>
-        <category>v8引擎</category>
-      </categories>
-  </entry>
-  <entry>
     <title>垃圾回收机制</title>
     <url>/2020/07/12/css/</url>
     <content><![CDATA[<h1 id="css"><a href="#css" class="headerlink" title="css"></a>css</h1><h2 id="盒模型宽度如何计算"><a href="#盒模型宽度如何计算" class="headerlink" title="盒模型宽度如何计算"></a>盒模型宽度如何计算</h2><h3 id="offeset"><a href="#offeset" class="headerlink" title="offeset"></a>offeset</h3><ul>
@@ -941,6 +941,85 @@
 <h3 id="怎么形成弹性布局"><a href="#怎么形成弹性布局" class="headerlink" title="怎么形成弹性布局"></a>怎么形成弹性布局</h3><h2 id="垂直水平居中"><a href="#垂直水平居中" class="headerlink" title="垂直水平居中"></a>垂直水平居中</h2>]]></content>
       <categories>
         <category>css</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>优化垃圾回收机制</title>
+    <url>/2020/12/19/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%9D%A5%E4%BC%98%E5%8C%96%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%C2%B7/</url>
+    <content><![CDATA[<h1 id="V8引擎如何来优化垃圾回收机制的·"><a href="#V8引擎如何来优化垃圾回收机制的·" class="headerlink" title="V8引擎如何来优化垃圾回收机制的·"></a>V8引擎如何来优化垃圾回收机制的·</h1><h2 id="相应优化算法"><a href="#相应优化算法" class="headerlink" title="相应优化算法"></a>相应优化算法</h2><h3 id="全停顿算法"><a href="#全停顿算法" class="headerlink" title="全停顿算法"></a>全停顿算法</h3><ul>
+<li><p>js是单线程，并且js执行和垃圾回收机制任务都在主线上，js执行就会被挂起，导致全停顿</p>
+</li>
+<li><p>Subtopic</p>
+</li>
+<li><p>并行回收</p>
+<ul>
+<li>副垃圾回收机制–采取专门用来清理新生代对象</li>
+<li>这些辅助线程，也会来帮忙将对象区域的数据转移到空闲区域</li>
+<li>Subtopic</li>
+<li>弊端还是全停顿，对于老生代对象还是会非常影响效率</li>
+</ul>
+</li>
+</ul>
+<h3 id="增量标记算法"><a href="#增量标记算法" class="headerlink" title="增量标记算法"></a>增量标记算法</h3><ul>
+<li><p>增量回收</p>
+<ul>
+<li><p>分治的思想</p>
+</li>
+<li><p>就是说将完整的标记清除任务分解为一个个小任务，然后穿插着在主线程上进行</p>
+</li>
+<li><p>怎么实现的</p>
+<ul>
+<li><p>如何来实现垃圾回收机制的暂停和恢复</p>
+<ul>
+<li><p>三色标记法</p>
+<ul>
+<li><p>黑色</p>
+<ul>
+<li>能够被GCroot对象遍历到</li>
+</ul>
+</li>
+<li><p>白色</p>
+<ul>
+<li>无法被GCroot对象遍历到–会被清除</li>
+</ul>
+</li>
+<li><p>灰色</p>
+<ul>
+<li><p>被GCroot对象遍历到，但是子节点还未被处理</p>
+</li>
+<li><p>V8的垃圾回收器，会来判断此时有没有灰色标记</p>
+<ul>
+<li><p>有</p>
+<ul>
+<li>下次恢复垃圾回收机制时就从灰色的标记开始，继续标记</li>
+</ul>
+</li>
+<li><p>没有</p>
+<ul>
+<li>直接开始清除</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>那这里有一个问题如果中途，已经被标记的变量，被改变</p>
+<ul>
+<li>原来被标记为黑色–现在改变后变白色了</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="重点：并发回收机制"><a href="#重点：并发回收机制" class="headerlink" title="重点：并发回收机制"></a>重点：并发回收机制</h2><h3 id="不管是增量回收还是-并行回收，都是运行在主线程上"><a href="#不管是增量回收还是-并行回收，都是运行在主线程上" class="headerlink" title="不管是增量回收还是/并行回收，都是运行在主线程上"></a>不管是增量回收还是/并行回收，都是运行在主线程上</h3><h3 id="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收"><a href="#那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收" class="headerlink" title="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-"></a>那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-</h3><h3 id="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"><a href="#简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收" class="headerlink" title="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"></a>简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收</h3><h3 id="Subtopic"><a href="#Subtopic" class="headerlink" title="Subtopic"></a>Subtopic</h3><h2 id="主垃圾回收机制采取了三种机制"><a href="#主垃圾回收机制采取了三种机制" class="headerlink" title="主垃圾回收机制采取了三种机制"></a>主垃圾回收机制采取了三种机制</h2>]]></content>
+      <categories>
+        <category>v8引擎</category>
       </categories>
   </entry>
   <entry>
@@ -1150,221 +1229,6 @@
 ]]></content>
       <categories>
         <category>ex6</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>优化垃圾回收机制</title>
-    <url>/2020/12/19/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%9D%A5%E4%BC%98%E5%8C%96%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%C2%B7/</url>
-    <content><![CDATA[<h1 id="V8引擎如何来优化垃圾回收机制的·"><a href="#V8引擎如何来优化垃圾回收机制的·" class="headerlink" title="V8引擎如何来优化垃圾回收机制的·"></a>V8引擎如何来优化垃圾回收机制的·</h1><h2 id="相应优化算法"><a href="#相应优化算法" class="headerlink" title="相应优化算法"></a>相应优化算法</h2><h3 id="全停顿算法"><a href="#全停顿算法" class="headerlink" title="全停顿算法"></a>全停顿算法</h3><ul>
-<li><p>js是单线程，并且js执行和垃圾回收机制任务都在主线上，js执行就会被挂起，导致全停顿</p>
-</li>
-<li><p>Subtopic</p>
-</li>
-<li><p>并行回收</p>
-<ul>
-<li>副垃圾回收机制–采取专门用来清理新生代对象</li>
-<li>这些辅助线程，也会来帮忙将对象区域的数据转移到空闲区域</li>
-<li>Subtopic</li>
-<li>弊端还是全停顿，对于老生代对象还是会非常影响效率</li>
-</ul>
-</li>
-</ul>
-<h3 id="增量标记算法"><a href="#增量标记算法" class="headerlink" title="增量标记算法"></a>增量标记算法</h3><ul>
-<li><p>增量回收</p>
-<ul>
-<li><p>分治的思想</p>
-</li>
-<li><p>就是说将完整的标记清除任务分解为一个个小任务，然后穿插着在主线程上进行</p>
-</li>
-<li><p>怎么实现的</p>
-<ul>
-<li><p>如何来实现垃圾回收机制的暂停和恢复</p>
-<ul>
-<li><p>三色标记法</p>
-<ul>
-<li><p>黑色</p>
-<ul>
-<li>能够被GCroot对象遍历到</li>
-</ul>
-</li>
-<li><p>白色</p>
-<ul>
-<li>无法被GCroot对象遍历到–会被清除</li>
-</ul>
-</li>
-<li><p>灰色</p>
-<ul>
-<li><p>被GCroot对象遍历到，但是子节点还未被处理</p>
-</li>
-<li><p>V8的垃圾回收器，会来判断此时有没有灰色标记</p>
-<ul>
-<li><p>有</p>
-<ul>
-<li>下次恢复垃圾回收机制时就从灰色的标记开始，继续标记</li>
-</ul>
-</li>
-<li><p>没有</p>
-<ul>
-<li>直接开始清除</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>那这里有一个问题如果中途，已经被标记的变量，被改变</p>
-<ul>
-<li>原来被标记为黑色–现在改变后变白色了</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="重点：并发回收机制"><a href="#重点：并发回收机制" class="headerlink" title="重点：并发回收机制"></a>重点：并发回收机制</h2><h3 id="不管是增量回收还是-并行回收，都是运行在主线程上"><a href="#不管是增量回收还是-并行回收，都是运行在主线程上" class="headerlink" title="不管是增量回收还是/并行回收，都是运行在主线程上"></a>不管是增量回收还是/并行回收，都是运行在主线程上</h3><h3 id="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收"><a href="#那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收" class="headerlink" title="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-"></a>那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-</h3><h3 id="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"><a href="#简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收" class="headerlink" title="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"></a>简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收</h3><h3 id="Subtopic"><a href="#Subtopic" class="headerlink" title="Subtopic"></a>Subtopic</h3><h2 id="主垃圾回收机制采取了三种机制"><a href="#主垃圾回收机制采取了三种机制" class="headerlink" title="主垃圾回收机制采取了三种机制"></a>主垃圾回收机制采取了三种机制</h2>]]></content>
-      <categories>
-        <category>v8引擎</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>垃圾回收机制</title>
-    <url>/2020/12/15/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6/</url>
-    <content><![CDATA[<h1 id="垃圾回收机制"><a href="#垃圾回收机制" class="headerlink" title="垃圾回收机制"></a>垃圾回收机制</h1><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="为什么要分类—依据"><a href="#为什么要分类—依据" class="headerlink" title="为什么要分类—依据"></a>为什么要分类—依据</h3><ul>
-<li><p>代际假说</p>
-<ul>
-<li><p>一些变量生存周期很短</p>
-<ul>
-<li>存放在新生代区域</li>
-</ul>
-</li>
-<li><p>一些比如window这些存活时间很长的对象</p>
-<ul>
-<li>存放在老生代区域</li>
-</ul>
-</li>
-<li><p>依据生存周期的长短–因地制宜的选取对应的算法来回收</p>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="堆-划分的"><a href="#堆-划分的" class="headerlink" title="堆/划分的"></a>堆/划分的</h3><ul>
-<li><p>目的就是为了能根据不同的对象依据对应的垃圾回收机制，进行回收</p>
-</li>
-<li><p>新生代</p>
-<ul>
-<li><p>存储生存周期短的对象</p>
-</li>
-<li><p>区域划分依据scanverge算法</p>
-<ul>
-<li>对象区域</li>
-<li>空闲区域</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>老生代</p>
-<ul>
-<li>专门存储，生存周期长的对象</li>
-</ul>
-</li>
-</ul>
-<h3 id="主垃圾回收器"><a href="#主垃圾回收器" class="headerlink" title="主垃圾回收器"></a>主垃圾回收器</h3><ul>
-<li><p>专门处理老生代里的对象</p>
-</li>
-<li><p>算法</p>
-<ul>
-<li>标记–整理</li>
-<li>标记–清除</li>
-</ul>
-</li>
-<li><p>步骤</p>
-<ul>
-<li><p>先进行标记–对于清除的对象先进行标记</p>
-</li>
-<li><p>利用标记–整理算法将活动对象，全部移动到一端</p>
-<ul>
-<li><p>这一步的意义是什么</p>
-<ul>
-<li>因为随着你频繁删除堆里所存储的对象，必然会导致内存空间不连续</li>
-<li>这个是让内存空间尽可能的连续</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>再去清除除过这一端的其它垃圾数据</p>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="副垃圾回收机制"><a href="#副垃圾回收机制" class="headerlink" title="副垃圾回收机制"></a>副垃圾回收机制</h3><ul>
-<li><p>scanverge算法</p>
-</li>
-<li><p>专门处理新生代里存储的对象</p>
-</li>
-<li><p>步骤</p>
-<ul>
-<li><p>利用标记—清除算法清除对象区域里标记的垃圾数据</p>
-</li>
-<li><p>在标记–清除阶段将活动对象复制到空闲区域，并进行整理</p>
-<ul>
-<li>为的就是能够使存储空间尽可能的连续</li>
-</ul>
-</li>
-<li><p>对象区域和空闲区域调换</p>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="首先来明确一下什么样的变量的空间可以被回收"><a href="#首先来明确一下什么样的变量的空间可以被回收" class="headerlink" title="首先来明确一下什么样的变量的空间可以被回收"></a>首先来明确一下什么样的变量的空间可以被回收</h2><h3 id="依赖可访问性算法"><a href="#依赖可访问性算法" class="headerlink" title="依赖可访问性算法"></a>依赖可访问性算法</h3><h3 id="通过GCroot对象遍历内部所有对象"><a href="#通过GCroot对象遍历内部所有对象" class="headerlink" title="通过GCroot对象遍历内部所有对象"></a>通过GCroot对象遍历内部所有对象</h3><ul>
-<li>window</li>
-<li>Dom节点</li>
-</ul>
-<h3 id="通过GCroot-对象访问变量"><a href="#通过GCroot-对象访问变量" class="headerlink" title="通过GCroot 对象访问变量"></a>通过GCroot 对象访问变量</h3><ul>
-<li><p>可访问到的：活动对象</p>
-</li>
-<li><p>不可访问：非活动对象</p>
-<ul>
-<li>V8引擎清除的将是非活动对象</li>
-</ul>
-</li>
-</ul>
-<h2 id="在早期有一个局限性较大的垃圾回收机制"><a href="#在早期有一个局限性较大的垃圾回收机制" class="headerlink" title="在早期有一个局限性较大的垃圾回收机制"></a>在早期有一个局限性较大的垃圾回收机制</h2><h3 id="引用计数法"><a href="#引用计数法" class="headerlink" title="引用计数法"></a>引用计数法</h3><ul>
-<li><p>它具体是怎么做的</p>
-<ul>
-<li><p>每产生一个引用就计数加一</p>
-<ul>
-<li><p>什么是引用？</p>
-</li>
-<li><p>那它的局限性在哪</p>
-<ul>
-<li>它无法识别循环引用的场景，无法使计数为0; eg:A对象的引用指向B，而B的引用又指向A，它们的引用计数都是1，无法成为0, 就会造成内存泄漏；</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>为0就会被回收</p>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="切入点由数据类型说起"><a href="#切入点由数据类型说起" class="headerlink" title="切入点由数据类型说起"></a>切入点由数据类型说起</h2><h3 id="基本数据类型"><a href="#基本数据类型" class="headerlink" title="基本数据类型"></a>基本数据类型</h3><ul>
-<li>symbol</li>
-<li>number</li>
-<li>string</li>
-<li>布尔类型</li>
-</ul>
-<h3 id="复杂数据类型"><a href="#复杂数据类型" class="headerlink" title="复杂数据类型"></a>复杂数据类型</h3><ul>
-<li>function</li>
-<li>对象</li>
-</ul>
-]]></content>
-      <categories>
-        <category>v8引擎</category>
       </categories>
   </entry>
   <entry>
@@ -1816,6 +1680,20 @@
       </categories>
   </entry>
   <entry>
+    <title>websocket</title>
+    <url>/2020/07/19/websocket/</url>
+    <content><![CDATA[<h1 id="websocket"><a href="#websocket" class="headerlink" title="websocket"></a>websocket</h1><h2 id="它解决了http是半双工，实现了服务端推送"><a href="#它解决了http是半双工，实现了服务端推送" class="headerlink" title="它解决了http是半双工，实现了服务端推送"></a>它解决了http是半双工，实现了服务端推送</h2><h3 id="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"><a href="#也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的" class="headerlink" title="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"></a>也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的</h3><h2 id="那为了能够实现类似全双工的效果，http做出了哪些努力，"><a href="#那为了能够实现类似全双工的效果，http做出了哪些努力，" class="headerlink" title="那为了能够实现类似全双工的效果，http做出了哪些努力，"></a>那为了能够实现类似全双工的效果，http做出了哪些努力，</h2><h3 id="轮询"><a href="#轮询" class="headerlink" title="轮询"></a>轮询</h3><ul>
+<li>其实就是说，客户端会向服务器不断的发送询问，问是否有新的数据，那么很明显这样做，效率非常的低</li>
+</ul>
+<h3 id="长轮询"><a href="#长轮询" class="headerlink" title="长轮询"></a>长轮询</h3><ul>
+<li>意思就是说只有对方有数据才会发，每次客户端仅在接受到新数据才会去询问，如果，没有那就不询问了</li>
+</ul>
+<h2 id="那么websocket是怎么来建立连接的（握手）"><a href="#那么websocket是怎么来建立连接的（握手）" class="headerlink" title="那么websocket是怎么来建立连接的（握手）"></a>那么websocket是怎么来建立连接的（握手）</h2><h3 id="其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"><a href="#其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接" class="headerlink" title="其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"></a>其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接</h3><h3 id="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"><a href="#建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了" class="headerlink" title="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"></a>建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了</h3><h2 id="这个协议更多的是对http的一种优化"><a href="#这个协议更多的是对http的一种优化" class="headerlink" title="这个协议更多的是对http的一种优化"></a>这个协议更多的是对http的一种优化</h2><h2 id="二进制帧格式？"><a href="#二进制帧格式？" class="headerlink" title="二进制帧格式？"></a>二进制帧格式？</h2>]]></content>
+      <categories>
+        <category>HTTP</category>
+      </categories>
+  </entry>
+  <entry>
     <title>垃圾回收机制</title>
     <url>/2021/01/12/%E5%BC%82%E6%AD%A5/</url>
     <content><![CDATA[<h1 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h1><h2 id="异步发展阶段"><a href="#异步发展阶段" class="headerlink" title="异步发展阶段"></a>异步发展阶段</h2><h3 id="回调函数"><a href="#回调函数" class="headerlink" title="回调函数"></a>回调函数</h3><h3 id="generator"><a href="#generator" class="headerlink" title="generator()"></a>generator()</h3><h3 id="promise"><a href="#promise" class="headerlink" title="promise"></a>promise</h3><ul>
@@ -1973,6 +1851,142 @@
   </entry>
   <entry>
     <title>垃圾回收机制</title>
+    <url>/2020/12/15/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6/</url>
+    <content><![CDATA[<h1 id="垃圾回收机制"><a href="#垃圾回收机制" class="headerlink" title="垃圾回收机制"></a>垃圾回收机制</h1><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="为什么要分类—依据"><a href="#为什么要分类—依据" class="headerlink" title="为什么要分类—依据"></a>为什么要分类—依据</h3><ul>
+<li><p>代际假说</p>
+<ul>
+<li><p>一些变量生存周期很短</p>
+<ul>
+<li>存放在新生代区域</li>
+</ul>
+</li>
+<li><p>一些比如window这些存活时间很长的对象</p>
+<ul>
+<li>存放在老生代区域</li>
+</ul>
+</li>
+<li><p>依据生存周期的长短–因地制宜的选取对应的算法来回收</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="堆-划分的"><a href="#堆-划分的" class="headerlink" title="堆/划分的"></a>堆/划分的</h3><ul>
+<li><p>目的就是为了能根据不同的对象依据对应的垃圾回收机制，进行回收</p>
+</li>
+<li><p>新生代</p>
+<ul>
+<li><p>存储生存周期短的对象</p>
+</li>
+<li><p>区域划分依据scanverge算法</p>
+<ul>
+<li>对象区域</li>
+<li>空闲区域</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>老生代</p>
+<ul>
+<li>专门存储，生存周期长的对象</li>
+</ul>
+</li>
+</ul>
+<h3 id="主垃圾回收器"><a href="#主垃圾回收器" class="headerlink" title="主垃圾回收器"></a>主垃圾回收器</h3><ul>
+<li><p>专门处理老生代里的对象</p>
+</li>
+<li><p>算法</p>
+<ul>
+<li>标记–整理</li>
+<li>标记–清除</li>
+</ul>
+</li>
+<li><p>步骤</p>
+<ul>
+<li><p>先进行标记–对于清除的对象先进行标记</p>
+</li>
+<li><p>利用标记–整理算法将活动对象，全部移动到一端</p>
+<ul>
+<li><p>这一步的意义是什么</p>
+<ul>
+<li>因为随着你频繁删除堆里所存储的对象，必然会导致内存空间不连续</li>
+<li>这个是让内存空间尽可能的连续</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>再去清除除过这一端的其它垃圾数据</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="副垃圾回收机制"><a href="#副垃圾回收机制" class="headerlink" title="副垃圾回收机制"></a>副垃圾回收机制</h3><ul>
+<li><p>scanverge算法</p>
+</li>
+<li><p>专门处理新生代里存储的对象</p>
+</li>
+<li><p>步骤</p>
+<ul>
+<li><p>利用标记—清除算法清除对象区域里标记的垃圾数据</p>
+</li>
+<li><p>在标记–清除阶段将活动对象复制到空闲区域，并进行整理</p>
+<ul>
+<li>为的就是能够使存储空间尽可能的连续</li>
+</ul>
+</li>
+<li><p>对象区域和空闲区域调换</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="首先来明确一下什么样的变量的空间可以被回收"><a href="#首先来明确一下什么样的变量的空间可以被回收" class="headerlink" title="首先来明确一下什么样的变量的空间可以被回收"></a>首先来明确一下什么样的变量的空间可以被回收</h2><h3 id="依赖可访问性算法"><a href="#依赖可访问性算法" class="headerlink" title="依赖可访问性算法"></a>依赖可访问性算法</h3><h3 id="通过GCroot对象遍历内部所有对象"><a href="#通过GCroot对象遍历内部所有对象" class="headerlink" title="通过GCroot对象遍历内部所有对象"></a>通过GCroot对象遍历内部所有对象</h3><ul>
+<li>window</li>
+<li>Dom节点</li>
+</ul>
+<h3 id="通过GCroot-对象访问变量"><a href="#通过GCroot-对象访问变量" class="headerlink" title="通过GCroot 对象访问变量"></a>通过GCroot 对象访问变量</h3><ul>
+<li><p>可访问到的：活动对象</p>
+</li>
+<li><p>不可访问：非活动对象</p>
+<ul>
+<li>V8引擎清除的将是非活动对象</li>
+</ul>
+</li>
+</ul>
+<h2 id="在早期有一个局限性较大的垃圾回收机制"><a href="#在早期有一个局限性较大的垃圾回收机制" class="headerlink" title="在早期有一个局限性较大的垃圾回收机制"></a>在早期有一个局限性较大的垃圾回收机制</h2><h3 id="引用计数法"><a href="#引用计数法" class="headerlink" title="引用计数法"></a>引用计数法</h3><ul>
+<li><p>它具体是怎么做的</p>
+<ul>
+<li><p>每产生一个引用就计数加一</p>
+<ul>
+<li><p>什么是引用？</p>
+</li>
+<li><p>那它的局限性在哪</p>
+<ul>
+<li>它无法识别循环引用的场景，无法使计数为0; eg:A对象的引用指向B，而B的引用又指向A，它们的引用计数都是1，无法成为0, 就会造成内存泄漏；</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>为0就会被回收</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="切入点由数据类型说起"><a href="#切入点由数据类型说起" class="headerlink" title="切入点由数据类型说起"></a>切入点由数据类型说起</h2><h3 id="基本数据类型"><a href="#基本数据类型" class="headerlink" title="基本数据类型"></a>基本数据类型</h3><ul>
+<li>symbol</li>
+<li>number</li>
+<li>string</li>
+<li>布尔类型</li>
+</ul>
+<h3 id="复杂数据类型"><a href="#复杂数据类型" class="headerlink" title="复杂数据类型"></a>复杂数据类型</h3><ul>
+<li>function</li>
+<li>对象</li>
+</ul>
+]]></content>
+      <categories>
+        <category>v8引擎</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>垃圾回收机制</title>
     <url>/2021/01/19/%E6%89%A7%E8%A1%8C%E4%B8%8A%E4%B8%8B%E6%96%87/</url>
     <content><![CDATA[<h1 id="执行上下文"><a href="#执行上下文" class="headerlink" title="执行上下文"></a>执行上下文</h1><h2 id="所谓的执行上下文其实就是代码所处的环境"><a href="#所谓的执行上下文其实就是代码所处的环境" class="headerlink" title="所谓的执行上下文其实就是代码所处的环境"></a>所谓的执行上下文其实就是代码所处的环境</h2><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="全局执行上下文"><a href="#全局执行上下文" class="headerlink" title="全局执行上下文"></a>全局执行上下文</h3><h3 id="函数执行上下文"><a href="#函数执行上下文" class="headerlink" title="函数执行上下文"></a>函数执行上下文</h3><h3 id="eval执行上下文–我不用"><a href="#eval执行上下文–我不用" class="headerlink" title="eval执行上下文–我不用"></a>eval执行上下文–我不用</h3><h2 id="调用栈"><a href="#调用栈" class="headerlink" title="调用栈"></a>调用栈</h2><h3 id="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"><a href="#每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间" class="headerlink" title="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"></a>每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间</h3><ul>
 <li><p>从这里开始，就可以知道作用域的本质了，其实就是当前所处的执行上下文了</p>
@@ -2049,23 +2063,6 @@
       </categories>
   </entry>
   <entry>
-    <title>盒模型</title>
-    <url>/2020/09/12/%E7%9B%92%E6%A8%A1%E5%9E%8B/</url>
-    <content><![CDATA[<p>首先盒模型有几个属性分别是content  border padding margin ;</p>
-<p>盒模型有两种标准，</p>
-<p>1：第一种是w3c（万维网联盟）</p>
-<p>首先盒模型有几个属性分别是content  border padding margin ;</p>
-<p>它的宽高的计算是包含了border的</p>
-<p>第二种：是传统的ie浏览器模型：</p>
-<p>也有几个属性分别是content （特殊点就是内容包含了内边距和border） border padding margin ;</p>
-<p>但是其元素宽高的计算是包含了border</p>
-<p>什么意思，就是说我可以并排的展示两个加上border超出了容器的元素；再具体就是元素的宽高既包含元素本身，还包含了其内部的边框与内边距；</p>
-]]></content>
-      <categories>
-        <category>css</category>
-      </categories>
-  </entry>
-  <entry>
     <title>暂时性死区</title>
     <url>/2020/02/13/%E6%9A%82%E6%97%B6%E6%80%A7%E6%AD%BB%E5%8C%BA/</url>
     <content><![CDATA[<h3 id="何为暂时性死区"><a href="#何为暂时性死区" class="headerlink" title="何为暂时性死区"></a>何为暂时性死区</h3><ol>
@@ -2080,161 +2077,20 @@
       </categories>
   </entry>
   <entry>
-    <title>websocket</title>
-    <url>/2020/07/19/websocket/</url>
-    <content><![CDATA[<h1 id="websocket"><a href="#websocket" class="headerlink" title="websocket"></a>websocket</h1><h2 id="它解决了http是半双工，实现了服务端推送"><a href="#它解决了http是半双工，实现了服务端推送" class="headerlink" title="它解决了http是半双工，实现了服务端推送"></a>它解决了http是半双工，实现了服务端推送</h2><h3 id="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"><a href="#也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的" class="headerlink" title="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"></a>也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的</h3><h2 id="那为了能够实现类似全双工的效果，http做出了哪些努力，"><a href="#那为了能够实现类似全双工的效果，http做出了哪些努力，" class="headerlink" title="那为了能够实现类似全双工的效果，http做出了哪些努力，"></a>那为了能够实现类似全双工的效果，http做出了哪些努力，</h2><h3 id="轮询"><a href="#轮询" class="headerlink" title="轮询"></a>轮询</h3><ul>
-<li>其实就是说，客户端会向服务器不断的发送询问，问是否有新的数据，那么很明显这样做，效率非常的低</li>
-</ul>
-<h3 id="长轮询"><a href="#长轮询" class="headerlink" title="长轮询"></a>长轮询</h3><ul>
-<li>意思就是说只有对方有数据才会发，每次客户端仅在接受到新数据才会去询问，如果，没有那就不询问了</li>
-</ul>
-<h2 id="那么websocket是怎么来建立连接的（握手）"><a href="#那么websocket是怎么来建立连接的（握手）" class="headerlink" title="那么websocket是怎么来建立连接的（握手）"></a>那么websocket是怎么来建立连接的（握手）</h2><h3 id="其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"><a href="#其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接" class="headerlink" title="其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"></a>其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接</h3><h3 id="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"><a href="#建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了" class="headerlink" title="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"></a>建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了</h3><h2 id="这个协议更多的是对http的一种优化"><a href="#这个协议更多的是对http的一种优化" class="headerlink" title="这个协议更多的是对http的一种优化"></a>这个协议更多的是对http的一种优化</h2><h2 id="二进制帧格式？"><a href="#二进制帧格式？" class="headerlink" title="二进制帧格式？"></a>二进制帧格式？</h2>]]></content>
-      <categories>
-        <category>HTTP</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>js核心梳理</title>
-    <url>/2021/02/19/JS%E6%A0%B8%E5%BF%83%E9%AA%A8%E6%9E%B6/</url>
-    <content><![CDATA[<h2 id="闭包体系"><a href="#闭包体系" class="headerlink" title="闭包体系"></a>闭包体系</h2><h3 id="切入点词法作用域"><a href="#切入点词法作用域" class="headerlink" title="切入点词法作用域"></a>切入点词法作用域</h3><ol>
-<li><p>首先我需要从作用域的底层机制说起，首先在 V8 引擎中是有编译阶段的，</p>
-<blockquote>
-<h2 id="V8-引擎如何执行一段代码"><a href="#V8-引擎如何执行一段代码" class="headerlink" title="V8 引擎如何执行一段代码"></a>V8 引擎如何执行一段代码</h2><h3 id="编译阶段"><a href="#编译阶段" class="headerlink" title="编译阶段"></a>编译阶段</h3><ol>
-<li>那在执行一段代码执行之前，得做些准备工作，</li>
-<li>具体就是需要准备<strong>基础环境</strong>。</li>
-<li>那现在有了基础环境后，就可以来执行这个代码。</li>
-<li>由于 v8 引擎并不识别代码，所以需要来，将其<strong>结构化</strong>， 转化为 <strong>AST 树</strong>，再<strong>最终转换为字节码</strong>，也就是说<strong>中间代码</strong>（介于 AST 和机器码中间的一种产物） ，但是 v8 引擎为了节省资源，它不会去将声明的函数内部的所有代码转换为中间代码。很<strong>懒惰</strong>，所以又称惰性解析阶段。只有当其函数调用的时候才会去将其内部的代码，转换为中间代码</li>
-</ol>
-<h3 id="执行阶段"><a href="#执行阶段" class="headerlink" title="执行阶段"></a>执行阶段</h3><ol>
-<li>同时要说明一点由于 V8 引擎属于jit，所以会有一个监控器，来判断是否有重复代码执行，如果有将其标记为热点代码，将其转换为二进制代码，当下次再次执行，解释器直接执行优化过的代码，提高效率。</li>
-</ol>
-</blockquote>
-<blockquote>
-<h3 id="字节码"><a href="#字节码" class="headerlink" title="字节码"></a>字节码</h3><p>所以时间上，早期编译为二进制代码太慢，所以时间上更快，空间上，所占内存小，早期为了防止重复编译将结果，缓存，而字节码所占空间很少。</p>
-</blockquote>
-<blockquote>
-</blockquote>
-<blockquote>
-<h3 id="v8-引擎如何来执行一段代码"><a href="#v8-引擎如何来执行一段代码" class="headerlink" title="v8 引擎如何来执行一段代码"></a>v8 引擎如何来执行一段代码</h3></blockquote>
-</li>
-<li><p>这里还有一点就是此时引擎会在当前的作用域去寻找有没有所声明的变量，如果有那就忽略它，这也是为什么，var 可以重复声明的本质原因，如果没有的话就将这个变量存放在当前作用域，赋值阶段。</p>
-</li>
-</ol>
-<h4 id="如何来叙述闭包"><a href="#如何来叙述闭包" class="headerlink" title="如何来叙述闭包"></a>如何来叙述闭包</h4><ol>
-<li>切入点<strong>词法作用域</strong>，那么词法作用域是怎样生成的（此时联想作用域里面有声明了一个变量），那么在编译阶段首先会来判断，当前的作用域有没有这个变量，有了就忽略，继续，没有就直接将变量放置当前作用域内并赋值 undefined.</li>
-<li>那你不能光找到它，还得赋值，在当前作用域能找到直接赋值，没找到就不断向外部作用域找形成作用域链。</li>
-<li><strong>（谈到作用域本质就联想一个调用栈，里面压入了全局执行上下文，和函数执行上下文））</strong>作用域的<strong>本质</strong>到底是什么，从<strong>表层意思</strong>来讲，它是一套规则，存放相应变量的规则，从本质上来讲，它是当前所处执行上下文，从这一点可以明白，为什么闭包中，可以从内部访问外部的变量，而外部无法访问内部的变量，全局执行上下文首先会推入调用栈中，之后每当调用一个函数，就会将函数上下文推入栈中，所以即便调用栈中，栈顶执行上下文，执行完毕后出栈，但是内部执行上下文依然可以通过，作用域链来访问，但由于栈顶执行上下文出栈了作用域链也被销毁了，所以无法访问调用栈中上下文的变量。</li>
-</ol>
-<h4 id="补充词法作用域"><a href="#补充词法作用域" class="headerlink" title="补充词法作用域"></a>补充词法作用域</h4><ol>
-<li>什么是<strong>词法作用域</strong>，由作用域想到了，作用域链，也就是说查找变量的时候一定是沿着，比如你所定义的位置，然后不断向外去延申，而动态作用域是沿着调用栈去查找的。</li>
-<li>补充函数的作用域是执行阶段就会去形成。但是查找一定是沿着定义的作用域，不断向外去延申。</li>
-<li>闭包引用的变量一定不会被回收吗，其实不对，当把这个变量直接赋值 null 就会被回收，这样相当于引用了一个空的变量自然会被回收</li>
-</ol>
-<h3 id="闭包应用。"><a href="#闭包应用。" class="headerlink" title="闭包应用。"></a>闭包应用。</h3><ol>
-<li><p>``` js<br>var a = [];<br>for(let i = 0;i&lt;10;i++){<br>a[i]=function(){<br>console.log(i)<br>}<br>};<br>a<a href="">2</a>;</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">   let 定义的 i 会运行 for 的块级作用域中，每次执行一次循环，都会创建一个块级作用域。</span><br><span class="line">   在这个块级作用域中，你又定义了一个函数，而这个函数又引用了函数外部的 i 变量，那么这就产生了闭包，也就是说，所有块级作用域中的 i 都不会被销毁，你在这里执行了 10 次循环，那么也就创建了 10 个块级作用域，这十个块级作用域中的变量 i 都会被保存在内存中。</span><br><span class="line">   那么当你再次调用该 a[n]() 时，v8 就会拿出闭包中的变量 i，并将其打印出来，因为每个闭包中的 i 值都不同，所以 a[n]() 时，打印出来的值就是 n，这个就非常符合直觉了。</span><br><span class="line">   但是如果你将 for 循环中的 i 变量声明改成 var，那么并不会产生块级作用域，那么函数引用的 i 就是全局作用域中的了，由于全局作用域中只有一个，那么在执行 for 循环的时候，i 的值会一直被改变，最后是 10，所以最终你执行 a[n]() 时，无论 n 是多少，打印出来的都是 10. 那么这就是 bug 之源了。</span><br><span class="line">2. 循环打印 1，2，3，4，5</span><br><span class="line">   和第二种思路比较相似，同样是在 setTimeout 外面再套一层函数，只不过这个函数是一个**立即执行函数** 。利用立即执行函数的入参来缓存每一个循环中的 i 值：</span><br><span class="line">   ```js</span><br><span class="line">   for (var i = 0; i &lt; 5; i++) &#123;</span><br><span class="line">       // 这里的 i 被赋值给了立即执行函数作用域内的变量 j</span><br><span class="line">       (function(j) &#123;  </span><br><span class="line">           setTimeout(function() &#123;</span><br><span class="line">               console.log(j);</span><br><span class="line">           &#125;, 1000);</span><br><span class="line">       &#125;)(i);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-<p>//就是每一次 settimeout 里的 j 对外部立即执行函数里的变量造成了引用，所以，缓存了这个值，因为 v8 不再回收这个被引用的值了，缓存下来了。</p>
-</li>
-<li><p>还可以用 promise 来实现闭包</p>
-</li>
-</ol>
-<p>高阶函数</p>
-<h3 id="闭包的应用"><a href="#闭包的应用" class="headerlink" title="闭包的应用"></a>闭包的应用</h3><h4 id="模拟私有变量"><a href="#模拟私有变量" class="headerlink" title="模拟私有变量"></a>模拟私有变量</h4><ol>
-<li><strong>模拟私有变量</strong>：就是之前像是 Java c++ 这些，有 private 私有变量， 就是不是这个类的其它成员，你无法去访问这些私有变量。</li>
-<li>在 js 生成一个类是依赖于这个构造函数，但是你实例化一个类会发现，你通过这个类可以访问到这些这个类的属性，但是这个有一个问题就是说，万一我在这个这个构造函数里定义了一些私密数据，那不就可以在这个对象去访问到这个属性了吗。</li>
-<li>用立即执行函数，形成一个闭包，返回一个类，然后将私有属性放在函数里，不去通过 this 来赋值，直接进行赋值操作；a=privatedata，这样外部是无法拿到这个私有变量的。</li>
-<li>还可以用symbol来模拟一个私有的变量。</li>
-</ol>
-<h4 id="偏函数-bind-的实现"><a href="#偏函数-bind-的实现" class="headerlink" title="偏函数 bind 的实现"></a>偏函数 bind 的实现</h4><ol>
-<li><p>[“bind”]</p>
-<blockquote>
-<h3 id="思路详解"><a href="#思路详解" class="headerlink" title="思路详解"></a>思路详解</h3><p><a href="https://www.bilibili.com/video/BV1m54y1q7hc/?spm_id_from=333.788.videocard.1">bli 易懂题解</a>.</p>
-<h3 id="个人理解"><a href="#个人理解" class="headerlink" title="个人理解"></a>个人理解</h3><ol>
-<li><p>二刷理解：</p>
-<ol>
-<li>第一点： 记住执行 bind 会返回一个函数，为什么为了之后的偏函数的应用，s.（a）（b）</li>
-<li>返回的函数需要调用它并且来改变它的 this 指向，利用 apply</li>
-<li>此时来考虑一下，类数组的问题，就是说，bind 函数里面有许多参数，被 arguements 所收集，你现在想传参数，但是 arguements 是一个类数组，需要转换为真正的数组，利用 array.propotype.slice.call()</li>
-<li>此时 bind 还具有偏函数的特性就是 bind 函数第一个括号内部，偏函数就是在第二个括号里的参数,为什么第一个括号里的参数要截取，因为我不需要第一个括号里面的第一个参数，所以要截取，对于第二个括号，只需要将其转化为数组就好，但是所谓偏函数的本质依然要将其两个参数里的东西转换为一个括号里的参数，所以我们需要合并 concat</li>
-<li>可以通过 bind 所返回的函数，实例化一个对象</li>
-<li>也就是说你需要在 Bind 所返回的函数里，去判断 this 是否是构造函数的实例，</li>
-<li>这里的构造函数指的是 person，不是你返回的函数，而且</li>
-</ol>
-</li>
-</ol>
-</blockquote>
-</li>
-</ol>
-<h4 id="柯里化"><a href="#柯里化" class="headerlink" title="柯里化"></a>柯里化</h4><h4 id="防抖节流"><a href="#防抖节流" class="headerlink" title="防抖节流"></a>防抖节流</h4><blockquote>
-<h3 id="防抖-节流"><a href="#防抖-节流" class="headerlink" title="防抖/节流"></a>防抖/节流</h3><h4 id="思想"><a href="#思想" class="headerlink" title="思想"></a>思想</h4><ol>
-<li>节流就是，n 秒内，只触发一次。（timer 无值了，说明第一次的定时任务执行完毕）</li>
-<li>防抖就是 n 秒内，触发多次只看最后一次触发，的中间多次触发，会重新计时。（timer 有值得情况会删除之前的定时器）</li>
-<li>执行 fn，this 就指向 window 了，要指向触发的 dom 节点，所以要调用 apply 绑定 this。</li>
-<li>一定要把这个 timer 放在外面，因为要形成一个闭包，这样在内存中由于闭包，就不会导致这个变量被销毁，这样能够保证多次触发函数所引用的变量是一个 timer.</li>
-<li><a href="https://www.jianshu.com/p/cc84f7594b47">防抖节流细节</a>。</li>
-<li><a href="https://blog.csdn.net/KangTongShun/article/details/105316227">防抖节流为什么要用闭包</a>。</li>
-<li><a href="https://www.cnblogs.com/ywjbokeyuan/p/14231894.html">防抖和节流和闭包的关系</a>。</li>
-</ol>
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">throter</span>(<span class="params">callback, delay</span>) </span>&#123;<span class="comment">//节流</span></span><br><span class="line">  <span class="keyword">let</span> timer;<span class="comment">//闭包应用</span></span><br><span class="line">   <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!timer) &#123;</span><br><span class="line">      timer = <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        callback.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>)</span><br><span class="line">      &#125;, delay);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">input.addEventListerener(<span class="string">&#x27;keyup&#x27;</span>, throter(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(input.value);</span><br><span class="line">&#125;, <span class="number">1000</span>))</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">debance</span>(<span class="params">callback, delay</span>) </span>&#123;<span class="comment">//防抖</span></span><br><span class="line">  <span class="keyword">let</span> timer = <span class="literal">null</span>;<span class="comment">//闭包的应用</span></span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (timer) &#123;</span><br><span class="line">      <span class="built_in">clearTimeout</span>(timer)<span class="comment">//清空定时器操作</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      timer = <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        callback.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>)</span><br><span class="line">        timer = <span class="literal">null</span><span class="comment">//这里用这个timer===null，//这里为什么要清空就是因为，如果你不清空的话</span></span><br><span class="line"><span class="comment">//，就会导致这个timer始终是有值的，那就没有办法紧接着，继续去，重新设置定时器了。/</span></span><br><span class="line"><span class="comment">//或者这样想就是，轮回，每次输入框输入完内容后，</span></span><br><span class="line">      &#125;, delay);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">input.addEventListener(<span class="string">&#x27;keyup&#x27;</span>, debance(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(input.value);</span><br><span class="line">&#125;, <span class="number">1000</span>))</span><br></pre></td></tr></table></figure>
-
-</blockquote>
-<p>   。</p>
-<h4 id="手写一个闭包"><a href="#手写一个闭包" class="headerlink" title="手写一个闭包"></a>手写一个闭包</h4><ol>
-<li><p>``` js<br>function cache(){<br>let res={}<br>return {<br>set: function(key,value){</p>
-<pre><code>res[key]=value
-</code></pre>
-<p>}<br>get: function(key,value){</p>
-<pre><code>return     res[key]
-</code></pre>
-<p>}</p>
-<p>}</p>
-<p>}//这里函数作为了返回值，并且这个内部返回的函数引用了外部的局部变量。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">高阶函数</span><br><span class="line"></span><br><span class="line">1. **高阶**函数是指使用其他函数作为参数、或者返回一个函数作为结果的函数。比如这个 map,reduce 等.</span><br><span class="line">2. **联想记忆**：为什么**高阶**，因为是属于，函数**一等公民**：所以高级---》就是函数可以做数据类型也能做的事情，比如这个，参数和返回值。</span><br><span class="line"></span><br><span class="line">### 继承</span><br><span class="line"></span><br><span class="line">1. [js 继承易懂](https://www.bilibili.com/video/BV1a5411a7n3?t=1656)</span><br><span class="line">2. [js 继承可参考视频](https://www.bilibili.com/video/BV1J54y1y7u9?from=search&amp;seid=7963754240755905813)。</span><br><span class="line">3. 首先来理解这个原型链继承就是将子类的原型对象直接变为，父类的实例，这样就可以通过**原型链实现继承**，从而拿到一些属性和方法，但是无法传递参数，而且会修改原型上的属性和方法，这里要注意一点就是要改变这个子类构造函数的指向，否则就顺着原型链指向了父类构造函数了，这个组合继承，寄生组合继承都要。</span><br><span class="line">4. 对于这个**组合继承**就是通过这个 call/apply 实现继承，首先子类实例一个对象，然后调用这个子类构造函数，之后再去调用这个父构造函数，改变这个父构造函数的 this 指向，这样并可以传递参数，这样，就给子类赋予了父类的属性和方法，并且由于构造函数声明的属性和方法都是私有的所以其它实例无法改变。并且还可以依赖原型链，去拿到这个**父类原型上的方法**，**弊端就是父类构造函数调用了两次，**一次是原型链上的，一次是这个 call 调用父构造函数的时候。</span><br><span class="line">5. **寄生组合继承**：就是由于父构造函数调用了两次所以我需要，通过 object.create(父构造函数的 propotype),就是先来创建一个对象，然后让这个对象的_proto_指向这个参数。这样就跳过了这个父的实例，完美，不过也需要修改构造函数的指向。</span><br><span class="line">6. ```js</span><br><span class="line">   function parent(name, sex) &#123;//组合继承</span><br><span class="line">     this.name = name</span><br><span class="line">     this.sex = sex</span><br><span class="line"></span><br><span class="line">     parent.prototype.say = function () &#123;</span><br><span class="line">       console.log(111);</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   function child(name, age) &#123;</span><br><span class="line">     parent.call(this, name)</span><br><span class="line"></span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   child.prototype = new parent()//第一次调用这个父构造函数</span><br><span class="line">   child.prototype.constructor = child//修改这个原型constructor指向</span><br><span class="line"></span><br><span class="line">   let a = new child()//第二次调用这个父构造函数</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">parent</span>(<span class="params">name, sex</span>) </span>&#123;<span class="comment">//寄生组合继承</span></span><br><span class="line">  <span class="built_in">this</span>.name = name</span><br><span class="line">  <span class="built_in">this</span>.sex = sex</span><br><span class="line"></span><br><span class="line">  parent.prototype.say = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="number">111</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">child</span>(<span class="params">name, age</span>) </span>&#123;</span><br><span class="line">  parent.call(<span class="built_in">this</span>, name)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">child.prototype = <span class="built_in">Object</span>.create(parent.prototype)<span class="comment">//修改子类原型对象的__proto__为父构造函数的原型对象实现继承父的原型方法</span></span><br><span class="line">child.prototype.constructor = child<span class="comment">//修改这个原型constructor指向</span></span><br></pre></td></tr></table></figure></li>
-</ol>
-<h4 id="ES6-和-ES5-继承的关系"><a href="#ES6-和-ES5-继承的关系" class="headerlink" title="ES6 和 ES5 继承的关系"></a>ES6 和 ES5 继承的关系</h4><ol>
-<li>ES5 和 ES6 子类 <code>this</code> 生成顺序不同。ES5 的继承先生成了子类实例，再调用父类的构造函数修饰子类实例，ES6 的继承先生成父类实例，再调用子类的构造函数修饰父类实例。这个差别使得 ES6 可以继承内置对象。</li>
-<li><strong>这样记忆</strong>，就是 es5 是我熟悉的先去，生成子类实例，再去调用父构造函数，es6 这个正好相反。简化记忆</li>
-<li><a href="https://muyiy.cn/question/js/7.html">es6 和 es5 的继承</a></li>
-</ol>
-<h2 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h2><h3 id="async-await"><a href="#async-await" class="headerlink" title="async await"></a>async await</h3><h3 id="Generator"><a href="#Generator" class="headerlink" title="Generator"></a>Generator</h3><ol>
-<li>手写 co 函数：<a href="https://www.bilibili.com/video/BV1sZ4y1j71K?from=search&seid=4431131485538593786">手写 co 函数的视频</a>。</li>
-</ol>
-<h3 id="Promise"><a href="#Promise" class="headerlink" title="Promise"></a>Promise</h3><ol>
-<li><a href="https://juejin.cn/post/6856213486633304078#heading-4">补充 promise 的细节补充及常见看代码读题</a>。</li>
-<li>怎么来中断这个 then 的链式调用，首先明确什么时候会去调用 then 也就是说，这成功的时候，那也就是说这个题的本质是让它去，失败，所以的话就是说，主动 reject，之后会去执行，then 里失败的回调，那如果是失败的回调，then 一定是成功状态的 promise 才会去调用，所以失败的回调执行后会变为失败态，所以的话，就是说会终止调用，还可以去主动抛错。然后改变这个当前 promise 的状态。</li>
-</ol>
-<h2 id="宏任务微任务"><a href="#宏任务微任务" class="headerlink" title="宏任务微任务"></a>宏任务微任务</h2><ol>
-<li>首先明确 js 为什么是单线程，一个线程删除 dom，另一个线程添加 dom 到底是删还是不删</li>
-<li>联想 左边一个调用栈，右边各一个微任务队列，和宏任务队列，</li>
-<li>就是调用栈不断的从队列中取任务，然后再去执行。</li>
-<li>为什么会有微任务队列和宏任务队列两种，为了插队，为了让一些任务插队优先执行。让任务执行的时机变的可控。</li>
-</ol>
-<h4 id="浏览器事件循环机制"><a href="#浏览器事件循环机制" class="headerlink" title="浏览器事件循环机制"></a>浏览器事件循环机制</h4><ol>
-<li>首先宏任务（script 整体代码）推入调用栈中，先同步，遇到异步代码分别投放至宏微任务队列，执行所有微任务，然后再去检查宏任务（易错：如果遇到定时器，这个要根据这个设定时间排一个顺序）。</li>
-<li>如果我想在异步任务中去更新 dom，应该是包装为微任务，如果是微任务，就是执行后会立即渲染，而宏任务，整体代码（宏）之后微–》渲染更新而此时压根就没有更新 dom，得等下一次任务循环也就意味着，多渲染了一次。</li>
-<li>引出这个 vue.nexttick,异步更新，就是不会   立刻去更新，避免多次重复渲染。</li>
-<li>那对于需要包装为宏任务的，那就直接派发为任务，默认都包装为微任务依赖于 promise.then</li>
-</ol>
-<h3 id="js-作用域链"><a href="#js-作用域链" class="headerlink" title="js 作用域链"></a>js 作用域链</h3><ol>
-<li>首先想到何时形成。</li>
-<li>作用域嵌套的时候就，可以形成这个作用域链了，想象（函数嵌套内部函数引用了外部变量）w–》闭包</li>
-<li>同时引出为什么为什么外部变量不能访问到内部的变量。</li>
-</ol>
-<h3 id="函数式编程"><a href="#函数式编程" class="headerlink" title="函数式编程"></a>函数式编程</h3><ol>
-<li>js 更多的是具有函数式编程的特点而不是纯粹的</li>
-<li>闭包</li>
-<li>偏函数柯里化</li>
-<li>高阶函数。</li>
-<li>纯<strong>函数</strong>： 三点： <strong>函数</strong>有确定的一个返回值，并且不使用全局的变量，并且不会去修改全局变量。</li>
-</ol>
+    <title>盒模型</title>
+    <url>/2020/09/12/%E7%9B%92%E6%A8%A1%E5%9E%8B/</url>
+    <content><![CDATA[<p>首先盒模型有几个属性分别是content  border padding margin ;</p>
+<p>盒模型有两种标准，</p>
+<p>1：第一种是w3c（万维网联盟）</p>
+<p>首先盒模型有几个属性分别是content  border padding margin ;</p>
+<p>它的宽高的计算是包含了border的</p>
+<p>第二种：是传统的ie浏览器模型：</p>
+<p>也有几个属性分别是content （特殊点就是内容包含了内边距和border） border padding margin ;</p>
+<p>但是其元素宽高的计算是包含了border</p>
+<p>什么意思，就是说我可以并排的展示两个加上border超出了容器的元素；再具体就是元素的宽高既包含元素本身，还包含了其内部的边框与内边距；</p>
 ]]></content>
       <categories>
-        <category>js核心</category>
+        <category>css</category>
       </categories>
   </entry>
   <entry>
@@ -2399,6 +2255,150 @@ b=&#123;b:1&#125;
 ]]></content>
       <categories>
         <category>js基础</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>js核心梳理</title>
+    <url>/2021/02/19/JS%E6%A0%B8%E5%BF%83%E9%AA%A8%E6%9E%B6/</url>
+    <content><![CDATA[<h2 id="闭包体系"><a href="#闭包体系" class="headerlink" title="闭包体系"></a>闭包体系</h2><h3 id="切入点词法作用域"><a href="#切入点词法作用域" class="headerlink" title="切入点词法作用域"></a>切入点词法作用域</h3><ol>
+<li><p>首先我需要从作用域的底层机制说起，首先在 V8 引擎中是有编译阶段的，</p>
+<blockquote>
+<h2 id="V8-引擎如何执行一段代码"><a href="#V8-引擎如何执行一段代码" class="headerlink" title="V8 引擎如何执行一段代码"></a>V8 引擎如何执行一段代码</h2><h3 id="编译阶段"><a href="#编译阶段" class="headerlink" title="编译阶段"></a>编译阶段</h3><ol>
+<li>那在执行一段代码执行之前，得做些准备工作，</li>
+<li>具体就是需要准备<strong>基础环境</strong>。</li>
+<li>那现在有了基础环境后，就可以来执行这个代码。</li>
+<li>由于 v8 引擎并不识别代码，所以需要来，将其<strong>结构化</strong>， 转化为 <strong>AST 树</strong>，再<strong>最终转换为字节码</strong>，也就是说<strong>中间代码</strong>（介于 AST 和机器码中间的一种产物） ，但是 v8 引擎为了节省资源，它不会去将声明的函数内部的所有代码转换为中间代码。很<strong>懒惰</strong>，所以又称惰性解析阶段。只有当其函数调用的时候才会去将其内部的代码，转换为中间代码</li>
+</ol>
+<h3 id="执行阶段"><a href="#执行阶段" class="headerlink" title="执行阶段"></a>执行阶段</h3><ol>
+<li>同时要说明一点由于 V8 引擎属于jit，所以会有一个监控器，来判断是否有重复代码执行，如果有将其标记为热点代码，将其转换为二进制代码，当下次再次执行，解释器直接执行优化过的代码，提高效率。</li>
+</ol>
+</blockquote>
+<blockquote>
+<h3 id="字节码"><a href="#字节码" class="headerlink" title="字节码"></a>字节码</h3><p>所以时间上，早期编译为二进制代码太慢，所以时间上更快，空间上，所占内存小，早期为了防止重复编译将结果，缓存，而字节码所占空间很少。</p>
+</blockquote>
+<blockquote>
+</blockquote>
+<blockquote>
+<h3 id="v8-引擎如何来执行一段代码"><a href="#v8-引擎如何来执行一段代码" class="headerlink" title="v8 引擎如何来执行一段代码"></a>v8 引擎如何来执行一段代码</h3></blockquote>
+</li>
+<li><p>这里还有一点就是此时引擎会在当前的作用域去寻找有没有所声明的变量，如果有那就忽略它，这也是为什么，var 可以重复声明的本质原因，如果没有的话就将这个变量存放在当前作用域，赋值阶段。</p>
+</li>
+</ol>
+<h4 id="如何来叙述闭包"><a href="#如何来叙述闭包" class="headerlink" title="如何来叙述闭包"></a>如何来叙述闭包</h4><ol>
+<li>切入点<strong>词法作用域</strong>，那么词法作用域是怎样生成的（此时联想作用域里面有声明了一个变量），那么在编译阶段首先会来判断，当前的作用域有没有这个变量，有了就忽略，继续，没有就直接将变量放置当前作用域内并赋值 undefined.</li>
+<li>那你不能光找到它，还得赋值，在当前作用域能找到直接赋值，没找到就不断向外部作用域找形成作用域链。</li>
+<li><strong>（谈到作用域本质就联想一个调用栈，里面压入了全局执行上下文，和函数执行上下文））</strong>作用域的<strong>本质</strong>到底是什么，从<strong>表层意思</strong>来讲，它是一套规则，存放相应变量的规则，从本质上来讲，它是当前所处执行上下文，从这一点可以明白，为什么闭包中，可以从内部访问外部的变量，而外部无法访问内部的变量，全局执行上下文首先会推入调用栈中，之后每当调用一个函数，就会将函数上下文推入栈中，所以即便调用栈中，栈顶执行上下文，执行完毕后出栈，但是内部执行上下文依然可以通过，作用域链来访问，但由于栈顶执行上下文出栈了作用域链也被销毁了，所以无法访问调用栈中上下文的变量。</li>
+</ol>
+<h4 id="补充词法作用域"><a href="#补充词法作用域" class="headerlink" title="补充词法作用域"></a>补充词法作用域</h4><ol>
+<li>什么是<strong>词法作用域</strong>，由作用域想到了，作用域链，也就是说查找变量的时候一定是沿着，比如你所定义的位置，然后不断向外去延申，而动态作用域是沿着调用栈去查找的。</li>
+<li>补充函数的作用域是执行阶段就会去形成。但是查找一定是沿着定义的作用域，不断向外去延申。</li>
+<li>闭包引用的变量一定不会被回收吗，其实不对，当把这个变量直接赋值 null 就会被回收，这样相当于引用了一个空的变量自然会被回收</li>
+</ol>
+<h3 id="闭包应用。"><a href="#闭包应用。" class="headerlink" title="闭包应用。"></a>闭包应用。</h3><ol>
+<li><p>``` js<br>var a = [];<br>for(let i = 0;i&lt;10;i++){<br>a[i]=function(){<br>console.log(i)<br>}<br>};<br>a<a href="">2</a>;</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">   let 定义的 i 会运行 for 的块级作用域中，每次执行一次循环，都会创建一个块级作用域。</span><br><span class="line">   在这个块级作用域中，你又定义了一个函数，而这个函数又引用了函数外部的 i 变量，那么这就产生了闭包，也就是说，所有块级作用域中的 i 都不会被销毁，你在这里执行了 10 次循环，那么也就创建了 10 个块级作用域，这十个块级作用域中的变量 i 都会被保存在内存中。</span><br><span class="line">   那么当你再次调用该 a[n]() 时，v8 就会拿出闭包中的变量 i，并将其打印出来，因为每个闭包中的 i 值都不同，所以 a[n]() 时，打印出来的值就是 n，这个就非常符合直觉了。</span><br><span class="line">   但是如果你将 for 循环中的 i 变量声明改成 var，那么并不会产生块级作用域，那么函数引用的 i 就是全局作用域中的了，由于全局作用域中只有一个，那么在执行 for 循环的时候，i 的值会一直被改变，最后是 10，所以最终你执行 a[n]() 时，无论 n 是多少，打印出来的都是 10. 那么这就是 bug 之源了。</span><br><span class="line">2. 循环打印 1，2，3，4，5</span><br><span class="line">   和第二种思路比较相似，同样是在 setTimeout 外面再套一层函数，只不过这个函数是一个**立即执行函数** 。利用立即执行函数的入参来缓存每一个循环中的 i 值：</span><br><span class="line">   ```js</span><br><span class="line">   for (var i = 0; i &lt; 5; i++) &#123;</span><br><span class="line">       // 这里的 i 被赋值给了立即执行函数作用域内的变量 j</span><br><span class="line">       (function(j) &#123;  </span><br><span class="line">           setTimeout(function() &#123;</span><br><span class="line">               console.log(j);</span><br><span class="line">           &#125;, 1000);</span><br><span class="line">       &#125;)(i);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>//就是每一次 settimeout 里的 j 对外部立即执行函数里的变量造成了引用，所以，缓存了这个值，因为 v8 不再回收这个被引用的值了，缓存下来了。</p>
+</li>
+<li><p>还可以用 promise 来实现闭包</p>
+</li>
+</ol>
+<p>高阶函数</p>
+<h3 id="闭包的应用"><a href="#闭包的应用" class="headerlink" title="闭包的应用"></a>闭包的应用</h3><h4 id="模拟私有变量"><a href="#模拟私有变量" class="headerlink" title="模拟私有变量"></a>模拟私有变量</h4><ol>
+<li><strong>模拟私有变量</strong>：就是之前像是 Java c++ 这些，有 private 私有变量， 就是不是这个类的其它成员，你无法去访问这些私有变量。</li>
+<li>在 js 生成一个类是依赖于这个构造函数，但是你实例化一个类会发现，你通过这个类可以访问到这些这个类的属性，但是这个有一个问题就是说，万一我在这个这个构造函数里定义了一些私密数据，那不就可以在这个对象去访问到这个属性了吗。</li>
+<li>用立即执行函数，形成一个闭包，返回一个类，然后将私有属性放在函数里，不去通过 this 来赋值，直接进行赋值操作；a=privatedata，这样外部是无法拿到这个私有变量的。</li>
+<li>还可以用symbol来模拟一个私有的变量。</li>
+</ol>
+<h4 id="偏函数-bind-的实现"><a href="#偏函数-bind-的实现" class="headerlink" title="偏函数 bind 的实现"></a>偏函数 bind 的实现</h4><ol>
+<li><p>[“bind”]</p>
+<blockquote>
+<h3 id="思路详解"><a href="#思路详解" class="headerlink" title="思路详解"></a>思路详解</h3><p><a href="https://www.bilibili.com/video/BV1m54y1q7hc/?spm_id_from=333.788.videocard.1">bli 易懂题解</a>.</p>
+<h3 id="个人理解"><a href="#个人理解" class="headerlink" title="个人理解"></a>个人理解</h3><ol>
+<li><p>二刷理解：</p>
+<ol>
+<li>第一点： 记住执行 bind 会返回一个函数，为什么为了之后的偏函数的应用，s.（a）（b）</li>
+<li>返回的函数需要调用它并且来改变它的 this 指向，利用 apply</li>
+<li>此时来考虑一下，类数组的问题，就是说，bind 函数里面有许多参数，被 arguements 所收集，你现在想传参数，但是 arguements 是一个类数组，需要转换为真正的数组，利用 array.propotype.slice.call()</li>
+<li>此时 bind 还具有偏函数的特性就是 bind 函数第一个括号内部，偏函数就是在第二个括号里的参数,为什么第一个括号里的参数要截取，因为我不需要第一个括号里面的第一个参数，所以要截取，对于第二个括号，只需要将其转化为数组就好，但是所谓偏函数的本质依然要将其两个参数里的东西转换为一个括号里的参数，所以我们需要合并 concat</li>
+<li>可以通过 bind 所返回的函数，实例化一个对象</li>
+<li>也就是说你需要在 Bind 所返回的函数里，去判断 this 是否是构造函数的实例，</li>
+<li>这里的构造函数指的是 person，不是你返回的函数，而且</li>
+</ol>
+</li>
+</ol>
+</blockquote>
+</li>
+</ol>
+<h4 id="柯里化"><a href="#柯里化" class="headerlink" title="柯里化"></a>柯里化</h4><h4 id="防抖节流"><a href="#防抖节流" class="headerlink" title="防抖节流"></a>防抖节流</h4><blockquote>
+<h3 id="防抖-节流"><a href="#防抖-节流" class="headerlink" title="防抖/节流"></a>防抖/节流</h3><h4 id="思想"><a href="#思想" class="headerlink" title="思想"></a>思想</h4><ol>
+<li>节流就是，n 秒内，只触发一次。（timer 无值了，说明第一次的定时任务执行完毕）</li>
+<li>防抖就是 n 秒内，触发多次只看最后一次触发，的中间多次触发，会重新计时。（timer 有值得情况会删除之前的定时器）</li>
+<li>执行 fn，this 就指向 window 了，要指向触发的 dom 节点，所以要调用 apply 绑定 this。</li>
+<li>一定要把这个 timer 放在外面，因为要形成一个闭包，这样在内存中由于闭包，就不会导致这个变量被销毁，这样能够保证多次触发函数所引用的变量是一个 timer.</li>
+<li><a href="https://www.jianshu.com/p/cc84f7594b47">防抖节流细节</a>。</li>
+<li><a href="https://blog.csdn.net/KangTongShun/article/details/105316227">防抖节流为什么要用闭包</a>。</li>
+<li><a href="https://www.cnblogs.com/ywjbokeyuan/p/14231894.html">防抖和节流和闭包的关系</a>。</li>
+</ol>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">throter</span>(<span class="params">callback, delay</span>) </span>&#123;<span class="comment">//节流</span></span><br><span class="line">  <span class="keyword">let</span> timer;<span class="comment">//闭包应用</span></span><br><span class="line">   <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!timer) &#123;</span><br><span class="line">      timer = <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        callback.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>)</span><br><span class="line">      &#125;, delay);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">input.addEventListerener(<span class="string">&#x27;keyup&#x27;</span>, throter(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(input.value);</span><br><span class="line">&#125;, <span class="number">1000</span>))</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">debance</span>(<span class="params">callback, delay</span>) </span>&#123;<span class="comment">//防抖</span></span><br><span class="line">  <span class="keyword">let</span> timer = <span class="literal">null</span>;<span class="comment">//闭包的应用</span></span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (timer) &#123;</span><br><span class="line">      <span class="built_in">clearTimeout</span>(timer)<span class="comment">//清空定时器操作</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      timer = <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        callback.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>)</span><br><span class="line">        timer = <span class="literal">null</span><span class="comment">//这里用这个timer===null，//这里为什么要清空就是因为，如果你不清空的话</span></span><br><span class="line"><span class="comment">//，就会导致这个timer始终是有值的，那就没有办法紧接着，继续去，重新设置定时器了。/</span></span><br><span class="line"><span class="comment">//或者这样想就是，轮回，每次输入框输入完内容后，</span></span><br><span class="line">      &#125;, delay);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">input.addEventListener(<span class="string">&#x27;keyup&#x27;</span>, debance(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(input.value);</span><br><span class="line">&#125;, <span class="number">1000</span>))</span><br></pre></td></tr></table></figure>
+
+</blockquote>
+<p>   。</p>
+<h4 id="手写一个闭包"><a href="#手写一个闭包" class="headerlink" title="手写一个闭包"></a>手写一个闭包</h4><ol>
+<li><p>``` js<br>function cache(){<br>let res={}<br>return {<br>set: function(key,value){</p>
+<pre><code>res[key]=value
+</code></pre>
+<p>}<br>get: function(key,value){</p>
+<pre><code>return     res[key]
+</code></pre>
+<p>}</p>
+<p>}</p>
+<p>}//这里函数作为了返回值，并且这个内部返回的函数引用了外部的局部变量。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">高阶函数</span><br><span class="line"></span><br><span class="line">1. **高阶**函数是指使用其他函数作为参数、或者返回一个函数作为结果的函数。比如这个 map,reduce 等.</span><br><span class="line">2. **联想记忆**：为什么**高阶**，因为是属于，函数**一等公民**：所以高级---》就是函数可以做数据类型也能做的事情，比如这个，参数和返回值。</span><br><span class="line"></span><br><span class="line">### 继承</span><br><span class="line"></span><br><span class="line">1. [js 继承易懂](https://www.bilibili.com/video/BV1a5411a7n3?t=1656)</span><br><span class="line">2. [js 继承可参考视频](https://www.bilibili.com/video/BV1J54y1y7u9?from=search&amp;seid=7963754240755905813)。</span><br><span class="line">3. 首先来理解这个原型链继承就是将子类的原型对象直接变为，父类的实例，这样就可以通过**原型链实现继承**，从而拿到一些属性和方法，但是无法传递参数，而且会修改原型上的属性和方法，这里要注意一点就是要改变这个子类构造函数的指向，否则就顺着原型链指向了父类构造函数了，这个组合继承，寄生组合继承都要。</span><br><span class="line">4. 对于这个**组合继承**就是通过这个 call/apply 实现继承，首先子类实例一个对象，然后调用这个子类构造函数，之后再去调用这个父构造函数，改变这个父构造函数的 this 指向，这样并可以传递参数，这样，就给子类赋予了父类的属性和方法，并且由于构造函数声明的属性和方法都是私有的所以其它实例无法改变。并且还可以依赖原型链，去拿到这个**父类原型上的方法**，**弊端就是父类构造函数调用了两次，**一次是原型链上的，一次是这个 call 调用父构造函数的时候。</span><br><span class="line">5. **寄生组合继承**：就是由于父构造函数调用了两次所以我需要，通过 object.create(父构造函数的 propotype),就是先来创建一个对象，然后让这个对象的_proto_指向这个参数。这样就跳过了这个父的实例，完美，不过也需要修改构造函数的指向。</span><br><span class="line">6. ```js</span><br><span class="line">   function parent(name, sex) &#123;//组合继承</span><br><span class="line">     this.name = name</span><br><span class="line">     this.sex = sex</span><br><span class="line"></span><br><span class="line">     parent.prototype.say = function () &#123;</span><br><span class="line">       console.log(111);</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   function child(name, age) &#123;</span><br><span class="line">     parent.call(this, name)</span><br><span class="line"></span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   child.prototype = new parent()//第一次调用这个父构造函数</span><br><span class="line">   child.prototype.constructor = child//修改这个原型constructor指向</span><br><span class="line"></span><br><span class="line">   let a = new child()//第二次调用这个父构造函数</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">parent</span>(<span class="params">name, sex</span>) </span>&#123;<span class="comment">//寄生组合继承</span></span><br><span class="line">  <span class="built_in">this</span>.name = name</span><br><span class="line">  <span class="built_in">this</span>.sex = sex</span><br><span class="line"></span><br><span class="line">  parent.prototype.say = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="number">111</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">child</span>(<span class="params">name, age</span>) </span>&#123;</span><br><span class="line">  parent.call(<span class="built_in">this</span>, name)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">child.prototype = <span class="built_in">Object</span>.create(parent.prototype)<span class="comment">//修改子类原型对象的__proto__为父构造函数的原型对象实现继承父的原型方法</span></span><br><span class="line">child.prototype.constructor = child<span class="comment">//修改这个原型constructor指向</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<h4 id="ES6-和-ES5-继承的关系"><a href="#ES6-和-ES5-继承的关系" class="headerlink" title="ES6 和 ES5 继承的关系"></a>ES6 和 ES5 继承的关系</h4><ol>
+<li>ES5 和 ES6 子类 <code>this</code> 生成顺序不同。ES5 的继承先生成了子类实例，再调用父类的构造函数修饰子类实例，ES6 的继承先生成父类实例，再调用子类的构造函数修饰父类实例。这个差别使得 ES6 可以继承内置对象。</li>
+<li><strong>这样记忆</strong>，就是 es5 是我熟悉的先去，生成子类实例，再去调用父构造函数，es6 这个正好相反。简化记忆</li>
+<li><a href="https://muyiy.cn/question/js/7.html">es6 和 es5 的继承</a></li>
+</ol>
+<h2 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h2><h3 id="async-await"><a href="#async-await" class="headerlink" title="async await"></a>async await</h3><h3 id="Generator"><a href="#Generator" class="headerlink" title="Generator"></a>Generator</h3><ol>
+<li>手写 co 函数：<a href="https://www.bilibili.com/video/BV1sZ4y1j71K?from=search&seid=4431131485538593786">手写 co 函数的视频</a>。</li>
+</ol>
+<h3 id="Promise"><a href="#Promise" class="headerlink" title="Promise"></a>Promise</h3><ol>
+<li><a href="https://juejin.cn/post/6856213486633304078#heading-4">补充 promise 的细节补充及常见看代码读题</a>。</li>
+<li>怎么来中断这个 then 的链式调用，首先明确什么时候会去调用 then 也就是说，这成功的时候，那也就是说这个题的本质是让它去，失败，所以的话就是说，主动 reject，之后会去执行，then 里失败的回调，那如果是失败的回调，then 一定是成功状态的 promise 才会去调用，所以失败的回调执行后会变为失败态，所以的话，就是说会终止调用，还可以去主动抛错。然后改变这个当前 promise 的状态。</li>
+</ol>
+<h2 id="宏任务微任务"><a href="#宏任务微任务" class="headerlink" title="宏任务微任务"></a>宏任务微任务</h2><ol>
+<li>首先明确 js 为什么是单线程，一个线程删除 dom，另一个线程添加 dom 到底是删还是不删</li>
+<li>联想 左边一个调用栈，右边各一个微任务队列，和宏任务队列，</li>
+<li>就是调用栈不断的从队列中取任务，然后再去执行。</li>
+<li>为什么会有微任务队列和宏任务队列两种，为了插队，为了让一些任务插队优先执行。让任务执行的时机变的可控。</li>
+</ol>
+<h4 id="浏览器事件循环机制"><a href="#浏览器事件循环机制" class="headerlink" title="浏览器事件循环机制"></a>浏览器事件循环机制</h4><ol>
+<li>首先宏任务（script 整体代码）推入调用栈中，先同步，遇到异步代码分别投放至宏微任务队列，执行所有微任务，然后再去检查宏任务（易错：如果遇到定时器，这个要根据这个设定时间排一个顺序）。</li>
+<li>如果我想在异步任务中去更新 dom，应该是包装为微任务，如果是微任务，就是执行后会立即渲染，而宏任务，整体代码（宏）之后微–》渲染更新而此时压根就没有更新 dom，得等下一次任务循环也就意味着，多渲染了一次。</li>
+<li>引出这个 vue.nexttick,异步更新，就是不会   立刻去更新，避免多次重复渲染。</li>
+<li>那对于需要包装为宏任务的，那就直接派发为任务，默认都包装为微任务依赖于 promise.then</li>
+</ol>
+<h3 id="js-作用域链"><a href="#js-作用域链" class="headerlink" title="js 作用域链"></a>js 作用域链</h3><ol>
+<li>首先想到何时形成。</li>
+<li>作用域嵌套的时候就，可以形成这个作用域链了，想象（函数嵌套内部函数引用了外部变量）w–》闭包</li>
+<li>同时引出为什么为什么外部变量不能访问到内部的变量。</li>
+</ol>
+<h3 id="函数式编程"><a href="#函数式编程" class="headerlink" title="函数式编程"></a>函数式编程</h3><ol>
+<li>js 更多的是具有函数式编程的特点而不是纯粹的</li>
+<li>闭包</li>
+<li>偏函数柯里化</li>
+<li>高阶函数。</li>
+<li>纯<strong>函数</strong>： 三点： <strong>函数</strong>有确定的一个返回值，并且不使用全局的变量，并且不会去修改全局变量。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>js核心</category>
       </categories>
   </entry>
 </search>
