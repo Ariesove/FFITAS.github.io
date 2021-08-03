@@ -302,6 +302,241 @@
       </categories>
   </entry>
   <entry>
+    <title>tcp重传机制拥塞控制相关</title>
+    <url>/2020/12/23/TCP%E6%8B%A5%E5%A1%9E%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9B%B8%E5%85%B3/</url>
+    <content><![CDATA[<h1 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h1><h2 id="这一次首先复习一下TCP重传机制"><a href="#这一次首先复习一下TCP重传机制" class="headerlink" title="这一次首先复习一下TCP重传机制"></a>这一次首先复习一下TCP重传机制</h2><h3 id="为什么TCP会重传呢"><a href="#为什么TCP会重传呢" class="headerlink" title="为什么TCP会重传呢"></a>为什么TCP会重传呢</h3><ul>
+<li><p>TCP建立连接的过程如果这个过程如果有丢包那么就会触发重传机制</p>
+<ul>
+<li><p>超时重传</p>
+<ul>
+<li>就是TCP内部有一个机制会设定一个时间（时延）这个时间大概略大于，tcp报文往返时间，这个时间的设置不能太短，如果太短那报文还没来的及发回来就误认为包丢了，导致重传，但是也不能设置的太长，这个会造成网络资源浪费（为什么会造成资源浪费我来解释一下：就是说如果时间设置太长了，此时真的发生丢包了，那客户端等很久之后才重发，那不是很浪费网路资源嘛对吧；</li>
+</ul>
+</li>
+<li><p>快速重传</p>
+<ul>
+<li><p>为什么已经有了超时重传：还要有快速重传</p>
+<ul>
+<li>其实是这样，就是说，由于超时重传，是要等一段时间才重传，其实效率并不是很高，所以网络设计们采取了快速重传机制这样效率更高</li>
+</ul>
+</li>
+<li><p>什么时候会触发快速重传机制，比如此时发送方发送了三个数据包（1，2，3），其中2没有发送出去，接收方只发出基于第一个数据包的确认号，并且重复了三次（不包含第一次的确认，再此基础上，再来三次确认）这个确认号，就是告诉发送方，2这个数据包丢失了，需要对方重新发送，于是触发了发送方的快速重传机制，发送方会重新传送2这个丢失数据包</p>
+</li>
+<li><p>特点</p>
+<ul>
+<li>接受方会重复发送丢失包的确认号</li>
+</ul>
+</li>
+<li><p>缺点</p>
+<ul>
+<li>这里存在一个问题就是，发送方是依据所收到的确认号，来确认接受方是否收到了数据，但是此时发送方只接受到了丢失包的确认号，它也不知道之后的数据包到底发送成功没；————于是Sack就是来解决这个问题的</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>SACK</p>
+<ul>
+<li>这里我通俗来讲一下，就是说为了能够让对方知道自己到底具体传哪些丢失的数据包，每次服务器发来的确认号，还会带上服务器已收到的最大 连续的包的序列号</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="滑动窗口"><a href="#滑动窗口" class="headerlink" title="滑动窗口"></a>滑动窗口</h2><h3 id="为什么要有滑动窗口"><a href="#为什么要有滑动窗口" class="headerlink" title="为什么要有滑动窗口"></a>为什么要有滑动窗口</h3><ul>
+<li><p>为了提升网络传输效率</p>
+<ul>
+<li><p>原因在于tcp为了能够实现可靠信息的传输：为每一个数据包都进行确认，那么这就导致了，数据包往返时间越长，网路通信效率就会大幅度的降低（不是很理解网络吞吐量），所以才引用到了窗口</p>
+</li>
+<li><p>怎么做的：就是为tcp报文设立一个滑动窗口，这个滑动窗口的大小由服务器决定/并且，是无需等待对方的确认，而可以继续发送的数据包</p>
+<ul>
+<li><p>发送窗口</p>
+<ul>
+<li>已收到确认的序列号</li>
+<li>已经发送但未收到确认的序列号（这个窗口的尺寸大小是服务器能接受的）</li>
+<li>还有一段未发送，但在接收方能力范围内的数据段（又称可用窗口的大小）（未发送但是可发送的包）</li>
+<li>超出了服务器所能接受的序列号</li>
+</ul>
+</li>
+<li><p>接收方滑动窗口</p>
+<ul>
+<li>已收到数据，并且已经确认的数据段</li>
+<li>未收到数据但是可以接受的窗口大小</li>
+<li>未收到数据但是无法确认的数据段</li>
+</ul>
+</li>
+<li><p>那有一个问题就是如果中途其中一个确认号丢失了，怎么办</p>
+<ul>
+<li>滑动窗口中的序列号是有序的，这也就意味着确认号也是有序的，只要缺失的那个序列号的确认号之后的确认号得到了确认，那么就是一种累计确认，只要某个确认号确认后默认之前的所有序列号都得到了确认（这里我对于序列号不是很理解）</li>
+</ul>
+</li>
+<li><p>滑动窗口是怎么个滑动法</p>
+<ul>
+<li>就是服务器发来确认号后，发送方的滑动窗口相应的就会滑动和确认号序列相同的距离，意味着可用窗口增加了</li>
+</ul>
+</li>
+<li><p>补充：滑动窗口大小的含义：指的是发送方不必等待对方的确认，可以发送的最大报文段</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="流量控制"><a href="#流量控制" class="headerlink" title="流量控制"></a>流量控制</h2><h3 id="就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力"><a href="#就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力" class="headerlink" title="就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力"></a>就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力</h3><h3 id="依赖于滑动窗口"><a href="#依赖于滑动窗口" class="headerlink" title="依赖于滑动窗口"></a>依赖于滑动窗口</h3><ul>
+<li>意思就是通过告知发送方自己的接收窗口大小rwnd来，控制发送方的数据–从而实现了流量控制</li>
+</ul>
+<h3 id="那所谓的窗口是什么：就是接收方最大所能处理的数据量"><a href="#那所谓的窗口是什么：就是接收方最大所能处理的数据量" class="headerlink" title="那所谓的窗口是什么：就是接收方最大所能处理的数据量"></a>那所谓的窗口是什么：就是接收方最大所能处理的数据量</h3><h3 id="窗口关闭"><a href="#窗口关闭" class="headerlink" title="窗口关闭"></a>窗口关闭</h3><ul>
+<li>主要就是在接收方发送给发送方自己最新的接收窗口大小的时候，发生了丢失–tcp的可靠传输没有对窗口大小的消息产生作用</li>
+<li>双方都在等待对方</li>
+</ul>
+<h2 id="拥塞控制"><a href="#拥塞控制" class="headerlink" title="拥塞控制"></a>拥塞控制</h2><h3 id="拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞"><a href="#拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞" class="headerlink" title="拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞"></a>拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞</h3><h3 id="那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）"><a href="#那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）" class="headerlink" title="那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）"></a>那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）</h3><h3 id="ssthresh-阈值"><a href="#ssthresh-阈值" class="headerlink" title="ssthresh//阈值"></a>ssthresh//阈值</h3><h3 id="有哪些算法"><a href="#有哪些算法" class="headerlink" title="有哪些算法"></a>有哪些算法</h3><ul>
+<li><p>慢开始</p>
+<ul>
+<li>就是一开始每当收到一个ack，其cwnd加一个，第二轮收到2个，cwnd就为2，第三轮次收到4个ack，cwnd为4,这样呈现了指数增加</li>
+</ul>
+</li>
+<li><p>拥塞避免</p>
+<ul>
+<li><p>但是随着客户端发送数据数量的增加</p>
+<ul>
+<li><p>一定会到达阈值</p>
+<ul>
+<li>进入拥塞避免后每收到一个确认，cwnd只加1/cwnd，比如当前收到了8个确认，一个加1/8,这次拥塞窗口仅加了一次，之后就是线性增长了</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>拥塞发生</p>
+<ul>
+<li><p>你即便是再怎么避免，还是会导致网络拥塞</p>
+<ul>
+<li><p>超时重传</p>
+<ul>
+<li><p>进入拥塞避免算法</p>
+<ul>
+<li><p>但是这里有一个问题就是说：每次一进入拥塞避免，拥塞窗口，直接就初始化为1</p>
+</li>
+<li><p>就算网络不拥堵，但是会卡顿，因为所能发送的数据包骤减</p>
+</li>
+<li><p>此时客户端认为其实网络情况也没有那么糟糕</p>
+<ul>
+<li>ssthresh=cwnd/2</li>
+<li>初始化cwnd=1</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>快重传</p>
+<ul>
+<li>cwnd/2</li>
+<li>sshred=cwnd/2</li>
+</ul>
+</li>
+<li><p>快恢复</p>
+<ul>
+<li><p>触发快重传后，紧接着执行</p>
+<ul>
+<li><p>cwnd=ssthred+3(ack报文）</p>
+<ul>
+<li>很明显拥塞窗口已经大于阈值了：之后再次进入线性拥塞避免算法</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>TCP</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>优化垃圾回收机制</title>
+    <url>/2020/12/19/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%9D%A5%E4%BC%98%E5%8C%96%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%C2%B7/</url>
+    <content><![CDATA[<h1 id="V8引擎如何来优化垃圾回收机制的·"><a href="#V8引擎如何来优化垃圾回收机制的·" class="headerlink" title="V8引擎如何来优化垃圾回收机制的·"></a>V8引擎如何来优化垃圾回收机制的·</h1><h2 id="相应优化算法"><a href="#相应优化算法" class="headerlink" title="相应优化算法"></a>相应优化算法</h2><h3 id="全停顿算法"><a href="#全停顿算法" class="headerlink" title="全停顿算法"></a>全停顿算法</h3><ul>
+<li><p>js是单线程，并且js执行和垃圾回收机制任务都在主线上，js执行就会被挂起，导致全停顿</p>
+</li>
+<li><p>Subtopic</p>
+</li>
+<li><p>并行回收</p>
+<ul>
+<li>副垃圾回收机制–采取专门用来清理新生代对象</li>
+<li>这些辅助线程，也会来帮忙将对象区域的数据转移到空闲区域</li>
+<li>Subtopic</li>
+<li>弊端还是全停顿，对于老生代对象还是会非常影响效率</li>
+</ul>
+</li>
+</ul>
+<h3 id="增量标记算法"><a href="#增量标记算法" class="headerlink" title="增量标记算法"></a>增量标记算法</h3><ul>
+<li><p>增量回收</p>
+<ul>
+<li><p>分治的思想</p>
+</li>
+<li><p>就是说将完整的标记清除任务分解为一个个小任务，然后穿插着在主线程上进行</p>
+</li>
+<li><p>怎么实现的</p>
+<ul>
+<li><p>如何来实现垃圾回收机制的暂停和恢复</p>
+<ul>
+<li><p>三色标记法</p>
+<ul>
+<li><p>黑色</p>
+<ul>
+<li>能够被GCroot对象遍历到</li>
+</ul>
+</li>
+<li><p>白色</p>
+<ul>
+<li>无法被GCroot对象遍历到–会被清除</li>
+</ul>
+</li>
+<li><p>灰色</p>
+<ul>
+<li><p>被GCroot对象遍历到，但是子节点还未被处理</p>
+</li>
+<li><p>V8的垃圾回收器，会来判断此时有没有灰色标记</p>
+<ul>
+<li><p>有</p>
+<ul>
+<li>下次恢复垃圾回收机制时就从灰色的标记开始，继续标记</li>
+</ul>
+</li>
+<li><p>没有</p>
+<ul>
+<li>直接开始清除</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>那这里有一个问题如果中途，已经被标记的变量，被改变</p>
+<ul>
+<li>原来被标记为黑色–现在改变后变白色了</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="重点：并发回收机制"><a href="#重点：并发回收机制" class="headerlink" title="重点：并发回收机制"></a>重点：并发回收机制</h2><h3 id="不管是增量回收还是-并行回收，都是运行在主线程上"><a href="#不管是增量回收还是-并行回收，都是运行在主线程上" class="headerlink" title="不管是增量回收还是/并行回收，都是运行在主线程上"></a>不管是增量回收还是/并行回收，都是运行在主线程上</h3><h3 id="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收"><a href="#那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收" class="headerlink" title="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-"></a>那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-</h3><h3 id="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"><a href="#简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收" class="headerlink" title="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"></a>简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收</h3><h3 id="Subtopic"><a href="#Subtopic" class="headerlink" title="Subtopic"></a>Subtopic</h3><h2 id="主垃圾回收机制采取了三种机制"><a href="#主垃圾回收机制采取了三种机制" class="headerlink" title="主垃圾回收机制采取了三种机制"></a>主垃圾回收机制采取了三种机制</h2>]]></content>
+      <categories>
+        <category>v8引擎</category>
+      </categories>
+  </entry>
+  <entry>
     <title>v8引擎基础梳理</title>
     <url>/2021/01/19/V8%E5%BC%95%E6%93%8E/</url>
     <content><![CDATA[<h1 id="V8引擎"><a href="#V8引擎" class="headerlink" title="V8引擎"></a>V8引擎</h1><h2 id="如何来执行一段js代码"><a href="#如何来执行一段js代码" class="headerlink" title="如何来执行一段js代码"></a>如何来执行一段js代码</h2><h3 id="首先你想想，v8想要来执行一段代码，首先你得有一个初始环境吧，基础环境"><a href="#首先你想想，v8想要来执行一段代码，首先你得有一个初始环境吧，基础环境" class="headerlink" title="首先你想想，v8想要来执行一段代码，首先你得有一个初始环境吧，基础环境"></a>首先你想想，v8想要来执行一段代码，首先你得有一个初始环境吧，基础环境</h3><ul>
@@ -659,159 +894,24 @@
       </categories>
   </entry>
   <entry>
-    <title>tcp重传机制拥塞控制相关</title>
-    <url>/2020/12/23/TCP%E6%8B%A5%E5%A1%9E%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9B%B8%E5%85%B3/</url>
-    <content><![CDATA[<h1 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h1><h2 id="这一次首先复习一下TCP重传机制"><a href="#这一次首先复习一下TCP重传机制" class="headerlink" title="这一次首先复习一下TCP重传机制"></a>这一次首先复习一下TCP重传机制</h2><h3 id="为什么TCP会重传呢"><a href="#为什么TCP会重传呢" class="headerlink" title="为什么TCP会重传呢"></a>为什么TCP会重传呢</h3><ul>
-<li><p>TCP建立连接的过程如果这个过程如果有丢包那么就会触发重传机制</p>
-<ul>
-<li><p>超时重传</p>
-<ul>
-<li>就是TCP内部有一个机制会设定一个时间（时延）这个时间大概略大于，tcp报文往返时间，这个时间的设置不能太短，如果太短那报文还没来的及发回来就误认为包丢了，导致重传，但是也不能设置的太长，这个会造成网络资源浪费（为什么会造成资源浪费我来解释一下：就是说如果时间设置太长了，此时真的发生丢包了，那客户端等很久之后才重发，那不是很浪费网路资源嘛对吧；</li>
-</ul>
+    <title>V8引擎执行代码</title>
+    <url>/2020/12/01/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%AE%B5%E4%BB%A3%E7%A0%81/</url>
+    <content><![CDATA[<h2 id="V8-引擎如何执行一段代码"><a href="#V8-引擎如何执行一段代码" class="headerlink" title="V8 引擎如何执行一段代码"></a>V8 引擎如何执行一段代码</h2><h3 id="编译阶段"><a href="#编译阶段" class="headerlink" title="编译阶段"></a>编译阶段</h3><ol>
+<li><p>那在执行一段代码执行之前，得做些准备工作，（你做事情不也得需要做准备工作吗），具体就是需要准备<strong>基础环境</strong>。</p>
 </li>
-<li><p>快速重传</p>
-<ul>
-<li><p>为什么已经有了超时重传：还要有快速重传</p>
-<ul>
-<li>其实是这样，就是说，由于超时重传，是要等一段时间才重传，其实效率并不是很高，所以网络设计们采取了快速重传机制这样效率更高</li>
-</ul>
+<li><p>全局执行上下文，创建阶段，首先会创建一个全局对象window，创建一个this 然后让它指向这个window，之后为变量和函数分配空间/并且要为变量赋一个undefined，创建作用域链，全局作用域里面有全局变量，全局函数，想来存储对象，不得需要创建存储的空间吗/堆 —栈，事件循环系系统web-api。</p>
 </li>
-<li><p>什么时候会触发快速重传机制，比如此时发送方发送了三个数据包（1，2，3），其中2没有发送出去，接收方只发出基于第一个数据包的确认号，并且重复了三次（不包含第一次的确认，再此基础上，再来三次确认）这个确认号，就是告诉发送方，2这个数据包丢失了，需要对方重新发送，于是触发了发送方的快速重传机制，发送方会重新传送2这个丢失数据包</p>
+<li><p>那现在有了基础环境后，就可以来执行这个代码。</p>
 </li>
-<li><p>特点</p>
-<ul>
-<li>接受方会重复发送丢失包的确认号</li>
-</ul>
+<li><p>由于 v8 引擎并不识别代码，所以需要来，将其<strong>结构化</strong>， 转化为 <strong>AST 树</strong>，再<strong>最终转换为字节码</strong>，也就是说<strong>中间代码</strong>（介于 AST 和机器码中间的一种产物） ，但是 v8 引擎为了节省资源，它不会去将声明的函数内部的所有代码转换为中间代码。很<strong>懒惰</strong>，所以又称<strong>惰性解析</strong>，阶段。</p>
 </li>
-<li><p>缺点</p>
-<ul>
-<li>这里存在一个问题就是，发送方是依据所收到的确认号，来确认接受方是否收到了数据，但是此时发送方只接受到了丢失包的确认号，它也不知道之后的数据包到底发送成功没；————于是Sack就是来解决这个问题的</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>SACK</p>
-<ul>
-<li>这里我通俗来讲一下，就是说为了能够让对方知道自己到底具体传哪些丢失的数据包，每次服务器发来的确认号，还会带上服务器已收到的最大 连续的包的序列号</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="滑动窗口"><a href="#滑动窗口" class="headerlink" title="滑动窗口"></a>滑动窗口</h2><h3 id="为什么要有滑动窗口"><a href="#为什么要有滑动窗口" class="headerlink" title="为什么要有滑动窗口"></a>为什么要有滑动窗口</h3><ul>
-<li><p>为了提升网络传输效率</p>
-<ul>
-<li><p>原因在于tcp为了能够实现可靠信息的传输：为每一个数据包都进行确认，那么这就导致了，数据包往返时间越长，网路通信效率就会大幅度的降低（不是很理解网络吞吐量），所以才引用到了窗口</p>
-</li>
-<li><p>怎么做的：就是为tcp报文设立一个滑动窗口，这个滑动窗口的大小由服务器决定/并且，是无需等待对方的确认，而可以继续发送的数据包</p>
-<ul>
-<li><p>发送窗口</p>
-<ul>
-<li>已收到确认的序列号</li>
-<li>已经发送但未收到确认的序列号（这个窗口的尺寸大小是服务器能接受的）</li>
-<li>还有一段未发送，但在接收方能力范围内的数据段（又称可用窗口的大小）（未发送但是可发送的包）</li>
-<li>超出了服务器所能接受的序列号</li>
-</ul>
-</li>
-<li><p>接收方滑动窗口</p>
-<ul>
-<li>已收到数据，并且已经确认的数据段</li>
-<li>未收到数据但是可以接受的窗口大小</li>
-<li>未收到数据但是无法确认的数据段</li>
-</ul>
-</li>
-<li><p>那有一个问题就是如果中途其中一个确认号丢失了，怎么办</p>
-<ul>
-<li>滑动窗口中的序列号是有序的，这也就意味着确认号也是有序的，只要缺失的那个序列号的确认号之后的确认号得到了确认，那么就是一种累计确认，只要某个确认号确认后默认之前的所有序列号都得到了确认（这里我对于序列号不是很理解）</li>
-</ul>
-</li>
-<li><p>滑动窗口是怎么个滑动法</p>
-<ul>
-<li>就是服务器发来确认号后，发送方的滑动窗口相应的就会滑动和确认号序列相同的距离，意味着可用窗口增加了</li>
-</ul>
-</li>
-<li><p>补充：滑动窗口大小的含义：指的是发送方不必等待对方的确认，可以发送的最大报文段</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="流量控制"><a href="#流量控制" class="headerlink" title="流量控制"></a>流量控制</h2><h3 id="就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力"><a href="#就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力" class="headerlink" title="就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力"></a>就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力</h3><h3 id="依赖于滑动窗口"><a href="#依赖于滑动窗口" class="headerlink" title="依赖于滑动窗口"></a>依赖于滑动窗口</h3><ul>
-<li>意思就是通过告知发送方自己的接收窗口大小rwnd来，控制发送方的数据–从而实现了流量控制</li>
-</ul>
-<h3 id="那所谓的窗口是什么：就是接收方最大所能处理的数据量"><a href="#那所谓的窗口是什么：就是接收方最大所能处理的数据量" class="headerlink" title="那所谓的窗口是什么：就是接收方最大所能处理的数据量"></a>那所谓的窗口是什么：就是接收方最大所能处理的数据量</h3><h3 id="窗口关闭"><a href="#窗口关闭" class="headerlink" title="窗口关闭"></a>窗口关闭</h3><ul>
-<li>主要就是在接收方发送给发送方自己最新的接收窗口大小的时候，发生了丢失–tcp的可靠传输没有对窗口大小的消息产生作用</li>
-<li>双方都在等待对方</li>
-</ul>
-<h2 id="拥塞控制"><a href="#拥塞控制" class="headerlink" title="拥塞控制"></a>拥塞控制</h2><h3 id="拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞"><a href="#拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞" class="headerlink" title="拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞"></a>拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞</h3><h3 id="那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）"><a href="#那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）" class="headerlink" title="那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）"></a>那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）</h3><h3 id="ssthresh-阈值"><a href="#ssthresh-阈值" class="headerlink" title="ssthresh//阈值"></a>ssthresh//阈值</h3><h3 id="有哪些算法"><a href="#有哪些算法" class="headerlink" title="有哪些算法"></a>有哪些算法</h3><ul>
-<li><p>慢开始</p>
-<ul>
-<li>就是一开始每当收到一个ack，其cwnd加一个，第二轮收到2个，cwnd就为2，第三轮次收到4个ack，cwnd为4,这样呈现了指数增加</li>
-</ul>
-</li>
-<li><p>拥塞避免</p>
-<ul>
-<li><p>但是随着客户端发送数据数量的增加</p>
-<ul>
-<li><p>一定会到达阈值</p>
-<ul>
-<li>进入拥塞避免后每收到一个确认，cwnd只加1/cwnd，比如当前收到了8个确认，一个加1/8,这次拥塞窗口仅加了一次，之后就是线性增长了</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>拥塞发生</p>
-<ul>
-<li><p>你即便是再怎么避免，还是会导致网络拥塞</p>
-<ul>
-<li><p>超时重传</p>
-<ul>
-<li><p>进入拥塞避免算法</p>
-<ul>
-<li><p>但是这里有一个问题就是说：每次一进入拥塞避免，拥塞窗口，直接就初始化为1</p>
-</li>
-<li><p>就算网络不拥堵，但是会卡顿，因为所能发送的数据包骤减</p>
-</li>
-<li><p>此时客户端认为其实网络情况也没有那么糟糕</p>
-<ul>
-<li>ssthresh=cwnd/2</li>
-<li>初始化cwnd=1</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>快重传</p>
-<ul>
-<li>cwnd/2</li>
-<li>sshred=cwnd/2</li>
-</ul>
-</li>
-<li><p>快恢复</p>
-<ul>
-<li><p>触发快重传后，紧接着执行</p>
-<ul>
-<li><p>cwnd=ssthred+3(ack报文）</p>
-<ul>
-<li>很明显拥塞窗口已经大于阈值了：之后再次进入线性拥塞避免算法</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
+</ol>
+<h3 id="执行阶段"><a href="#执行阶段" class="headerlink" title="执行阶段"></a>执行阶段</h3><ol>
+<li>同时要说明一点由于 V8 引擎属于&amp;混合编译执行/解释执行，所以会有一个监控器，来判断是否有重复代码执行，如果有将其标记为热点代码，将其转换为二进制代码，当下次再次执行，解释器直接执行优化过的代码，提高效率</li>
+</ol>
 ]]></content>
       <categories>
-        <category>TCP</category>
+        <category>v8引擎</category>
       </categories>
   </entry>
   <entry>
@@ -920,315 +1020,6 @@
 <h3 id="怎么形成弹性布局"><a href="#怎么形成弹性布局" class="headerlink" title="怎么形成弹性布局"></a>怎么形成弹性布局</h3><h2 id="垂直水平居中"><a href="#垂直水平居中" class="headerlink" title="垂直水平居中"></a>垂直水平居中</h2>]]></content>
       <categories>
         <category>css</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>优化垃圾回收机制</title>
-    <url>/2020/12/19/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%9D%A5%E4%BC%98%E5%8C%96%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%C2%B7/</url>
-    <content><![CDATA[<h1 id="V8引擎如何来优化垃圾回收机制的·"><a href="#V8引擎如何来优化垃圾回收机制的·" class="headerlink" title="V8引擎如何来优化垃圾回收机制的·"></a>V8引擎如何来优化垃圾回收机制的·</h1><h2 id="相应优化算法"><a href="#相应优化算法" class="headerlink" title="相应优化算法"></a>相应优化算法</h2><h3 id="全停顿算法"><a href="#全停顿算法" class="headerlink" title="全停顿算法"></a>全停顿算法</h3><ul>
-<li><p>js是单线程，并且js执行和垃圾回收机制任务都在主线上，js执行就会被挂起，导致全停顿</p>
-</li>
-<li><p>Subtopic</p>
-</li>
-<li><p>并行回收</p>
-<ul>
-<li>副垃圾回收机制–采取专门用来清理新生代对象</li>
-<li>这些辅助线程，也会来帮忙将对象区域的数据转移到空闲区域</li>
-<li>Subtopic</li>
-<li>弊端还是全停顿，对于老生代对象还是会非常影响效率</li>
-</ul>
-</li>
-</ul>
-<h3 id="增量标记算法"><a href="#增量标记算法" class="headerlink" title="增量标记算法"></a>增量标记算法</h3><ul>
-<li><p>增量回收</p>
-<ul>
-<li><p>分治的思想</p>
-</li>
-<li><p>就是说将完整的标记清除任务分解为一个个小任务，然后穿插着在主线程上进行</p>
-</li>
-<li><p>怎么实现的</p>
-<ul>
-<li><p>如何来实现垃圾回收机制的暂停和恢复</p>
-<ul>
-<li><p>三色标记法</p>
-<ul>
-<li><p>黑色</p>
-<ul>
-<li>能够被GCroot对象遍历到</li>
-</ul>
-</li>
-<li><p>白色</p>
-<ul>
-<li>无法被GCroot对象遍历到–会被清除</li>
-</ul>
-</li>
-<li><p>灰色</p>
-<ul>
-<li><p>被GCroot对象遍历到，但是子节点还未被处理</p>
-</li>
-<li><p>V8的垃圾回收器，会来判断此时有没有灰色标记</p>
-<ul>
-<li><p>有</p>
-<ul>
-<li>下次恢复垃圾回收机制时就从灰色的标记开始，继续标记</li>
-</ul>
-</li>
-<li><p>没有</p>
-<ul>
-<li>直接开始清除</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>那这里有一个问题如果中途，已经被标记的变量，被改变</p>
-<ul>
-<li>原来被标记为黑色–现在改变后变白色了</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="重点：并发回收机制"><a href="#重点：并发回收机制" class="headerlink" title="重点：并发回收机制"></a>重点：并发回收机制</h2><h3 id="不管是增量回收还是-并行回收，都是运行在主线程上"><a href="#不管是增量回收还是-并行回收，都是运行在主线程上" class="headerlink" title="不管是增量回收还是/并行回收，都是运行在主线程上"></a>不管是增量回收还是/并行回收，都是运行在主线程上</h3><h3 id="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收"><a href="#那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收" class="headerlink" title="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-"></a>那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-</h3><h3 id="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"><a href="#简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收" class="headerlink" title="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"></a>简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收</h3><h3 id="Subtopic"><a href="#Subtopic" class="headerlink" title="Subtopic"></a>Subtopic</h3><h2 id="主垃圾回收机制采取了三种机制"><a href="#主垃圾回收机制采取了三种机制" class="headerlink" title="主垃圾回收机制采取了三种机制"></a>主垃圾回收机制采取了三种机制</h2>]]></content>
-      <categories>
-        <category>v8引擎</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Es6</title>
-    <url>/2020/11/12/es6/</url>
-    <content><![CDATA[<h1 id="es6"><a href="#es6" class="headerlink" title="es6"></a>es6</h1><h2 id="promise-generator-async-await"><a href="#promise-generator-async-await" class="headerlink" title="promise/generator/async/await"></a>promise/generator/async/await</h2><h2 id="箭头函数"><a href="#箭头函数" class="headerlink" title="箭头函数"></a>箭头函数</h2><h3 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h3><ul>
-<li>function的一种简化</li>
-</ul>
-<h3 id="何时用"><a href="#何时用" class="headerlink" title="何时用"></a>何时用</h3><ul>
-<li>简化函数，凡是用到函数的时候就可以用</li>
-</ul>
-<h3 id="怎么用"><a href="#怎么用" class="headerlink" title="怎么用"></a>怎么用</h3><ul>
-<li><p>无参数</p>
-<ul>
-<li>&lt;ol&gt;&lt;li&gt;（）=&gt;{&nbsp; &nbsp;}&lt;br&gt;&lt;/li&gt;&lt;/ol&gt;</li>
-</ul>
-</li>
-<li><p>有多个参数时</p>
-<ul>
-<li><p>const&nbsp; fun=(a,b,c)=&gt;{&nbsp; return 函数体}</p>
-<ul>
-<li>注意要得到函数返回值别把return忘记</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h2><h3 id="什么是"><a href="#什么是" class="headerlink" title="什么是"></a>什么是</h3><ul>
-<li>限制用户所输入的信息，的表达式</li>
-</ul>
-<h3 id="什么时候用"><a href="#什么时候用" class="headerlink" title="什么时候用"></a>什么时候用</h3><ul>
-<li><p>表单验证</p>
-</li>
-<li><p>用户名输入的时候</p>
-<ul>
-<li>子主题</li>
-</ul>
-</li>
-<li><p>对于密码验证的时候</p>
-</li>
-</ul>
-<h3 id="怎么用-1"><a href="#怎么用-1" class="headerlink" title="怎么用"></a>怎么用</h3><ul>
-<li><p>起止符</p>
-<ul>
-<li>^ 开始符号</li>
-<li>&amp;结束符</li>
-</ul>
-</li>
-<li><p>多选一符号</p>
-<ul>
-<li>[  ]</li>
-</ul>
-</li>
-<li><p>组合符号 ^[^A-Z0-9${2,3} ]</p>
-<ul>
-<li>后面花括号代表的是从前面选2-3个元素；</li>
-</ul>
-</li>
-</ul>
-<h2 id="作用域"><a href="#作用域" class="headerlink" title="作用域"></a>作用域</h2><h3 id="块级作用域"><a href="#块级作用域" class="headerlink" title="块级作用域"></a>块级作用域</h3><ul>
-<li><p>const</p>
-<ul>
-<li><p>这个和let的最大的区别就是，const不可以先只声明</p>
-<ul>
-<li><p>为什么</p>
-<ul>
-<li>const所定义的是一个定值，如果你只声明不赋值，如何做到是一个定值，感觉有点勉强</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>let </p>
-<ul>
-<li>Subtopic</li>
-</ul>
-</li>
-<li><p>它首先解决了var变量提升的问题</p>
-<ul>
-<li>它怎么解决这个问题的，将全局执行上下文的创建阶段和执行阶段时机同步了所以不会再出现变量提升的问题</li>
-<li>它还解决了，var没有作用域的问题</li>
-</ul>
-</li>
-<li><p>由块级作用域，引发了一个问题就是暂时性死区</p>
-<ul>
-<li><p>什么时候会引发暂时性死区</p>
-<ul>
-<li><p>条件</p>
-<ul>
-<li>如果在一个块级作用域里存在let,那么此时let所处的作用域就会锁死</li>
-</ul>
-</li>
-<li><p>一旦在变量let声明前,去使用就会为undefined</p>
-</li>
-<li><p>那我什么时候能用，只有到声明后才可以去使用let/或const所声明的变量</p>
-</li>
-<li><p>那具体暂时性死区是什么</p>
-<ul>
-<li>其实就是let/const声明前的代码区域（在块级作用域中）</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="var"><a href="#var" class="headerlink" title="var"></a>var</h3><ul>
-<li><p>没有块级作用域</p>
-<ul>
-<li><p>那如果没有块级作用域会引发哪些问题</p>
-<ul>
-<li><p>在函数中用var声明的变量，函数外部可以访问，这个就很危险</p>
-</li>
-<li><p>也会引发变量提升的问题</p>
-<ul>
-<li>根据你在声明变量的时候，会出现执行上下文，而创建上下文的创建与执行阶段是不同步的所以造成了变量提升</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="this指向"><a href="#this指向" class="headerlink" title="this指向"></a>this指向</h2><h3 id="指向谁"><a href="#指向谁" class="headerlink" title="指向谁"></a>指向谁</h3><ul>
-<li>在函数 的内部，</li>
-</ul>
-<h2 id=""><a href="#" class="headerlink" title=".  .   ."></a>.  .   .</h2><h3 id="实现对对象的深拷贝"><a href="#实现对对象的深拷贝" class="headerlink" title="实现对对象的深拷贝"></a>实现对对象的深拷贝</h3><h3 id="将数组转为由逗号隔开的序列，同时又可以实现拷贝"><a href="#将数组转为由逗号隔开的序列，同时又可以实现拷贝" class="headerlink" title="将数组转为由逗号隔开的序列，同时又可以实现拷贝"></a>将数组转为由逗号隔开的序列，同时又可以实现拷贝</h3><h3 id="传递形参时用"><a href="#传递形参时用" class="headerlink" title="传递形参时用"></a>传递形参时用</h3><ul>
-<li>如果你并不知道参数有几个的时候？？？</li>
-</ul>
-<h2 id="解构"><a href="#解构" class="headerlink" title="解构"></a>解构</h2><h3 id="怎么用-2"><a href="#怎么用-2" class="headerlink" title="怎么用"></a>怎么用</h3><ul>
-<li>需要从一些对象（也可解构多层嵌套对象）</li>
-</ul>
-<h3 id="说人话"><a href="#说人话" class="headerlink" title="说人话"></a>说人话</h3><ul>
-<li><p>获取对象里的值</p>
-<ul>
-<li>根据对象里的键来获取值</li>
-</ul>
-</li>
-</ul>
-<h3 id="更高端大气"><a href="#更高端大气" class="headerlink" title="更高端大气"></a>更高端大气</h3><h2 id="怎样将类数组转为真正的数组"><a href="#怎样将类数组转为真正的数组" class="headerlink" title="怎样将类数组转为真正的数组"></a>怎样将类数组转为真正的数组</h2><h3 id="Array-from-类数组"><a href="#Array-from-类数组" class="headerlink" title="Array.from(类数组)"></a>Array.from(类数组)</h3><h3 id="除过es6以外还有什么方法"><a href="#除过es6以外还有什么方法" class="headerlink" title="除过es6以外还有什么方法"></a>除过es6以外还有什么方法</h3><ul>
-<li><p>Array.prototype.slice( ).call(类数组）</p>
-<ul>
-<li>这个不理解</li>
-</ul>
-</li>
-</ul>
-<h2 id="Map（）"><a href="#Map（）" class="headerlink" title="Map（）"></a>Map（）</h2><h3 id="它解决了什么问题"><a href="#它解决了什么问题" class="headerlink" title="它解决了什么问题"></a>它解决了什么问题</h3><ul>
-<li>专门用来存储键值对的</li>
-</ul>
-<h3 id="什么时候用一旦出现需要存储一对键值对，立刻首先想到Map这个数据结构"><a href="#什么时候用一旦出现需要存储一对键值对，立刻首先想到Map这个数据结构" class="headerlink" title="什么时候用一旦出现需要存储一对键值对，立刻首先想到Map这个数据结构"></a>什么时候用一旦出现需要存储一对键值对，立刻首先想到Map这个数据结构</h3><h3 id="那它有哪些方法"><a href="#那它有哪些方法" class="headerlink" title="那它有哪些方法"></a>那它有哪些方法</h3><ul>
-<li><p>set(键，值）</p>
-<ul>
-<li>这个返回的是新的map数据结构，包含有新的设置的键值对</li>
-</ul>
-</li>
-<li><p>has(键）</p>
-<ul>
-<li><p>返回值为布尔值</p>
-<ul>
-<li>目的是为了判断是否存在当前键//这个主要判断是否有对应的键</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>delete(键)</p>
-<ul>
-<li>删除键所对应的键值对</li>
-</ul>
-</li>
-<li><p>get(键）</p>
-<ul>
-<li><p>这个是在获取键所对应的值</p>
-<ul>
-<li>这个在力扣第一题中用到它了</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="Set"><a href="#Set" class="headerlink" title="Set()"></a>Set()</h2><h3 id="一旦题目中涉及集合立刻想到set"><a href="#一旦题目中涉及集合立刻想到set" class="headerlink" title="一旦题目中涉及集合立刻想到set"></a>一旦题目中涉及集合立刻想到set</h3><ul>
-<li>特点就是，一旦题目提到有序，无重复元素，立刻反应Set()</li>
-</ul>
-<h3 id="Set做了哪些事情"><a href="#Set做了哪些事情" class="headerlink" title="Set做了哪些事情"></a>Set做了哪些事情</h3><ul>
-<li><p>给定一个数组</p>
-<ul>
-<li>返回一个没有重复序列的集合</li>
-</ul>
-</li>
-</ul>
-<h3 id="能做到什么"><a href="#能做到什么" class="headerlink" title="能做到什么"></a>能做到什么</h3><ul>
-<li><p>数组去重</p>
-<ul>
-<li><p>首先通过，[…set(arry)]</p>
-<ul>
-<li>但是我对于这个有一些问题就是，首先通过…元素是否意思是将set数据结构转为数组，那如果已经是数组了为什么要在加上数组字面量不理解</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>求交集</p>
-<ul>
-<li>怎么做</li>
-</ul>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>ex6</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>V8引擎执行代码</title>
-    <url>/2020/12/01/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E4%B8%80%E6%AE%B5%E4%BB%A3%E7%A0%81/</url>
-    <content><![CDATA[<h2 id="V8-引擎如何执行一段代码"><a href="#V8-引擎如何执行一段代码" class="headerlink" title="V8 引擎如何执行一段代码"></a>V8 引擎如何执行一段代码</h2><h3 id="编译阶段"><a href="#编译阶段" class="headerlink" title="编译阶段"></a>编译阶段</h3><ol>
-<li><p>那在执行一段代码执行之前，得做些准备工作，（你做事情不也得需要做准备工作吗），具体就是需要准备<strong>基础环境</strong>。</p>
-</li>
-<li><p>全局执行上下文，创建阶段，首先会创建一个全局对象window，创建一个this 然后让它指向这个window，之后为变量和函数分配空间/并且要为变量赋一个undefined，创建作用域链，全局作用域里面有全局变量，全局函数，想来存储对象，不得需要创建存储的空间吗/堆 —栈，事件循环系系统web-api。</p>
-</li>
-<li><p>那现在有了基础环境后，就可以来执行这个代码。</p>
-</li>
-<li><p>由于 v8 引擎并不识别代码，所以需要来，将其<strong>结构化</strong>， 转化为 <strong>AST 树</strong>，再<strong>最终转换为字节码</strong>，也就是说<strong>中间代码</strong>（介于 AST 和机器码中间的一种产物） ，但是 v8 引擎为了节省资源，它不会去将声明的函数内部的所有代码转换为中间代码。很<strong>懒惰</strong>，所以又称<strong>惰性解析</strong>，阶段。</p>
-</li>
-</ol>
-<h3 id="执行阶段"><a href="#执行阶段" class="headerlink" title="执行阶段"></a>执行阶段</h3><ol>
-<li>同时要说明一点由于 V8 引擎属于&amp;混合编译执行/解释执行，所以会有一个监控器，来判断是否有重复代码执行，如果有将其标记为热点代码，将其转换为二进制代码，当下次再次执行，解释器直接执行优化过的代码，提高效率</li>
-</ol>
-]]></content>
-      <categories>
-        <category>v8引擎</category>
       </categories>
   </entry>
   <entry>
@@ -1680,139 +1471,212 @@
       </categories>
   </entry>
   <entry>
-    <title>垃圾回收机制</title>
-    <url>/2020/12/15/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6/</url>
-    <content><![CDATA[<h1 id="垃圾回收机制"><a href="#垃圾回收机制" class="headerlink" title="垃圾回收机制"></a>垃圾回收机制</h1><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="为什么要分类—依据"><a href="#为什么要分类—依据" class="headerlink" title="为什么要分类—依据"></a>为什么要分类—依据</h3><ul>
-<li><p>代际假说</p>
+    <title>Es6</title>
+    <url>/2020/11/12/es6/</url>
+    <content><![CDATA[<h1 id="es6"><a href="#es6" class="headerlink" title="es6"></a>es6</h1><h2 id="promise-generator-async-await"><a href="#promise-generator-async-await" class="headerlink" title="promise/generator/async/await"></a>promise/generator/async/await</h2><h2 id="箭头函数"><a href="#箭头函数" class="headerlink" title="箭头函数"></a>箭头函数</h2><h3 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h3><ul>
+<li>function的一种简化</li>
+</ul>
+<h3 id="何时用"><a href="#何时用" class="headerlink" title="何时用"></a>何时用</h3><ul>
+<li>简化函数，凡是用到函数的时候就可以用</li>
+</ul>
+<h3 id="怎么用"><a href="#怎么用" class="headerlink" title="怎么用"></a>怎么用</h3><ul>
+<li><p>无参数</p>
 <ul>
-<li><p>一些变量生存周期很短</p>
+<li>&lt;ol&gt;&lt;li&gt;（）=&gt;{&nbsp; &nbsp;}&lt;br&gt;&lt;/li&gt;&lt;/ol&gt;</li>
+</ul>
+</li>
+<li><p>有多个参数时</p>
 <ul>
-<li>存放在新生代区域</li>
-</ul>
-</li>
-<li><p>一些比如window这些存活时间很长的对象</p>
+<li><p>const&nbsp; fun=(a,b,c)=&gt;{&nbsp; return 函数体}</p>
 <ul>
-<li>存放在老生代区域</li>
+<li>注意要得到函数返回值别把return忘记</li>
 </ul>
-</li>
-<li><p>依据生存周期的长短–因地制宜的选取对应的算法来回收</p>
 </li>
 </ul>
 </li>
 </ul>
-<h3 id="堆-划分的"><a href="#堆-划分的" class="headerlink" title="堆/划分的"></a>堆/划分的</h3><ul>
-<li><p>目的就是为了能根据不同的对象依据对应的垃圾回收机制，进行回收</p>
+<h2 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h2><h3 id="什么是"><a href="#什么是" class="headerlink" title="什么是"></a>什么是</h3><ul>
+<li>限制用户所输入的信息，的表达式</li>
+</ul>
+<h3 id="什么时候用"><a href="#什么时候用" class="headerlink" title="什么时候用"></a>什么时候用</h3><ul>
+<li><p>表单验证</p>
 </li>
-<li><p>新生代</p>
+<li><p>用户名输入的时候</p>
 <ul>
-<li><p>存储生存周期短的对象</p>
+<li>子主题</li>
+</ul>
 </li>
-<li><p>区域划分依据scanverge算法</p>
+<li><p>对于密码验证的时候</p>
+</li>
+</ul>
+<h3 id="怎么用-1"><a href="#怎么用-1" class="headerlink" title="怎么用"></a>怎么用</h3><ul>
+<li><p>起止符</p>
 <ul>
-<li>对象区域</li>
-<li>空闲区域</li>
+<li>^ 开始符号</li>
+<li>&amp;结束符</li>
 </ul>
 </li>
-</ul>
-</li>
-<li><p>老生代</p>
+<li><p>多选一符号</p>
 <ul>
-<li>专门存储，生存周期长的对象</li>
+<li>[  ]</li>
 </ul>
 </li>
-</ul>
-<h3 id="主垃圾回收器"><a href="#主垃圾回收器" class="headerlink" title="主垃圾回收器"></a>主垃圾回收器</h3><ul>
-<li><p>专门处理老生代里的对象</p>
-</li>
-<li><p>算法</p>
+<li><p>组合符号 ^[^A-Z0-9${2,3} ]</p>
 <ul>
-<li>标记–整理</li>
-<li>标记–清除</li>
+<li>后面花括号代表的是从前面选2-3个元素；</li>
 </ul>
 </li>
-<li><p>步骤</p>
+</ul>
+<h2 id="作用域"><a href="#作用域" class="headerlink" title="作用域"></a>作用域</h2><h3 id="块级作用域"><a href="#块级作用域" class="headerlink" title="块级作用域"></a>块级作用域</h3><ul>
+<li><p>const</p>
 <ul>
-<li><p>先进行标记–对于清除的对象先进行标记</p>
-</li>
-<li><p>利用标记–整理算法将活动对象，全部移动到一端</p>
+<li><p>这个和let的最大的区别就是，const不可以先只声明</p>
 <ul>
-<li><p>这一步的意义是什么</p>
+<li><p>为什么</p>
 <ul>
-<li>因为随着你频繁删除堆里所存储的对象，必然会导致内存空间不连续</li>
-<li>这个是让内存空间尽可能的连续</li>
+<li>const所定义的是一个定值，如果你只声明不赋值，如何做到是一个定值，感觉有点勉强</li>
 </ul>
 </li>
 </ul>
 </li>
-<li><p>再去清除除过这一端的其它垃圾数据</p>
-</li>
 </ul>
 </li>
-</ul>
-<h3 id="副垃圾回收机制"><a href="#副垃圾回收机制" class="headerlink" title="副垃圾回收机制"></a>副垃圾回收机制</h3><ul>
-<li><p>scanverge算法</p>
-</li>
-<li><p>专门处理新生代里存储的对象</p>
-</li>
-<li><p>步骤</p>
+<li><p>let </p>
 <ul>
-<li><p>利用标记—清除算法清除对象区域里标记的垃圾数据</p>
+<li>Subtopic</li>
+</ul>
 </li>
-<li><p>在标记–清除阶段将活动对象复制到空闲区域，并进行整理</p>
+<li><p>它首先解决了var变量提升的问题</p>
 <ul>
-<li>为的就是能够使存储空间尽可能的连续</li>
+<li>它怎么解决这个问题的，将全局执行上下文的创建阶段和执行阶段时机同步了所以不会再出现变量提升的问题</li>
+<li>它还解决了，var没有作用域的问题</li>
 </ul>
 </li>
-<li><p>对象区域和空闲区域调换</p>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="首先来明确一下什么样的变量的空间可以被回收"><a href="#首先来明确一下什么样的变量的空间可以被回收" class="headerlink" title="首先来明确一下什么样的变量的空间可以被回收"></a>首先来明确一下什么样的变量的空间可以被回收</h2><h3 id="依赖可访问性算法"><a href="#依赖可访问性算法" class="headerlink" title="依赖可访问性算法"></a>依赖可访问性算法</h3><h3 id="通过GCroot对象遍历内部所有对象"><a href="#通过GCroot对象遍历内部所有对象" class="headerlink" title="通过GCroot对象遍历内部所有对象"></a>通过GCroot对象遍历内部所有对象</h3><ul>
-<li>window</li>
-<li>Dom节点</li>
-</ul>
-<h3 id="通过GCroot-对象访问变量"><a href="#通过GCroot-对象访问变量" class="headerlink" title="通过GCroot 对象访问变量"></a>通过GCroot 对象访问变量</h3><ul>
-<li><p>可访问到的：活动对象</p>
-</li>
-<li><p>不可访问：非活动对象</p>
+<li><p>由块级作用域，引发了一个问题就是暂时性死区</p>
 <ul>
-<li>V8引擎清除的将是非活动对象</li>
-</ul>
-</li>
-</ul>
-<h2 id="在早期有一个局限性较大的垃圾回收机制"><a href="#在早期有一个局限性较大的垃圾回收机制" class="headerlink" title="在早期有一个局限性较大的垃圾回收机制"></a>在早期有一个局限性较大的垃圾回收机制</h2><h3 id="引用计数法"><a href="#引用计数法" class="headerlink" title="引用计数法"></a>引用计数法</h3><ul>
-<li><p>它具体是怎么做的</p>
+<li><p>什么时候会引发暂时性死区</p>
 <ul>
-<li><p>每产生一个引用就计数加一</p>
+<li><p>条件</p>
 <ul>
-<li><p>什么是引用？</p>
+<li>如果在一个块级作用域里存在let,那么此时let所处的作用域就会锁死</li>
+</ul>
 </li>
-<li><p>那它的局限性在哪</p>
+<li><p>一旦在变量let声明前,去使用就会为undefined</p>
+</li>
+<li><p>那我什么时候能用，只有到声明后才可以去使用let/或const所声明的变量</p>
+</li>
+<li><p>那具体暂时性死区是什么</p>
 <ul>
-<li>它无法识别循环引用的场景，无法使计数为0; eg:A对象的引用指向B，而B的引用又指向A，它们的引用计数都是1，无法成为0, 就会造成内存泄漏；</li>
+<li>其实就是let/const声明前的代码区域（在块级作用域中）</li>
 </ul>
 </li>
 </ul>
 </li>
-<li><p>为0就会被回收</p>
+</ul>
+</li>
+</ul>
+<h3 id="var"><a href="#var" class="headerlink" title="var"></a>var</h3><ul>
+<li><p>没有块级作用域</p>
+<ul>
+<li><p>那如果没有块级作用域会引发哪些问题</p>
+<ul>
+<li><p>在函数中用var声明的变量，函数外部可以访问，这个就很危险</p>
+</li>
+<li><p>也会引发变量提升的问题</p>
+<ul>
+<li>根据你在声明变量的时候，会出现执行上下文，而创建上下文的创建与执行阶段是不同步的所以造成了变量提升</li>
+</ul>
 </li>
 </ul>
 </li>
 </ul>
-<h2 id="切入点由数据类型说起"><a href="#切入点由数据类型说起" class="headerlink" title="切入点由数据类型说起"></a>切入点由数据类型说起</h2><h3 id="基本数据类型"><a href="#基本数据类型" class="headerlink" title="基本数据类型"></a>基本数据类型</h3><ul>
-<li>symbol</li>
-<li>number</li>
-<li>string</li>
-<li>布尔类型</li>
+</li>
 </ul>
-<h3 id="复杂数据类型"><a href="#复杂数据类型" class="headerlink" title="复杂数据类型"></a>复杂数据类型</h3><ul>
-<li>function</li>
-<li>对象</li>
+<h2 id="this指向"><a href="#this指向" class="headerlink" title="this指向"></a>this指向</h2><h3 id="指向谁"><a href="#指向谁" class="headerlink" title="指向谁"></a>指向谁</h3><ul>
+<li>在函数 的内部，</li>
+</ul>
+<h2 id=""><a href="#" class="headerlink" title=".  .   ."></a>.  .   .</h2><h3 id="实现对对象的深拷贝"><a href="#实现对对象的深拷贝" class="headerlink" title="实现对对象的深拷贝"></a>实现对对象的深拷贝</h3><h3 id="将数组转为由逗号隔开的序列，同时又可以实现拷贝"><a href="#将数组转为由逗号隔开的序列，同时又可以实现拷贝" class="headerlink" title="将数组转为由逗号隔开的序列，同时又可以实现拷贝"></a>将数组转为由逗号隔开的序列，同时又可以实现拷贝</h3><h3 id="传递形参时用"><a href="#传递形参时用" class="headerlink" title="传递形参时用"></a>传递形参时用</h3><ul>
+<li>如果你并不知道参数有几个的时候？？？</li>
+</ul>
+<h2 id="解构"><a href="#解构" class="headerlink" title="解构"></a>解构</h2><h3 id="怎么用-2"><a href="#怎么用-2" class="headerlink" title="怎么用"></a>怎么用</h3><ul>
+<li>需要从一些对象（也可解构多层嵌套对象）</li>
+</ul>
+<h3 id="说人话"><a href="#说人话" class="headerlink" title="说人话"></a>说人话</h3><ul>
+<li><p>获取对象里的值</p>
+<ul>
+<li>根据对象里的键来获取值</li>
+</ul>
+</li>
+</ul>
+<h3 id="更高端大气"><a href="#更高端大气" class="headerlink" title="更高端大气"></a>更高端大气</h3><h2 id="怎样将类数组转为真正的数组"><a href="#怎样将类数组转为真正的数组" class="headerlink" title="怎样将类数组转为真正的数组"></a>怎样将类数组转为真正的数组</h2><h3 id="Array-from-类数组"><a href="#Array-from-类数组" class="headerlink" title="Array.from(类数组)"></a>Array.from(类数组)</h3><h3 id="除过es6以外还有什么方法"><a href="#除过es6以外还有什么方法" class="headerlink" title="除过es6以外还有什么方法"></a>除过es6以外还有什么方法</h3><ul>
+<li><p>Array.prototype.slice( ).call(类数组）</p>
+<ul>
+<li>这个不理解</li>
+</ul>
+</li>
+</ul>
+<h2 id="Map（）"><a href="#Map（）" class="headerlink" title="Map（）"></a>Map（）</h2><h3 id="它解决了什么问题"><a href="#它解决了什么问题" class="headerlink" title="它解决了什么问题"></a>它解决了什么问题</h3><ul>
+<li>专门用来存储键值对的</li>
+</ul>
+<h3 id="什么时候用一旦出现需要存储一对键值对，立刻首先想到Map这个数据结构"><a href="#什么时候用一旦出现需要存储一对键值对，立刻首先想到Map这个数据结构" class="headerlink" title="什么时候用一旦出现需要存储一对键值对，立刻首先想到Map这个数据结构"></a>什么时候用一旦出现需要存储一对键值对，立刻首先想到Map这个数据结构</h3><h3 id="那它有哪些方法"><a href="#那它有哪些方法" class="headerlink" title="那它有哪些方法"></a>那它有哪些方法</h3><ul>
+<li><p>set(键，值）</p>
+<ul>
+<li>这个返回的是新的map数据结构，包含有新的设置的键值对</li>
+</ul>
+</li>
+<li><p>has(键）</p>
+<ul>
+<li><p>返回值为布尔值</p>
+<ul>
+<li>目的是为了判断是否存在当前键//这个主要判断是否有对应的键</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>delete(键)</p>
+<ul>
+<li>删除键所对应的键值对</li>
+</ul>
+</li>
+<li><p>get(键）</p>
+<ul>
+<li><p>这个是在获取键所对应的值</p>
+<ul>
+<li>这个在力扣第一题中用到它了</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Set"><a href="#Set" class="headerlink" title="Set()"></a>Set()</h2><h3 id="一旦题目中涉及集合立刻想到set"><a href="#一旦题目中涉及集合立刻想到set" class="headerlink" title="一旦题目中涉及集合立刻想到set"></a>一旦题目中涉及集合立刻想到set</h3><ul>
+<li>特点就是，一旦题目提到有序，无重复元素，立刻反应Set()</li>
+</ul>
+<h3 id="Set做了哪些事情"><a href="#Set做了哪些事情" class="headerlink" title="Set做了哪些事情"></a>Set做了哪些事情</h3><ul>
+<li><p>给定一个数组</p>
+<ul>
+<li>返回一个没有重复序列的集合</li>
+</ul>
+</li>
+</ul>
+<h3 id="能做到什么"><a href="#能做到什么" class="headerlink" title="能做到什么"></a>能做到什么</h3><ul>
+<li><p>数组去重</p>
+<ul>
+<li><p>首先通过，[…set(arry)]</p>
+<ul>
+<li>但是我对于这个有一些问题就是，首先通过…元素是否意思是将set数据结构转为数组，那如果已经是数组了为什么要在加上数组字面量不理解</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>求交集</p>
+<ul>
+<li>怎么做</li>
+</ul>
+</li>
 </ul>
 ]]></content>
       <categories>
-        <category>v8引擎</category>
+        <category>ex6</category>
       </categories>
   </entry>
   <entry>
@@ -1987,6 +1851,156 @@
   </entry>
   <entry>
     <title>垃圾回收机制</title>
+    <url>/2020/12/15/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6/</url>
+    <content><![CDATA[<h1 id="垃圾回收机制"><a href="#垃圾回收机制" class="headerlink" title="垃圾回收机制"></a>垃圾回收机制</h1><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="为什么要分类—依据"><a href="#为什么要分类—依据" class="headerlink" title="为什么要分类—依据"></a>为什么要分类—依据</h3><ul>
+<li><p>代际假说</p>
+<ul>
+<li><p>一些变量生存周期很短</p>
+<ul>
+<li>存放在新生代区域</li>
+</ul>
+</li>
+<li><p>一些比如window这些存活时间很长的对象</p>
+<ul>
+<li>存放在老生代区域</li>
+</ul>
+</li>
+<li><p>依据生存周期的长短–因地制宜的选取对应的算法来回收</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="堆-划分的"><a href="#堆-划分的" class="headerlink" title="堆/划分的"></a>堆/划分的</h3><ul>
+<li><p>目的就是为了能根据不同的对象依据对应的垃圾回收机制，进行回收</p>
+</li>
+<li><p>新生代</p>
+<ul>
+<li><p>存储生存周期短的对象</p>
+</li>
+<li><p>区域划分依据scanverge算法</p>
+<ul>
+<li>对象区域</li>
+<li>空闲区域</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>老生代</p>
+<ul>
+<li>专门存储，生存周期长的对象</li>
+</ul>
+</li>
+</ul>
+<h3 id="主垃圾回收器"><a href="#主垃圾回收器" class="headerlink" title="主垃圾回收器"></a>主垃圾回收器</h3><ul>
+<li><p>专门处理老生代里的对象</p>
+</li>
+<li><p>算法</p>
+<ul>
+<li>标记–整理</li>
+<li>标记–清除</li>
+</ul>
+</li>
+<li><p>步骤</p>
+<ul>
+<li><p>先进行标记–对于清除的对象先进行标记</p>
+</li>
+<li><p>利用标记–整理算法将活动对象，全部移动到一端</p>
+<ul>
+<li><p>这一步的意义是什么</p>
+<ul>
+<li>因为随着你频繁删除堆里所存储的对象，必然会导致内存空间不连续</li>
+<li>这个是让内存空间尽可能的连续</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>再去清除除过这一端的其它垃圾数据</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="副垃圾回收机制"><a href="#副垃圾回收机制" class="headerlink" title="副垃圾回收机制"></a>副垃圾回收机制</h3><ul>
+<li><p>scanverge算法</p>
+</li>
+<li><p>专门处理新生代里存储的对象</p>
+</li>
+<li><p>步骤</p>
+<ul>
+<li><p>利用标记—清除算法清除对象区域里标记的垃圾数据</p>
+</li>
+<li><p>在标记–清除阶段将活动对象复制到空闲区域，并进行整理</p>
+<ul>
+<li>为的就是能够使存储空间尽可能的连续</li>
+</ul>
+</li>
+<li><p>对象区域和空闲区域调换</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="首先来明确一下什么样的变量的空间可以被回收"><a href="#首先来明确一下什么样的变量的空间可以被回收" class="headerlink" title="首先来明确一下什么样的变量的空间可以被回收"></a>首先来明确一下什么样的变量的空间可以被回收</h2><h3 id="依赖可访问性算法"><a href="#依赖可访问性算法" class="headerlink" title="依赖可访问性算法"></a>依赖可访问性算法</h3><h3 id="通过GCroot对象遍历内部所有对象"><a href="#通过GCroot对象遍历内部所有对象" class="headerlink" title="通过GCroot对象遍历内部所有对象"></a>通过GCroot对象遍历内部所有对象</h3><ul>
+<li>window</li>
+<li>Dom节点</li>
+</ul>
+<h3 id="通过GCroot-对象访问变量"><a href="#通过GCroot-对象访问变量" class="headerlink" title="通过GCroot 对象访问变量"></a>通过GCroot 对象访问变量</h3><ul>
+<li><p>可访问到的：活动对象</p>
+</li>
+<li><p>不可访问：非活动对象</p>
+<ul>
+<li>V8引擎清除的将是非活动对象</li>
+</ul>
+</li>
+</ul>
+<h2 id="在早期有一个局限性较大的垃圾回收机制"><a href="#在早期有一个局限性较大的垃圾回收机制" class="headerlink" title="在早期有一个局限性较大的垃圾回收机制"></a>在早期有一个局限性较大的垃圾回收机制</h2><h3 id="引用计数法"><a href="#引用计数法" class="headerlink" title="引用计数法"></a>引用计数法</h3><ul>
+<li><p>它具体是怎么做的</p>
+<ul>
+<li><p>每产生一个引用就计数加一</p>
+<ul>
+<li><p>什么是引用？</p>
+</li>
+<li><p>那它的局限性在哪</p>
+<ul>
+<li>它无法识别循环引用的场景，无法使计数为0; eg:A对象的引用指向B，而B的引用又指向A，它们的引用计数都是1，无法成为0, 就会造成内存泄漏；</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>为0就会被回收</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="切入点由数据类型说起"><a href="#切入点由数据类型说起" class="headerlink" title="切入点由数据类型说起"></a>切入点由数据类型说起</h2><h3 id="基本数据类型"><a href="#基本数据类型" class="headerlink" title="基本数据类型"></a>基本数据类型</h3><ul>
+<li>symbol</li>
+<li>number</li>
+<li>string</li>
+<li>布尔类型</li>
+</ul>
+<h3 id="复杂数据类型"><a href="#复杂数据类型" class="headerlink" title="复杂数据类型"></a>复杂数据类型</h3><ul>
+<li>function</li>
+<li>对象</li>
+</ul>
+]]></content>
+      <categories>
+        <category>v8引擎</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>暂时性死区</title>
+    <url>/2020/02/13/%E6%9A%82%E6%97%B6%E6%80%A7%E6%AD%BB%E5%8C%BA/</url>
+    <content><![CDATA[<h3 id="何为暂时性死区"><a href="#何为暂时性死区" class="headerlink" title="何为暂时性死区"></a>何为暂时性死区</h3><ol>
+<li>首先说起这个问题，首先需要来明确一下这个var let const 的一些本质的一个区别，首先对于这个var 会有一个变量提升的问题，其实这个变量从未提升过，从执行上下文的角度来考虑，问题，首先创建的阶段对于你所声明的变量，会去开辟空间，然后到达执行阶段才去赋值，因为创建阶段先给变量赋值为undefined，，但是又由于js解释执行的时候是在之后，才有值所以是undefined.所以它的本质其实就是这个，全局执行上下文创建阶段和执行阶段两者不同步所造成的。</li>
+<li>那么这个var同时还没有作用域的概念，所以在闭包常见题种循环输出只能拿到最后一次遍历的值，因为一旦用var来声明变量，首先这个var会被提升至全局，因为它没有作用域的这个概念，然后每次遍历这个var都是唯一的所以，不断被刷新了。</li>
+<li>那么这个let const 就是说let 之所以没有变量提升的问题在于它将全局执行上下文的创建阶段和执行阶段都同步了，所以才不会出现这个，问题，并且添加了块级作用域的概念，也就是说，每次声明一个变量都会将其绑定到当前作用域内比如在函数中去。</li>
+<li>const 就是声明的变量，不能被重新赋值，对于简单值类型，不能被重复改变值，但是对于引用类型的值，只要不改它的地址，可以修改比如对象里的值。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>js核心</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>垃圾回收机制</title>
     <url>/2021/01/19/%E6%89%A7%E8%A1%8C%E4%B8%8A%E4%B8%8B%E6%96%87/</url>
     <content><![CDATA[<h1 id="执行上下文"><a href="#执行上下文" class="headerlink" title="执行上下文"></a>执行上下文</h1><h2 id="所谓的执行上下文其实就是代码所处的环境"><a href="#所谓的执行上下文其实就是代码所处的环境" class="headerlink" title="所谓的执行上下文其实就是代码所处的环境"></a>所谓的执行上下文其实就是代码所处的环境</h2><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="全局执行上下文"><a href="#全局执行上下文" class="headerlink" title="全局执行上下文"></a>全局执行上下文</h3><h3 id="函数执行上下文"><a href="#函数执行上下文" class="headerlink" title="函数执行上下文"></a>函数执行上下文</h3><h3 id="eval执行上下文–我不用"><a href="#eval执行上下文–我不用" class="headerlink" title="eval执行上下文–我不用"></a>eval执行上下文–我不用</h3><h2 id="调用栈"><a href="#调用栈" class="headerlink" title="调用栈"></a>调用栈</h2><h3 id="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"><a href="#每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间" class="headerlink" title="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"></a>每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间</h3><ul>
 <li><p>从这里开始，就可以知道作用域的本质了，其实就是当前所处的执行上下文了</p>
@@ -2060,20 +2074,6 @@
 <h2 id="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"><a href="#那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度" class="headerlink" title="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"></a>那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度</h2>]]></content>
       <categories>
         <category>执行上下文</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>暂时性死区</title>
-    <url>/2020/02/13/%E6%9A%82%E6%97%B6%E6%80%A7%E6%AD%BB%E5%8C%BA/</url>
-    <content><![CDATA[<h3 id="何为暂时性死区"><a href="#何为暂时性死区" class="headerlink" title="何为暂时性死区"></a>何为暂时性死区</h3><ol>
-<li>首先说起这个问题，首先需要来明确一下这个var let const 的一些本质的一个区别，首先对于这个var 会有一个变量提升的问题，其实这个变量从未提升过，从执行上下文的角度来考虑，问题，首先创建的阶段对于你所声明的变量，会去开辟空间，然后到达执行阶段才去赋值，因为创建阶段先给变量赋值为undefined，，但是又由于js解释执行的时候是在之后，才有值所以是undefined.所以它的本质其实就是这个，全局执行上下文创建阶段和执行阶段两者不同步所造成的。</li>
-<li>那么这个var同时还没有作用域的概念，所以在闭包常见题种循环输出只能拿到最后一次遍历的值，因为一旦用var来声明变量，首先这个var会被提升至全局，因为它没有作用域的这个概念，然后每次遍历这个var都是唯一的所以，不断被刷新了。</li>
-<li>那么这个let const 就是说let 之所以没有变量提升的问题在于它将全局执行上下文的创建阶段和执行阶段都同步了，所以才不会出现这个，问题，并且添加了块级作用域的概念，也就是说，每次声明一个变量都会将其绑定到当前作用域内比如在函数中去。</li>
-<li>const 就是声明的变量，不能被重新赋值，对于简单值类型，不能被重复改变值，但是对于引用类型的值，只要不改它的地址，可以修改比如对象里的值。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>js核心</category>
       </categories>
   </entry>
   <entry>
