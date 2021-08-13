@@ -1,6 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>HTTPS</title>
+    <url>/2021/01/19/HTTPS%E4%BD%93%E7%B3%BB/</url>
+    <content><![CDATA[<h4 id="问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改"><a href="#问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改" class="headerlink" title="问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改"></a>问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改</h4><ol>
+<li>首先由认证想到了<strong>身份认证</strong>，在 tls 握手阶段为了能够表明自己的身份，首先依赖于<strong>数字签名算法</strong>，就是首先会将密文用摘要算法，这些算法的特点就是单向性，和雪崩性，也就是说一旦中间人篡改一点点，摘要就会改变，然后此时用<strong>私钥</strong>（因为是唯一的）<strong>加密摘要</strong>，以及将<strong>公钥</strong>发送给对方，那么为了能够让客户端清楚是对的人发 的。</li>
+<li>需要依赖于 ca 机构的证书，那么我将数字签名和公钥，都发给对方，对方接收到之后取出公钥然后验签，确认是对方了，就继续握手阶段。</li>
+<li>那么它的加密过程是什么就是说在开始阶段，双方发给对方，发送 client random,server random ,验证身份阶段，服务器会发送 server params ，，客户端验签后会发送 client params  , 彼此通过 ecdhe 算法算法出一个 pre-master.</li>
+<li>双方此时具有三个参数（client random server random pre-master ） 生成 Master 主密钥，之后就用这个密钥进行加密信息。</li>
+</ol>
+<h4 id="那根证书怎么保证签发的证书是有安全有效的"><a href="#那根证书怎么保证签发的证书是有安全有效的" class="headerlink" title="那根证书怎么保证签发的证书是有安全有效的"></a>那根证书怎么保证签发的证书是有安全有效的</h4><ol>
+<li>此时联想一个证书链，浏览器是具备各大机构的<strong>根证书</strong>的，走证书链找对应的根证书</li>
+<li>易错点就是自己这个，这个证书发布是服务器不是这个机构，机构只是给申请者颁布证书的，并且就是 ca 机构页会对服务器发的公钥来加密，然后接受方用内置的 ca 公钥来解密 ca 的私钥</li>
+</ol>
+<h4 id="前面你说到-CA-机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解"><a href="#前面你说到-CA-机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解" class="headerlink" title="前面你说到 CA 机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解"></a>前面你说到 CA 机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解</h4><ol>
+<li>就是 ca 机构拿到这个，服务器发来的公钥，会用自己的私钥加密，形成证书的签名算法，之后呢就是，客户端保存有各大 ca 机构的公钥，然后进行解密，验证这个 ca 机构，这里是证书的签名，不是之前那个服务器，的签名算法，不要弄混了</li>
+</ol>
+<h4 id="如果发生无限套娃的情况，根证书都被篡改怎么办-或者说-https-一定是安全的吗？"><a href="#如果发生无限套娃的情况，根证书都被篡改怎么办-或者说-https-一定是安全的吗？" class="headerlink" title="如果发生无限套娃的情况，根证书都被篡改怎么办/或者说 https 一定是安全的吗？"></a>如果发生无限套娃的情况，根证书都被篡改怎么办/或者说 https 一定是安全的吗？</h4><ol>
+<li>无解，因为证书体系的保障就是依赖于根证书的，这个都无法保障的话，确实无解。</li>
+</ol>
+<h3 id="你讲到-HTTPS-用到了加密算法，加密算法都有哪些类型，说说看"><a href="#你讲到-HTTPS-用到了加密算法，加密算法都有哪些类型，说说看" class="headerlink" title="你讲到 HTTPS 用到了加密算法，加密算法都有哪些类型，说说看"></a>你讲到 HTTPS 用到了加密算法，加密算法都有哪些类型，说说看</h3><ol>
+<li>首先对称加密算法，非对称加密算法，摘要算法里的单向加密也就是说只能加密不能解密。</li>
+<li>对称加密：ACE chacha20</li>
+<li>非对称加密： RSA ECDH</li>
+<li>摘要算法： MD5 SHA-2</li>
+</ol>
+<h3 id="对称加密和非对称加密有什么区别吗"><a href="#对称加密和非对称加密有什么区别吗" class="headerlink" title="对称加密和非对称加密有什么区别吗"></a>对称加密和非对称加密有什么区别吗</h3><ol>
+<li>对称加密简单来讲就是用同一个公钥进行加密</li>
+<li>非对称加密就是公钥加密，私钥解密，因为私钥是唯一的。补充：其实也可以用私钥加密公钥解密，就是数字签名算法了。</li>
+</ol>
+<h3 id="MD5、SHA、Base64-和-RSA-属于什么类型的算法，对称还是非对称？"><a href="#MD5、SHA、Base64-和-RSA-属于什么类型的算法，对称还是非对称？" class="headerlink" title="MD5、SHA、Base64 和 RSA 属于什么类型的算法，对称还是非对称？"></a>MD5、SHA、Base64 和 RSA 属于什么类型的算法，对称还是非对称？</h3><ol>
+<li>MD5,SHA 属于摘要算法，，RSA 常用非对称加密算法。</li>
+<li><strong>Base64,用 64 个字符表示二进制（B）不是加密算法</strong>。</li>
+</ol>
+<h4 id="1-HTTP-和-HTTPS-之间有什么区别或者说改进"><a href="#1-HTTP-和-HTTPS-之间有什么区别或者说改进" class="headerlink" title="1. HTTP 和 HTTPS 之间有什么区别或者说改进"></a>1. HTTP 和 HTTPS 之间有什么区别或者说改进</h4><ol>
+<li>首先 TLS—》 是什么： 网景公司开发，一个协议，在哪： TCP/IP 协议栈中 HTTP 层之下，TCP 协议层之上，解决了 HTTP 安全性问题， 在 TLS1.2 握手协议（HTTP 和 HTTPS 是好兄弟需要握手）中由于身份认证，需要向 <strong>CA 机构申请证书</strong>。</li>
+<li>然后还有一个细节就是 HTTPS 的端口号是 443，HTTP 是 80（S4，P 的吧（8））</li>
+</ol>
+<h4 id="联想记忆路径："><a href="#联想记忆路径：" class="headerlink" title="联想记忆路径："></a>联想记忆路径：</h4><ol>
+<li>由 S 联想到了 TLS， 把它想象一个人，查它户口，是谁，在哪，解决了什么问题，同时为了表明自己的身份，需要向 CA 机构申请证书。</li>
+</ol>
+<h4 id="2-HTTPS-具体是如何解决-HTTP-的安全性问题的"><a href="#2-HTTPS-具体是如何解决-HTTP-的安全性问题的" class="headerlink" title="2. HTTPS 具体是如何解决 HTTP 的安全性问题的"></a>2. HTTPS 具体是如何解决 HTTP 的安全性问题的</h4><ol>
+<li>这个题就得从机密性，不可否认性，完整性，身份认证四个点来答（这里首先得想起来有哪四点 https 怎么做到这么安全的肯定是 😂‘<strong>饥不择食</strong>’择对应的是完整性，食对应的是身 ，首字母发音，想不起来了就想想 https 是通过饥不择食的手段达到安全性的目的）</li>
+</ol>
+<p><a href="https://mp.weixin.qq.com/s/9QrphQhq_N3OxySzf2wWOg">2020 抖音架构组前端实习生面经(offer)</a>。</p>
+<h3 id="HTTPS-1-2-ECEH-握手过程"><a href="#HTTPS-1-2-ECEH-握手过程" class="headerlink" title="HTTPS 1.2 ECEH 握手过程"></a>HTTPS 1.2 ECEH 握手过程</h3><p><a href="assets/HTTPS%E7%B3%BB%E7%BB%9F-20210305211818-o5hst6h.emmx">HTTPS Ecdh 握手思维导图</a>。</p>
+<h3 id="tls1-3-握手"><a href="#tls1-3-握手" class="headerlink" title="tls1.3 握手"></a>tls1.3 握手</h3><ol>
+<li>简单来讲就是说讲之前的 hello 阶段与密钥交换阶段合并。一次信息交换，就可以产生 两个 random 随机数，以及两个 params。</li>
+</ol>
+<h3 id="https-为什么可以预防这个中间人的攻击"><a href="#https-为什么可以预防这个中间人的攻击" class="headerlink" title="https 为什么可以预防这个中间人的攻击"></a>https 为什么可以预防这个中间人的攻击</h3><ol>
+<li>依赖摘要算法防止被篡改，依赖 ca 机构，来防止身份的一个伪造。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>HTTPS</category>
+      </categories>
+  </entry>
+  <entry>
     <title>HTML</title>
     <url>/2020/09/15/HTML%E4%BD%93%E7%B3%BB/</url>
     <content><![CDATA[<!DOCTYPE html>
@@ -95,62 +151,6 @@
 ]]></content>
       <categories>
         <category>html</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>HTTPS</title>
-    <url>/2021/01/19/HTTPS%E4%BD%93%E7%B3%BB/</url>
-    <content><![CDATA[<h4 id="问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改"><a href="#问题一：HTTPS-它的认证加密过程是怎样，它怎么保证内容不会被篡改" class="headerlink" title="问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改"></a>问题一：HTTPS 它的认证加密过程是怎样，它怎么保证内容不会被篡改</h4><ol>
-<li>首先由认证想到了<strong>身份认证</strong>，在 tls 握手阶段为了能够表明自己的身份，首先依赖于<strong>数字签名算法</strong>，就是首先会将密文用摘要算法，这些算法的特点就是单向性，和雪崩性，也就是说一旦中间人篡改一点点，摘要就会改变，然后此时用<strong>私钥</strong>（因为是唯一的）<strong>加密摘要</strong>，以及将<strong>公钥</strong>发送给对方，那么为了能够让客户端清楚是对的人发 的。</li>
-<li>需要依赖于 ca 机构的证书，那么我将数字签名和公钥，都发给对方，对方接收到之后取出公钥然后验签，确认是对方了，就继续握手阶段。</li>
-<li>那么它的加密过程是什么就是说在开始阶段，双方发给对方，发送 client random,server random ,验证身份阶段，服务器会发送 server params ，，客户端验签后会发送 client params  , 彼此通过 ecdhe 算法算法出一个 pre-master.</li>
-<li>双方此时具有三个参数（client random server random pre-master ） 生成 Master 主密钥，之后就用这个密钥进行加密信息。</li>
-</ol>
-<h4 id="那根证书怎么保证签发的证书是有安全有效的"><a href="#那根证书怎么保证签发的证书是有安全有效的" class="headerlink" title="那根证书怎么保证签发的证书是有安全有效的"></a>那根证书怎么保证签发的证书是有安全有效的</h4><ol>
-<li>此时联想一个证书链，浏览器是具备各大机构的<strong>根证书</strong>的，走证书链找对应的根证书</li>
-<li>易错点就是自己这个，这个证书发布是服务器不是这个机构，机构只是给申请者颁布证书的，并且就是 ca 机构页会对服务器发的公钥来加密，然后接受方用内置的 ca 公钥来解密 ca 的私钥</li>
-</ol>
-<h4 id="前面你说到-CA-机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解"><a href="#前面你说到-CA-机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解" class="headerlink" title="前面你说到 CA 机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解"></a>前面你说到 CA 机构会用密钥对服务器的公钥进行签名，签名和加密，你是怎么理解</h4><ol>
-<li>就是 ca 机构拿到这个，服务器发来的公钥，会用自己的私钥加密，形成证书的签名算法，之后呢就是，客户端保存有各大 ca 机构的公钥，然后进行解密，验证这个 ca 机构，这里是证书的签名，不是之前那个服务器，的签名算法，不要弄混了</li>
-</ol>
-<h4 id="如果发生无限套娃的情况，根证书都被篡改怎么办-或者说-https-一定是安全的吗？"><a href="#如果发生无限套娃的情况，根证书都被篡改怎么办-或者说-https-一定是安全的吗？" class="headerlink" title="如果发生无限套娃的情况，根证书都被篡改怎么办/或者说 https 一定是安全的吗？"></a>如果发生无限套娃的情况，根证书都被篡改怎么办/或者说 https 一定是安全的吗？</h4><ol>
-<li>无解，因为证书体系的保障就是依赖于根证书的，这个都无法保障的话，确实无解。</li>
-</ol>
-<h3 id="你讲到-HTTPS-用到了加密算法，加密算法都有哪些类型，说说看"><a href="#你讲到-HTTPS-用到了加密算法，加密算法都有哪些类型，说说看" class="headerlink" title="你讲到 HTTPS 用到了加密算法，加密算法都有哪些类型，说说看"></a>你讲到 HTTPS 用到了加密算法，加密算法都有哪些类型，说说看</h3><ol>
-<li>首先对称加密算法，非对称加密算法，摘要算法里的单向加密也就是说只能加密不能解密。</li>
-<li>对称加密：ACE chacha20</li>
-<li>非对称加密： RSA ECDH</li>
-<li>摘要算法： MD5 SHA-2</li>
-</ol>
-<h3 id="对称加密和非对称加密有什么区别吗"><a href="#对称加密和非对称加密有什么区别吗" class="headerlink" title="对称加密和非对称加密有什么区别吗"></a>对称加密和非对称加密有什么区别吗</h3><ol>
-<li>对称加密简单来讲就是用同一个公钥进行加密</li>
-<li>非对称加密就是公钥加密，私钥解密，因为私钥是唯一的。补充：其实也可以用私钥加密公钥解密，就是数字签名算法了。</li>
-</ol>
-<h3 id="MD5、SHA、Base64-和-RSA-属于什么类型的算法，对称还是非对称？"><a href="#MD5、SHA、Base64-和-RSA-属于什么类型的算法，对称还是非对称？" class="headerlink" title="MD5、SHA、Base64 和 RSA 属于什么类型的算法，对称还是非对称？"></a>MD5、SHA、Base64 和 RSA 属于什么类型的算法，对称还是非对称？</h3><ol>
-<li>MD5,SHA 属于摘要算法，，RSA 常用非对称加密算法。</li>
-<li><strong>Base64,用 64 个字符表示二进制（B）不是加密算法</strong>。</li>
-</ol>
-<h4 id="1-HTTP-和-HTTPS-之间有什么区别或者说改进"><a href="#1-HTTP-和-HTTPS-之间有什么区别或者说改进" class="headerlink" title="1. HTTP 和 HTTPS 之间有什么区别或者说改进"></a>1. HTTP 和 HTTPS 之间有什么区别或者说改进</h4><ol>
-<li>首先 TLS—》 是什么： 网景公司开发，一个协议，在哪： TCP/IP 协议栈中 HTTP 层之下，TCP 协议层之上，解决了 HTTP 安全性问题， 在 TLS1.2 握手协议（HTTP 和 HTTPS 是好兄弟需要握手）中由于身份认证，需要向 <strong>CA 机构申请证书</strong>。</li>
-<li>然后还有一个细节就是 HTTPS 的端口号是 443，HTTP 是 80（S4，P 的吧（8））</li>
-</ol>
-<h4 id="联想记忆路径："><a href="#联想记忆路径：" class="headerlink" title="联想记忆路径："></a>联想记忆路径：</h4><ol>
-<li>由 S 联想到了 TLS， 把它想象一个人，查它户口，是谁，在哪，解决了什么问题，同时为了表明自己的身份，需要向 CA 机构申请证书。</li>
-</ol>
-<h4 id="2-HTTPS-具体是如何解决-HTTP-的安全性问题的"><a href="#2-HTTPS-具体是如何解决-HTTP-的安全性问题的" class="headerlink" title="2. HTTPS 具体是如何解决 HTTP 的安全性问题的"></a>2. HTTPS 具体是如何解决 HTTP 的安全性问题的</h4><ol>
-<li>这个题就得从机密性，不可否认性，完整性，身份认证四个点来答（这里首先得想起来有哪四点 https 怎么做到这么安全的肯定是 😂‘<strong>饥不择食</strong>’择对应的是完整性，食对应的是身 ，首字母发音，想不起来了就想想 https 是通过饥不择食的手段达到安全性的目的）</li>
-</ol>
-<p><a href="https://mp.weixin.qq.com/s/9QrphQhq_N3OxySzf2wWOg">2020 抖音架构组前端实习生面经(offer)</a>。</p>
-<h3 id="HTTPS-1-2-ECEH-握手过程"><a href="#HTTPS-1-2-ECEH-握手过程" class="headerlink" title="HTTPS 1.2 ECEH 握手过程"></a>HTTPS 1.2 ECEH 握手过程</h3><p><a href="assets/HTTPS%E7%B3%BB%E7%BB%9F-20210305211818-o5hst6h.emmx">HTTPS Ecdh 握手思维导图</a>。</p>
-<h3 id="tls1-3-握手"><a href="#tls1-3-握手" class="headerlink" title="tls1.3 握手"></a>tls1.3 握手</h3><ol>
-<li>简单来讲就是说讲之前的 hello 阶段与密钥交换阶段合并。一次信息交换，就可以产生 两个 random 随机数，以及两个 params。</li>
-</ol>
-<h3 id="https-为什么可以预防这个中间人的攻击"><a href="#https-为什么可以预防这个中间人的攻击" class="headerlink" title="https 为什么可以预防这个中间人的攻击"></a>https 为什么可以预防这个中间人的攻击</h3><ol>
-<li>依赖摘要算法防止被篡改，依赖 ca 机构，来防止身份的一个伪造。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>HTTPS</category>
       </categories>
   </entry>
   <entry>
@@ -455,85 +455,6 @@
 ]]></content>
       <categories>
         <category>TCP</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>优化垃圾回收机制</title>
-    <url>/2020/12/19/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%9D%A5%E4%BC%98%E5%8C%96%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%C2%B7/</url>
-    <content><![CDATA[<h1 id="V8引擎如何来优化垃圾回收机制的·"><a href="#V8引擎如何来优化垃圾回收机制的·" class="headerlink" title="V8引擎如何来优化垃圾回收机制的·"></a>V8引擎如何来优化垃圾回收机制的·</h1><h2 id="相应优化算法"><a href="#相应优化算法" class="headerlink" title="相应优化算法"></a>相应优化算法</h2><h3 id="全停顿算法"><a href="#全停顿算法" class="headerlink" title="全停顿算法"></a>全停顿算法</h3><ul>
-<li><p>js是单线程，并且js执行和垃圾回收机制任务都在主线上，js执行就会被挂起，导致全停顿</p>
-</li>
-<li><p>Subtopic</p>
-</li>
-<li><p>并行回收</p>
-<ul>
-<li>副垃圾回收机制–采取专门用来清理新生代对象</li>
-<li>这些辅助线程，也会来帮忙将对象区域的数据转移到空闲区域</li>
-<li>Subtopic</li>
-<li>弊端还是全停顿，对于老生代对象还是会非常影响效率</li>
-</ul>
-</li>
-</ul>
-<h3 id="增量标记算法"><a href="#增量标记算法" class="headerlink" title="增量标记算法"></a>增量标记算法</h3><ul>
-<li><p>增量回收</p>
-<ul>
-<li><p>分治的思想</p>
-</li>
-<li><p>就是说将完整的标记清除任务分解为一个个小任务，然后穿插着在主线程上进行</p>
-</li>
-<li><p>怎么实现的</p>
-<ul>
-<li><p>如何来实现垃圾回收机制的暂停和恢复</p>
-<ul>
-<li><p>三色标记法</p>
-<ul>
-<li><p>黑色</p>
-<ul>
-<li>能够被GCroot对象遍历到</li>
-</ul>
-</li>
-<li><p>白色</p>
-<ul>
-<li>无法被GCroot对象遍历到–会被清除</li>
-</ul>
-</li>
-<li><p>灰色</p>
-<ul>
-<li><p>被GCroot对象遍历到，但是子节点还未被处理</p>
-</li>
-<li><p>V8的垃圾回收器，会来判断此时有没有灰色标记</p>
-<ul>
-<li><p>有</p>
-<ul>
-<li>下次恢复垃圾回收机制时就从灰色的标记开始，继续标记</li>
-</ul>
-</li>
-<li><p>没有</p>
-<ul>
-<li>直接开始清除</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>那这里有一个问题如果中途，已经被标记的变量，被改变</p>
-<ul>
-<li>原来被标记为黑色–现在改变后变白色了</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="重点：并发回收机制"><a href="#重点：并发回收机制" class="headerlink" title="重点：并发回收机制"></a>重点：并发回收机制</h2><h3 id="不管是增量回收还是-并行回收，都是运行在主线程上"><a href="#不管是增量回收还是-并行回收，都是运行在主线程上" class="headerlink" title="不管是增量回收还是/并行回收，都是运行在主线程上"></a>不管是增量回收还是/并行回收，都是运行在主线程上</h3><h3 id="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收"><a href="#那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收" class="headerlink" title="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-"></a>那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-</h3><h3 id="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"><a href="#简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收" class="headerlink" title="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"></a>简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收</h3><h3 id="Subtopic"><a href="#Subtopic" class="headerlink" title="Subtopic"></a>Subtopic</h3><h2 id="主垃圾回收机制采取了三种机制"><a href="#主垃圾回收机制采取了三种机制" class="headerlink" title="主垃圾回收机制采取了三种机制"></a>主垃圾回收机制采取了三种机制</h2>]]></content>
-      <categories>
-        <category>v8引擎</category>
       </categories>
   </entry>
   <entry>
@@ -889,6 +810,85 @@
 <li>就是在在其它位置/其它时间点来调用回调函数，settimeout 是将其内部的回调函数，封装为一个宏任务，由主线程某一时刻，来取出并执行的</li>
 </ul>
 ]]></content>
+      <categories>
+        <category>v8引擎</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>优化垃圾回收机制</title>
+    <url>/2020/12/19/V8%E5%BC%95%E6%93%8E%E5%A6%82%E4%BD%95%E6%9D%A5%E4%BC%98%E5%8C%96%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%C2%B7/</url>
+    <content><![CDATA[<h1 id="V8引擎如何来优化垃圾回收机制的·"><a href="#V8引擎如何来优化垃圾回收机制的·" class="headerlink" title="V8引擎如何来优化垃圾回收机制的·"></a>V8引擎如何来优化垃圾回收机制的·</h1><h2 id="相应优化算法"><a href="#相应优化算法" class="headerlink" title="相应优化算法"></a>相应优化算法</h2><h3 id="全停顿算法"><a href="#全停顿算法" class="headerlink" title="全停顿算法"></a>全停顿算法</h3><ul>
+<li><p>js是单线程，并且js执行和垃圾回收机制任务都在主线上，js执行就会被挂起，导致全停顿</p>
+</li>
+<li><p>Subtopic</p>
+</li>
+<li><p>并行回收</p>
+<ul>
+<li>副垃圾回收机制–采取专门用来清理新生代对象</li>
+<li>这些辅助线程，也会来帮忙将对象区域的数据转移到空闲区域</li>
+<li>Subtopic</li>
+<li>弊端还是全停顿，对于老生代对象还是会非常影响效率</li>
+</ul>
+</li>
+</ul>
+<h3 id="增量标记算法"><a href="#增量标记算法" class="headerlink" title="增量标记算法"></a>增量标记算法</h3><ul>
+<li><p>增量回收</p>
+<ul>
+<li><p>分治的思想</p>
+</li>
+<li><p>就是说将完整的标记清除任务分解为一个个小任务，然后穿插着在主线程上进行</p>
+</li>
+<li><p>怎么实现的</p>
+<ul>
+<li><p>如何来实现垃圾回收机制的暂停和恢复</p>
+<ul>
+<li><p>三色标记法</p>
+<ul>
+<li><p>黑色</p>
+<ul>
+<li>能够被GCroot对象遍历到</li>
+</ul>
+</li>
+<li><p>白色</p>
+<ul>
+<li>无法被GCroot对象遍历到–会被清除</li>
+</ul>
+</li>
+<li><p>灰色</p>
+<ul>
+<li><p>被GCroot对象遍历到，但是子节点还未被处理</p>
+</li>
+<li><p>V8的垃圾回收器，会来判断此时有没有灰色标记</p>
+<ul>
+<li><p>有</p>
+<ul>
+<li>下次恢复垃圾回收机制时就从灰色的标记开始，继续标记</li>
+</ul>
+</li>
+<li><p>没有</p>
+<ul>
+<li>直接开始清除</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>那这里有一个问题如果中途，已经被标记的变量，被改变</p>
+<ul>
+<li>原来被标记为黑色–现在改变后变白色了</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="重点：并发回收机制"><a href="#重点：并发回收机制" class="headerlink" title="重点：并发回收机制"></a>重点：并发回收机制</h2><h3 id="不管是增量回收还是-并行回收，都是运行在主线程上"><a href="#不管是增量回收还是-并行回收，都是运行在主线程上" class="headerlink" title="不管是增量回收还是/并行回收，都是运行在主线程上"></a>不管是增量回收还是/并行回收，都是运行在主线程上</h3><h3 id="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收"><a href="#那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收" class="headerlink" title="那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-"></a>那么如何来实现在不阻塞主线程的基础上来，实现垃圾回收-</h3><h3 id="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"><a href="#简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收" class="headerlink" title="简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收"></a>简单来讲就是主线程只进行js代码的执行，辅助线程来实现垃圾回收</h3><h3 id="Subtopic"><a href="#Subtopic" class="headerlink" title="Subtopic"></a>Subtopic</h3><h2 id="主垃圾回收机制采取了三种机制"><a href="#主垃圾回收机制采取了三种机制" class="headerlink" title="主垃圾回收机制采取了三种机制"></a>主垃圾回收机制采取了三种机制</h2>]]></content>
       <categories>
         <category>v8引擎</category>
       </categories>
@@ -1695,6 +1695,233 @@
   </entry>
   <entry>
     <title>垃圾回收机制</title>
+    <url>/2021/01/19/%E6%89%A7%E8%A1%8C%E4%B8%8A%E4%B8%8B%E6%96%87/</url>
+    <content><![CDATA[<h1 id="执行上下文"><a href="#执行上下文" class="headerlink" title="执行上下文"></a>执行上下文</h1><h2 id="所谓的执行上下文其实就是代码所处的环境"><a href="#所谓的执行上下文其实就是代码所处的环境" class="headerlink" title="所谓的执行上下文其实就是代码所处的环境"></a>所谓的执行上下文其实就是代码所处的环境</h2><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="全局执行上下文"><a href="#全局执行上下文" class="headerlink" title="全局执行上下文"></a>全局执行上下文</h3><h3 id="函数执行上下文"><a href="#函数执行上下文" class="headerlink" title="函数执行上下文"></a>函数执行上下文</h3><h3 id="eval执行上下文–我不用"><a href="#eval执行上下文–我不用" class="headerlink" title="eval执行上下文–我不用"></a>eval执行上下文–我不用</h3><h2 id="调用栈"><a href="#调用栈" class="headerlink" title="调用栈"></a>调用栈</h2><h3 id="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"><a href="#每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间" class="headerlink" title="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"></a>每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间</h3><ul>
+<li><p>从这里开始，就可以知道作用域的本质了，其实就是当前所处的执行上下文了</p>
+<ul>
+<li><p>那为什么作用域外部无法访问到另一个作用域的内部</p>
+<ul>
+<li><p>原理其实是因为当外部执行上下文想要去访问函数执行上下文里的变量的时候，它出栈了自然是无法访问了</p>
+</li>
+<li><p>那为什么内部作用域又能去访问外部作用域</p>
+<ul>
+<li>其实这是因为zhi’x</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="全局执行上下文执行过程"><a href="#全局执行上下文执行过程" class="headerlink" title="全局执行上下文执行过程"></a>全局执行上下文执行过程</h3><ul>
+<li><p>创建阶段</p>
+<ul>
+<li>首先会创建一个全局对象window： global object</li>
+<li>创建一个this 然后让它指向这个window</li>
+<li>之后为变量和函数分配空间/并且要为变量赋一个undefined</li>
+<li>创建作用域链</li>
+</ul>
+</li>
+<li><p>执行阶段</p>
+<ul>
+<li>js引擎开始一行行执行代码，并开始给变量赋值</li>
+</ul>
+</li>
+<li><p>由此引出了变量提升的本质</p>
+<ul>
+<li>其实是因为js的执行上下文的创建阶段和赋值阶段并不同步所造成的</li>
+<li>创建阶段给变量开辟空间然后赋了初值undefined</li>
+<li>之后赋值的时候由于在访问的变量的时候，要去赋值的代码还未执行，所以依然是undefined</li>
+</ul>
+</li>
+</ul>
+<h3 id="函数执行上下文（调用时才会推入调用栈中）"><a href="#函数执行上下文（调用时才会推入调用栈中）" class="headerlink" title="函数执行上下文（调用时才会推入调用栈中）"></a>函数执行上下文（调用时才会推入调用栈中）</h3><ul>
+<li><p>创建阶段</p>
+<ul>
+<li><p>首先明确一点这个是在函数调用的时候才生成的</p>
+</li>
+<li><p>创建this </p>
+<ul>
+<li><p>将其指向调用者</p>
+</li>
+<li><p>无人调用就指向window</p>
+<ul>
+<li>也就是说，普通函数之所以this指向window其实是这里指定的</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>创建arguements 这里面包含着函数所有的参数</p>
+</li>
+<li><p>创建作用域链</p>
+</li>
+<li><p>是这样你想一想，你在全局执行上下文已经有了全局对象了，那函数执行上下文自然不用再去建立了</p>
+</li>
+</ul>
+</li>
+<li><p>执行阶段</p>
+<ul>
+<li>一行行执行函数内部的代码</li>
+</ul>
+</li>
+</ul>
+<h2 id="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"><a href="#那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度" class="headerlink" title="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"></a>那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度</h2>]]></content>
+      <categories>
+        <category>执行上下文</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>垃圾回收机制</title>
+    <url>/2020/12/15/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6/</url>
+    <content><![CDATA[<h1 id="垃圾回收机制"><a href="#垃圾回收机制" class="headerlink" title="垃圾回收机制"></a>垃圾回收机制</h1><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="为什么要分类—依据"><a href="#为什么要分类—依据" class="headerlink" title="为什么要分类—依据"></a>为什么要分类—依据</h3><ul>
+<li><p>代际假说</p>
+<ul>
+<li><p>一些变量生存周期很短</p>
+<ul>
+<li>存放在新生代区域</li>
+</ul>
+</li>
+<li><p>一些比如window这些存活时间很长的对象</p>
+<ul>
+<li>存放在老生代区域</li>
+</ul>
+</li>
+<li><p>依据生存周期的长短–因地制宜的选取对应的算法来回收</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="堆-划分的"><a href="#堆-划分的" class="headerlink" title="堆/划分的"></a>堆/划分的</h3><ul>
+<li><p>目的就是为了能根据不同的对象依据对应的垃圾回收机制，进行回收</p>
+</li>
+<li><p>新生代</p>
+<ul>
+<li><p>存储生存周期短的对象</p>
+</li>
+<li><p>区域划分依据scanverge算法</p>
+<ul>
+<li>对象区域</li>
+<li>空闲区域</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>老生代</p>
+<ul>
+<li>专门存储，生存周期长的对象</li>
+</ul>
+</li>
+</ul>
+<h3 id="主垃圾回收器"><a href="#主垃圾回收器" class="headerlink" title="主垃圾回收器"></a>主垃圾回收器</h3><ul>
+<li><p>专门处理老生代里的对象</p>
+</li>
+<li><p>算法</p>
+<ul>
+<li>标记–整理</li>
+<li>标记–清除</li>
+</ul>
+</li>
+<li><p>步骤</p>
+<ul>
+<li><p>先进行标记–对于清除的对象先进行标记</p>
+</li>
+<li><p>利用标记–整理算法将活动对象，全部移动到一端</p>
+<ul>
+<li><p>这一步的意义是什么</p>
+<ul>
+<li>因为随着你频繁删除堆里所存储的对象，必然会导致内存空间不连续</li>
+<li>这个是让内存空间尽可能的连续</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>再去清除除过这一端的其它垃圾数据</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="副垃圾回收机制"><a href="#副垃圾回收机制" class="headerlink" title="副垃圾回收机制"></a>副垃圾回收机制</h3><ul>
+<li><p>scanverge算法</p>
+</li>
+<li><p>专门处理新生代里存储的对象</p>
+</li>
+<li><p>步骤</p>
+<ul>
+<li><p>利用标记—清除算法清除对象区域里标记的垃圾数据</p>
+</li>
+<li><p>在标记–清除阶段将活动对象复制到空闲区域，并进行整理</p>
+<ul>
+<li>为的就是能够使存储空间尽可能的连续</li>
+</ul>
+</li>
+<li><p>对象区域和空闲区域调换</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="首先来明确一下什么样的变量的空间可以被回收"><a href="#首先来明确一下什么样的变量的空间可以被回收" class="headerlink" title="首先来明确一下什么样的变量的空间可以被回收"></a>首先来明确一下什么样的变量的空间可以被回收</h2><h3 id="依赖可访问性算法"><a href="#依赖可访问性算法" class="headerlink" title="依赖可访问性算法"></a>依赖可访问性算法</h3><h3 id="通过GCroot对象遍历内部所有对象"><a href="#通过GCroot对象遍历内部所有对象" class="headerlink" title="通过GCroot对象遍历内部所有对象"></a>通过GCroot对象遍历内部所有对象</h3><ul>
+<li>window</li>
+<li>Dom节点</li>
+</ul>
+<h3 id="通过GCroot-对象访问变量"><a href="#通过GCroot-对象访问变量" class="headerlink" title="通过GCroot 对象访问变量"></a>通过GCroot 对象访问变量</h3><ul>
+<li><p>可访问到的：活动对象</p>
+</li>
+<li><p>不可访问：非活动对象</p>
+<ul>
+<li>V8引擎清除的将是非活动对象</li>
+</ul>
+</li>
+</ul>
+<h2 id="在早期有一个局限性较大的垃圾回收机制"><a href="#在早期有一个局限性较大的垃圾回收机制" class="headerlink" title="在早期有一个局限性较大的垃圾回收机制"></a>在早期有一个局限性较大的垃圾回收机制</h2><h3 id="引用计数法"><a href="#引用计数法" class="headerlink" title="引用计数法"></a>引用计数法</h3><ul>
+<li><p>它具体是怎么做的</p>
+<ul>
+<li><p>每产生一个引用就计数加一</p>
+<ul>
+<li><p>什么是引用？</p>
+</li>
+<li><p>那它的局限性在哪</p>
+<ul>
+<li>它无法识别循环引用的场景，无法使计数为0; eg:A对象的引用指向B，而B的引用又指向A，它们的引用计数都是1，无法成为0, 就会造成内存泄漏；</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>为0就会被回收</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="切入点由数据类型说起"><a href="#切入点由数据类型说起" class="headerlink" title="切入点由数据类型说起"></a>切入点由数据类型说起</h2><h3 id="基本数据类型"><a href="#基本数据类型" class="headerlink" title="基本数据类型"></a>基本数据类型</h3><ul>
+<li>symbol</li>
+<li>number</li>
+<li>string</li>
+<li>布尔类型</li>
+</ul>
+<h3 id="复杂数据类型"><a href="#复杂数据类型" class="headerlink" title="复杂数据类型"></a>复杂数据类型</h3><ul>
+<li>function</li>
+<li>对象</li>
+</ul>
+]]></content>
+      <categories>
+        <category>v8引擎</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>暂时性死区</title>
+    <url>/2020/02/13/%E6%9A%82%E6%97%B6%E6%80%A7%E6%AD%BB%E5%8C%BA/</url>
+    <content><![CDATA[<h3 id="何为暂时性死区"><a href="#何为暂时性死区" class="headerlink" title="何为暂时性死区"></a>何为暂时性死区</h3><ol>
+<li>首先说起这个问题，首先需要来明确一下这个var let const 的一些本质的一个区别，首先对于这个var 会有一个变量提升的问题，其实这个变量从未提升过，从执行上下文的角度来考虑，问题，首先创建的阶段对于你所声明的变量，会去开辟空间，然后到达执行阶段才去赋值，因为创建阶段先给变量赋值为undefined，，但是又由于js解释执行的时候是在之后，才有值所以是undefined.所以它的本质其实就是这个，全局执行上下文创建阶段和执行阶段两者不同步所造成的。</li>
+<li>那么这个var同时还没有作用域的概念，所以在闭包常见题种循环输出只能拿到最后一次遍历的值，因为一旦用var来声明变量，首先这个var会被提升至全局，因为它没有作用域的这个概念，然后每次遍历这个var都是唯一的所以，不断被刷新了。</li>
+<li>那么这个let const 就是说let 之所以没有变量提升的问题在于它将全局执行上下文的创建阶段和执行阶段都同步了，所以才不会出现这个，问题，并且添加了块级作用域的概念，也就是说，每次声明一个变量都会将其绑定到当前作用域内比如在函数中去。</li>
+<li>const 就是声明的变量，不能被重新赋值，对于简单值类型，不能被重复改变值，但是对于引用类型的值，只要不改它的地址，可以修改比如对象里的值。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>js核心</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>垃圾回收机制</title>
     <url>/2021/01/12/%E5%BC%82%E6%AD%A5/</url>
     <content><![CDATA[<h1 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h1><h2 id="异步发展阶段"><a href="#异步发展阶段" class="headerlink" title="异步发展阶段"></a>异步发展阶段</h2><h3 id="回调函数"><a href="#回调函数" class="headerlink" title="回调函数"></a>回调函数</h3><h3 id="generator"><a href="#generator" class="headerlink" title="generator()"></a>generator()</h3><h3 id="promise"><a href="#promise" class="headerlink" title="promise"></a>promise</h3><ul>
 <li><p>为什么有promise</p>
@@ -1850,233 +2077,6 @@
       </categories>
   </entry>
   <entry>
-    <title>垃圾回收机制</title>
-    <url>/2020/12/15/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6/</url>
-    <content><![CDATA[<h1 id="垃圾回收机制"><a href="#垃圾回收机制" class="headerlink" title="垃圾回收机制"></a>垃圾回收机制</h1><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="为什么要分类—依据"><a href="#为什么要分类—依据" class="headerlink" title="为什么要分类—依据"></a>为什么要分类—依据</h3><ul>
-<li><p>代际假说</p>
-<ul>
-<li><p>一些变量生存周期很短</p>
-<ul>
-<li>存放在新生代区域</li>
-</ul>
-</li>
-<li><p>一些比如window这些存活时间很长的对象</p>
-<ul>
-<li>存放在老生代区域</li>
-</ul>
-</li>
-<li><p>依据生存周期的长短–因地制宜的选取对应的算法来回收</p>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="堆-划分的"><a href="#堆-划分的" class="headerlink" title="堆/划分的"></a>堆/划分的</h3><ul>
-<li><p>目的就是为了能根据不同的对象依据对应的垃圾回收机制，进行回收</p>
-</li>
-<li><p>新生代</p>
-<ul>
-<li><p>存储生存周期短的对象</p>
-</li>
-<li><p>区域划分依据scanverge算法</p>
-<ul>
-<li>对象区域</li>
-<li>空闲区域</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>老生代</p>
-<ul>
-<li>专门存储，生存周期长的对象</li>
-</ul>
-</li>
-</ul>
-<h3 id="主垃圾回收器"><a href="#主垃圾回收器" class="headerlink" title="主垃圾回收器"></a>主垃圾回收器</h3><ul>
-<li><p>专门处理老生代里的对象</p>
-</li>
-<li><p>算法</p>
-<ul>
-<li>标记–整理</li>
-<li>标记–清除</li>
-</ul>
-</li>
-<li><p>步骤</p>
-<ul>
-<li><p>先进行标记–对于清除的对象先进行标记</p>
-</li>
-<li><p>利用标记–整理算法将活动对象，全部移动到一端</p>
-<ul>
-<li><p>这一步的意义是什么</p>
-<ul>
-<li>因为随着你频繁删除堆里所存储的对象，必然会导致内存空间不连续</li>
-<li>这个是让内存空间尽可能的连续</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>再去清除除过这一端的其它垃圾数据</p>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="副垃圾回收机制"><a href="#副垃圾回收机制" class="headerlink" title="副垃圾回收机制"></a>副垃圾回收机制</h3><ul>
-<li><p>scanverge算法</p>
-</li>
-<li><p>专门处理新生代里存储的对象</p>
-</li>
-<li><p>步骤</p>
-<ul>
-<li><p>利用标记—清除算法清除对象区域里标记的垃圾数据</p>
-</li>
-<li><p>在标记–清除阶段将活动对象复制到空闲区域，并进行整理</p>
-<ul>
-<li>为的就是能够使存储空间尽可能的连续</li>
-</ul>
-</li>
-<li><p>对象区域和空闲区域调换</p>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="首先来明确一下什么样的变量的空间可以被回收"><a href="#首先来明确一下什么样的变量的空间可以被回收" class="headerlink" title="首先来明确一下什么样的变量的空间可以被回收"></a>首先来明确一下什么样的变量的空间可以被回收</h2><h3 id="依赖可访问性算法"><a href="#依赖可访问性算法" class="headerlink" title="依赖可访问性算法"></a>依赖可访问性算法</h3><h3 id="通过GCroot对象遍历内部所有对象"><a href="#通过GCroot对象遍历内部所有对象" class="headerlink" title="通过GCroot对象遍历内部所有对象"></a>通过GCroot对象遍历内部所有对象</h3><ul>
-<li>window</li>
-<li>Dom节点</li>
-</ul>
-<h3 id="通过GCroot-对象访问变量"><a href="#通过GCroot-对象访问变量" class="headerlink" title="通过GCroot 对象访问变量"></a>通过GCroot 对象访问变量</h3><ul>
-<li><p>可访问到的：活动对象</p>
-</li>
-<li><p>不可访问：非活动对象</p>
-<ul>
-<li>V8引擎清除的将是非活动对象</li>
-</ul>
-</li>
-</ul>
-<h2 id="在早期有一个局限性较大的垃圾回收机制"><a href="#在早期有一个局限性较大的垃圾回收机制" class="headerlink" title="在早期有一个局限性较大的垃圾回收机制"></a>在早期有一个局限性较大的垃圾回收机制</h2><h3 id="引用计数法"><a href="#引用计数法" class="headerlink" title="引用计数法"></a>引用计数法</h3><ul>
-<li><p>它具体是怎么做的</p>
-<ul>
-<li><p>每产生一个引用就计数加一</p>
-<ul>
-<li><p>什么是引用？</p>
-</li>
-<li><p>那它的局限性在哪</p>
-<ul>
-<li>它无法识别循环引用的场景，无法使计数为0; eg:A对象的引用指向B，而B的引用又指向A，它们的引用计数都是1，无法成为0, 就会造成内存泄漏；</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>为0就会被回收</p>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="切入点由数据类型说起"><a href="#切入点由数据类型说起" class="headerlink" title="切入点由数据类型说起"></a>切入点由数据类型说起</h2><h3 id="基本数据类型"><a href="#基本数据类型" class="headerlink" title="基本数据类型"></a>基本数据类型</h3><ul>
-<li>symbol</li>
-<li>number</li>
-<li>string</li>
-<li>布尔类型</li>
-</ul>
-<h3 id="复杂数据类型"><a href="#复杂数据类型" class="headerlink" title="复杂数据类型"></a>复杂数据类型</h3><ul>
-<li>function</li>
-<li>对象</li>
-</ul>
-]]></content>
-      <categories>
-        <category>v8引擎</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>暂时性死区</title>
-    <url>/2020/02/13/%E6%9A%82%E6%97%B6%E6%80%A7%E6%AD%BB%E5%8C%BA/</url>
-    <content><![CDATA[<h3 id="何为暂时性死区"><a href="#何为暂时性死区" class="headerlink" title="何为暂时性死区"></a>何为暂时性死区</h3><ol>
-<li>首先说起这个问题，首先需要来明确一下这个var let const 的一些本质的一个区别，首先对于这个var 会有一个变量提升的问题，其实这个变量从未提升过，从执行上下文的角度来考虑，问题，首先创建的阶段对于你所声明的变量，会去开辟空间，然后到达执行阶段才去赋值，因为创建阶段先给变量赋值为undefined，，但是又由于js解释执行的时候是在之后，才有值所以是undefined.所以它的本质其实就是这个，全局执行上下文创建阶段和执行阶段两者不同步所造成的。</li>
-<li>那么这个var同时还没有作用域的概念，所以在闭包常见题种循环输出只能拿到最后一次遍历的值，因为一旦用var来声明变量，首先这个var会被提升至全局，因为它没有作用域的这个概念，然后每次遍历这个var都是唯一的所以，不断被刷新了。</li>
-<li>那么这个let const 就是说let 之所以没有变量提升的问题在于它将全局执行上下文的创建阶段和执行阶段都同步了，所以才不会出现这个，问题，并且添加了块级作用域的概念，也就是说，每次声明一个变量都会将其绑定到当前作用域内比如在函数中去。</li>
-<li>const 就是声明的变量，不能被重新赋值，对于简单值类型，不能被重复改变值，但是对于引用类型的值，只要不改它的地址，可以修改比如对象里的值。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>js核心</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>垃圾回收机制</title>
-    <url>/2021/01/19/%E6%89%A7%E8%A1%8C%E4%B8%8A%E4%B8%8B%E6%96%87/</url>
-    <content><![CDATA[<h1 id="执行上下文"><a href="#执行上下文" class="headerlink" title="执行上下文"></a>执行上下文</h1><h2 id="所谓的执行上下文其实就是代码所处的环境"><a href="#所谓的执行上下文其实就是代码所处的环境" class="headerlink" title="所谓的执行上下文其实就是代码所处的环境"></a>所谓的执行上下文其实就是代码所处的环境</h2><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="全局执行上下文"><a href="#全局执行上下文" class="headerlink" title="全局执行上下文"></a>全局执行上下文</h3><h3 id="函数执行上下文"><a href="#函数执行上下文" class="headerlink" title="函数执行上下文"></a>函数执行上下文</h3><h3 id="eval执行上下文–我不用"><a href="#eval执行上下文–我不用" class="headerlink" title="eval执行上下文–我不用"></a>eval执行上下文–我不用</h3><h2 id="调用栈"><a href="#调用栈" class="headerlink" title="调用栈"></a>调用栈</h2><h3 id="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"><a href="#每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间" class="headerlink" title="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"></a>每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间</h3><ul>
-<li><p>从这里开始，就可以知道作用域的本质了，其实就是当前所处的执行上下文了</p>
-<ul>
-<li><p>那为什么作用域外部无法访问到另一个作用域的内部</p>
-<ul>
-<li><p>原理其实是因为当外部执行上下文想要去访问函数执行上下文里的变量的时候，它出栈了自然是无法访问了</p>
-</li>
-<li><p>那为什么内部作用域又能去访问外部作用域</p>
-<ul>
-<li>其实这是因为zhi’x</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="全局执行上下文执行过程"><a href="#全局执行上下文执行过程" class="headerlink" title="全局执行上下文执行过程"></a>全局执行上下文执行过程</h3><ul>
-<li><p>创建阶段</p>
-<ul>
-<li>首先会创建一个全局对象window： global object</li>
-<li>创建一个this 然后让它指向这个window</li>
-<li>之后为变量和函数分配空间/并且要为变量赋一个undefined</li>
-<li>创建作用域链</li>
-</ul>
-</li>
-<li><p>执行阶段</p>
-<ul>
-<li>js引擎开始一行行执行代码，并开始给变量赋值</li>
-</ul>
-</li>
-<li><p>由此引出了变量提升的本质</p>
-<ul>
-<li>其实是因为js的执行上下文的创建阶段和赋值阶段并不同步所造成的</li>
-<li>创建阶段给变量开辟空间然后赋了初值undefined</li>
-<li>之后赋值的时候由于在访问的变量的时候，要去赋值的代码还未执行，所以依然是undefined</li>
-</ul>
-</li>
-</ul>
-<h3 id="函数执行上下文（调用时才会推入调用栈中）"><a href="#函数执行上下文（调用时才会推入调用栈中）" class="headerlink" title="函数执行上下文（调用时才会推入调用栈中）"></a>函数执行上下文（调用时才会推入调用栈中）</h3><ul>
-<li><p>创建阶段</p>
-<ul>
-<li><p>首先明确一点这个是在函数调用的时候才生成的</p>
-</li>
-<li><p>创建this </p>
-<ul>
-<li><p>将其指向调用者</p>
-</li>
-<li><p>无人调用就指向window</p>
-<ul>
-<li>也就是说，普通函数之所以this指向window其实是这里指定的</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>创建arguements 这里面包含着函数所有的参数</p>
-</li>
-<li><p>创建作用域链</p>
-</li>
-<li><p>是这样你想一想，你在全局执行上下文已经有了全局对象了，那函数执行上下文自然不用再去建立了</p>
-</li>
-</ul>
-</li>
-<li><p>执行阶段</p>
-<ul>
-<li>一行行执行函数内部的代码</li>
-</ul>
-</li>
-</ul>
-<h2 id="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"><a href="#那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度" class="headerlink" title="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"></a>那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度</h2>]]></content>
-      <categories>
-        <category>执行上下文</category>
-      </categories>
-  </entry>
-  <entry>
     <title>盒模型</title>
     <url>/2020/09/12/%E7%9B%92%E6%A8%A1%E5%9E%8B/</url>
     <content><![CDATA[<p>首先盒模型有几个属性分别是content  border padding margin ;</p>
@@ -2091,6 +2091,150 @@
 ]]></content>
       <categories>
         <category>css</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>js核心梳理</title>
+    <url>/2021/02/19/JS%E6%A0%B8%E5%BF%83%E9%AA%A8%E6%9E%B6/</url>
+    <content><![CDATA[<h2 id="闭包体系"><a href="#闭包体系" class="headerlink" title="闭包体系"></a>闭包体系</h2><h3 id="切入点词法作用域"><a href="#切入点词法作用域" class="headerlink" title="切入点词法作用域"></a>切入点词法作用域</h3><ol>
+<li><p>首先我需要从作用域的底层机制说起，首先在 V8 引擎中是有编译阶段的，</p>
+<blockquote>
+<h2 id="V8-引擎如何执行一段代码"><a href="#V8-引擎如何执行一段代码" class="headerlink" title="V8 引擎如何执行一段代码"></a>V8 引擎如何执行一段代码</h2><h3 id="编译阶段"><a href="#编译阶段" class="headerlink" title="编译阶段"></a>编译阶段</h3><ol>
+<li>那在执行一段代码执行之前，得做些准备工作，</li>
+<li>具体就是需要准备<strong>基础环境</strong>。</li>
+<li>那现在有了基础环境后，就可以来执行这个代码。</li>
+<li>由于 v8 引擎并不识别代码，所以需要来，将其<strong>结构化</strong>， 转化为 <strong>AST 树</strong>，再<strong>最终转换为字节码</strong>，也就是说<strong>中间代码</strong>（介于 AST 和机器码中间的一种产物） ，但是 v8 引擎为了节省资源，它不会去将声明的函数内部的所有代码转换为中间代码。很<strong>懒惰</strong>，所以又称惰性解析阶段。只有当其函数调用的时候才会去将其内部的代码，转换为中间代码</li>
+</ol>
+<h3 id="执行阶段"><a href="#执行阶段" class="headerlink" title="执行阶段"></a>执行阶段</h3><ol>
+<li>同时要说明一点由于 V8 引擎属于jit，所以会有一个监控器，来判断是否有重复代码执行，如果有将其标记为热点代码，将其转换为二进制代码，当下次再次执行，解释器直接执行优化过的代码，提高效率。</li>
+</ol>
+</blockquote>
+<blockquote>
+<h3 id="字节码"><a href="#字节码" class="headerlink" title="字节码"></a>字节码</h3><p>所以时间上，早期编译为二进制代码太慢，所以时间上更快，空间上，所占内存小，早期为了防止重复编译将结果，缓存，而字节码所占空间很少。</p>
+</blockquote>
+<blockquote>
+</blockquote>
+<blockquote>
+<h3 id="v8-引擎如何来执行一段代码"><a href="#v8-引擎如何来执行一段代码" class="headerlink" title="v8 引擎如何来执行一段代码"></a>v8 引擎如何来执行一段代码</h3></blockquote>
+</li>
+<li><p>这里还有一点就是此时引擎会在当前的作用域去寻找有没有所声明的变量，如果有那就忽略它，这也是为什么，var 可以重复声明的本质原因，如果没有的话就将这个变量存放在当前作用域，赋值阶段。</p>
+</li>
+</ol>
+<h4 id="如何来叙述闭包"><a href="#如何来叙述闭包" class="headerlink" title="如何来叙述闭包"></a>如何来叙述闭包</h4><ol>
+<li>切入点<strong>词法作用域</strong>，那么词法作用域是怎样生成的（此时联想作用域里面有声明了一个变量），那么在编译阶段首先会来判断，当前的作用域有没有这个变量，有了就忽略，继续，没有就直接将变量放置当前作用域内并赋值 undefined.</li>
+<li>那你不能光找到它，还得赋值，在当前作用域能找到直接赋值，没找到就不断向外部作用域找形成作用域链。</li>
+<li><strong>（谈到作用域本质就联想一个调用栈，里面压入了全局执行上下文，和函数执行上下文））</strong>作用域的<strong>本质</strong>到底是什么，从<strong>表层意思</strong>来讲，它是一套规则，存放相应变量的规则，从本质上来讲，它是当前所处执行上下文，从这一点可以明白，为什么闭包中，可以从内部访问外部的变量，而外部无法访问内部的变量，全局执行上下文首先会推入调用栈中，之后每当调用一个函数，就会将函数上下文推入栈中，所以即便调用栈中，栈顶执行上下文，执行完毕后出栈，但是内部执行上下文依然可以通过，作用域链来访问，但由于栈顶执行上下文出栈了作用域链也被销毁了，所以无法访问调用栈中上下文的变量。</li>
+</ol>
+<h4 id="补充词法作用域"><a href="#补充词法作用域" class="headerlink" title="补充词法作用域"></a>补充词法作用域</h4><ol>
+<li>什么是<strong>词法作用域</strong>，由作用域想到了，作用域链，也就是说查找变量的时候一定是沿着，比如你所定义的位置，然后不断向外去延申，而动态作用域是沿着调用栈去查找的。</li>
+<li>补充函数的作用域是执行阶段就会去形成。但是查找一定是沿着定义的作用域，不断向外去延申。</li>
+<li>闭包引用的变量一定不会被回收吗，其实不对，当把这个变量直接赋值 null 就会被回收，这样相当于引用了一个空的变量自然会被回收</li>
+</ol>
+<h3 id="闭包应用。"><a href="#闭包应用。" class="headerlink" title="闭包应用。"></a>闭包应用。</h3><ol>
+<li><p>``` js<br>var a = [];<br>for(let i = 0;i&lt;10;i++){<br>a[i]=function(){<br>console.log(i)<br>}<br>};<br>a<a href="">2</a>;</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">   let 定义的 i 会运行 for 的块级作用域中，每次执行一次循环，都会创建一个块级作用域。</span><br><span class="line">   在这个块级作用域中，你又定义了一个函数，而这个函数又引用了函数外部的 i 变量，那么这就产生了闭包，也就是说，所有块级作用域中的 i 都不会被销毁，你在这里执行了 10 次循环，那么也就创建了 10 个块级作用域，这十个块级作用域中的变量 i 都会被保存在内存中。</span><br><span class="line">   那么当你再次调用该 a[n]() 时，v8 就会拿出闭包中的变量 i，并将其打印出来，因为每个闭包中的 i 值都不同，所以 a[n]() 时，打印出来的值就是 n，这个就非常符合直觉了。</span><br><span class="line">   但是如果你将 for 循环中的 i 变量声明改成 var，那么并不会产生块级作用域，那么函数引用的 i 就是全局作用域中的了，由于全局作用域中只有一个，那么在执行 for 循环的时候，i 的值会一直被改变，最后是 10，所以最终你执行 a[n]() 时，无论 n 是多少，打印出来的都是 10. 那么这就是 bug 之源了。</span><br><span class="line">2. 循环打印 1，2，3，4，5</span><br><span class="line">   和第二种思路比较相似，同样是在 setTimeout 外面再套一层函数，只不过这个函数是一个**立即执行函数** 。利用立即执行函数的入参来缓存每一个循环中的 i 值：</span><br><span class="line">   ```js</span><br><span class="line">   for (var i = 0; i &lt; 5; i++) &#123;</span><br><span class="line">       // 这里的 i 被赋值给了立即执行函数作用域内的变量 j</span><br><span class="line">       (function(j) &#123;  </span><br><span class="line">           setTimeout(function() &#123;</span><br><span class="line">               console.log(j);</span><br><span class="line">           &#125;, 1000);</span><br><span class="line">       &#125;)(i);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>//就是每一次 settimeout 里的 j 对外部立即执行函数里的变量造成了引用，所以，缓存了这个值，因为 v8 不再回收这个被引用的值了，缓存下来了。</p>
+</li>
+<li><p>还可以用 promise 来实现闭包</p>
+</li>
+</ol>
+<p>高阶函数</p>
+<h3 id="闭包的应用"><a href="#闭包的应用" class="headerlink" title="闭包的应用"></a>闭包的应用</h3><h4 id="模拟私有变量"><a href="#模拟私有变量" class="headerlink" title="模拟私有变量"></a>模拟私有变量</h4><ol>
+<li><strong>模拟私有变量</strong>：就是之前像是 Java c++ 这些，有 private 私有变量， 就是不是这个类的其它成员，你无法去访问这些私有变量。</li>
+<li>在 js 生成一个类是依赖于这个构造函数，但是你实例化一个类会发现，你通过这个类可以访问到这些这个类的属性，但是这个有一个问题就是说，万一我在这个这个构造函数里定义了一些私密数据，那不就可以在这个对象去访问到这个属性了吗。</li>
+<li>用立即执行函数，形成一个闭包，返回一个类，然后将私有属性放在函数里，不去通过 this 来赋值，直接进行赋值操作；a=privatedata，这样外部是无法拿到这个私有变量的。</li>
+<li>还可以用symbol来模拟一个私有的变量。</li>
+</ol>
+<h4 id="偏函数-bind-的实现"><a href="#偏函数-bind-的实现" class="headerlink" title="偏函数 bind 的实现"></a>偏函数 bind 的实现</h4><ol>
+<li><p>[“bind”]</p>
+<blockquote>
+<h3 id="思路详解"><a href="#思路详解" class="headerlink" title="思路详解"></a>思路详解</h3><p><a href="https://www.bilibili.com/video/BV1m54y1q7hc/?spm_id_from=333.788.videocard.1">bli 易懂题解</a>.</p>
+<h3 id="个人理解"><a href="#个人理解" class="headerlink" title="个人理解"></a>个人理解</h3><ol>
+<li><p>二刷理解：</p>
+<ol>
+<li>第一点： 记住执行 bind 会返回一个函数，为什么为了之后的偏函数的应用，s.（a）（b）</li>
+<li>返回的函数需要调用它并且来改变它的 this 指向，利用 apply</li>
+<li>此时来考虑一下，类数组的问题，就是说，bind 函数里面有许多参数，被 arguements 所收集，你现在想传参数，但是 arguements 是一个类数组，需要转换为真正的数组，利用 array.propotype.slice.call()</li>
+<li>此时 bind 还具有偏函数的特性就是 bind 函数第一个括号内部，偏函数就是在第二个括号里的参数,为什么第一个括号里的参数要截取，因为我不需要第一个括号里面的第一个参数，所以要截取，对于第二个括号，只需要将其转化为数组就好，但是所谓偏函数的本质依然要将其两个参数里的东西转换为一个括号里的参数，所以我们需要合并 concat</li>
+<li>可以通过 bind 所返回的函数，实例化一个对象</li>
+<li>也就是说你需要在 Bind 所返回的函数里，去判断 this 是否是构造函数的实例，</li>
+<li>这里的构造函数指的是 person，不是你返回的函数，而且</li>
+</ol>
+</li>
+</ol>
+</blockquote>
+</li>
+</ol>
+<h4 id="柯里化"><a href="#柯里化" class="headerlink" title="柯里化"></a>柯里化</h4><h4 id="防抖节流"><a href="#防抖节流" class="headerlink" title="防抖节流"></a>防抖节流</h4><blockquote>
+<h3 id="防抖-节流"><a href="#防抖-节流" class="headerlink" title="防抖/节流"></a>防抖/节流</h3><h4 id="思想"><a href="#思想" class="headerlink" title="思想"></a>思想</h4><ol>
+<li>节流就是，n 秒内，只触发一次。（timer 无值了，说明第一次的定时任务执行完毕）</li>
+<li>防抖就是 n 秒内，触发多次只看最后一次触发，的中间多次触发，会重新计时。（timer 有值得情况会删除之前的定时器）</li>
+<li>执行 fn，this 就指向 window 了，要指向触发的 dom 节点，所以要调用 apply 绑定 this。</li>
+<li>一定要把这个 timer 放在外面，因为要形成一个闭包，这样在内存中由于闭包，就不会导致这个变量被销毁，这样能够保证多次触发函数所引用的变量是一个 timer.</li>
+<li><a href="https://www.jianshu.com/p/cc84f7594b47">防抖节流细节</a>。</li>
+<li><a href="https://blog.csdn.net/KangTongShun/article/details/105316227">防抖节流为什么要用闭包</a>。</li>
+<li><a href="https://www.cnblogs.com/ywjbokeyuan/p/14231894.html">防抖和节流和闭包的关系</a>。</li>
+</ol>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">throter</span>(<span class="params">callback, delay</span>) </span>&#123;<span class="comment">//节流</span></span><br><span class="line">  <span class="keyword">let</span> timer;<span class="comment">//闭包应用</span></span><br><span class="line">   <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!timer) &#123;</span><br><span class="line">      timer = <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        callback.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>)</span><br><span class="line">      &#125;, delay);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">input.addEventListerener(<span class="string">&#x27;keyup&#x27;</span>, throter(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(input.value);</span><br><span class="line">&#125;, <span class="number">1000</span>))</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">debance</span>(<span class="params">callback, delay</span>) </span>&#123;<span class="comment">//防抖</span></span><br><span class="line">  <span class="keyword">let</span> timer = <span class="literal">null</span>;<span class="comment">//闭包的应用</span></span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (timer) &#123;</span><br><span class="line">      <span class="built_in">clearTimeout</span>(timer)<span class="comment">//清空定时器操作</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      timer = <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        callback.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>)</span><br><span class="line">        timer = <span class="literal">null</span><span class="comment">//这里用这个timer===null，//这里为什么要清空就是因为，如果你不清空的话</span></span><br><span class="line"><span class="comment">//，就会导致这个timer始终是有值的，那就没有办法紧接着，继续去，重新设置定时器了。/</span></span><br><span class="line"><span class="comment">//或者这样想就是，轮回，每次输入框输入完内容后，</span></span><br><span class="line">      &#125;, delay);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">input.addEventListener(<span class="string">&#x27;keyup&#x27;</span>, debance(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(input.value);</span><br><span class="line">&#125;, <span class="number">1000</span>))</span><br></pre></td></tr></table></figure>
+
+</blockquote>
+<p>   。</p>
+<h4 id="手写一个闭包"><a href="#手写一个闭包" class="headerlink" title="手写一个闭包"></a>手写一个闭包</h4><ol>
+<li><p>``` js<br>function cache(){<br>let res={}<br>return {<br>set: function(key,value){</p>
+<pre><code>res[key]=value
+</code></pre>
+<p>}<br>get: function(key,value){</p>
+<pre><code>return     res[key]
+</code></pre>
+<p>}</p>
+<p>}</p>
+<p>}//这里函数作为了返回值，并且这个内部返回的函数引用了外部的局部变量。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">高阶函数</span><br><span class="line"></span><br><span class="line">1. **高阶**函数是指使用其他函数作为参数、或者返回一个函数作为结果的函数。比如这个 map,reduce 等.</span><br><span class="line">2. **联想记忆**：为什么**高阶**，因为是属于，函数**一等公民**：所以高级---》就是函数可以做数据类型也能做的事情，比如这个，参数和返回值。</span><br><span class="line"></span><br><span class="line">### 继承</span><br><span class="line"></span><br><span class="line">1. [js 继承易懂](https://www.bilibili.com/video/BV1a5411a7n3?t=1656)</span><br><span class="line">2. [js 继承可参考视频](https://www.bilibili.com/video/BV1J54y1y7u9?from=search&amp;seid=7963754240755905813)。</span><br><span class="line">3. 首先来理解这个原型链继承就是将子类的原型对象直接变为，父类的实例，这样就可以通过**原型链实现继承**，从而拿到一些属性和方法，但是无法传递参数，而且会修改原型上的属性和方法，这里要注意一点就是要改变这个子类构造函数的指向，否则就顺着原型链指向了父类构造函数了，这个组合继承，寄生组合继承都要。</span><br><span class="line">4. 对于这个**组合继承**就是通过这个 call/apply 实现继承，首先子类实例一个对象，然后调用这个子类构造函数，之后再去调用这个父构造函数，改变这个父构造函数的 this 指向，这样并可以传递参数，这样，就给子类赋予了父类的属性和方法，并且由于构造函数声明的属性和方法都是私有的所以其它实例无法改变。并且还可以依赖原型链，去拿到这个**父类原型上的方法**，**弊端就是父类构造函数调用了两次，**一次是原型链上的，一次是这个 call 调用父构造函数的时候。</span><br><span class="line">5. **寄生组合继承**：就是由于父构造函数调用了两次所以我需要，通过 object.create(父构造函数的 propotype),就是先来创建一个对象，然后让这个对象的_proto_指向这个参数。这样就跳过了这个父的实例，完美，不过也需要修改构造函数的指向。</span><br><span class="line">6. ```js</span><br><span class="line">   function parent(name, sex) &#123;//组合继承</span><br><span class="line">     this.name = name</span><br><span class="line">     this.sex = sex</span><br><span class="line"></span><br><span class="line">     parent.prototype.say = function () &#123;</span><br><span class="line">       console.log(111);</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   function child(name, age) &#123;</span><br><span class="line">     parent.call(this, name)</span><br><span class="line"></span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   child.prototype = new parent()//第一次调用这个父构造函数</span><br><span class="line">   child.prototype.constructor = child//修改这个原型constructor指向</span><br><span class="line"></span><br><span class="line">   let a = new child()//第二次调用这个父构造函数</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">parent</span>(<span class="params">name, sex</span>) </span>&#123;<span class="comment">//寄生组合继承</span></span><br><span class="line">  <span class="built_in">this</span>.name = name</span><br><span class="line">  <span class="built_in">this</span>.sex = sex</span><br><span class="line"></span><br><span class="line">  parent.prototype.say = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="number">111</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">child</span>(<span class="params">name, age</span>) </span>&#123;</span><br><span class="line">  parent.call(<span class="built_in">this</span>, name)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">child.prototype = <span class="built_in">Object</span>.create(parent.prototype)<span class="comment">//修改子类原型对象的__proto__为父构造函数的原型对象实现继承父的原型方法</span></span><br><span class="line">child.prototype.constructor = child<span class="comment">//修改这个原型constructor指向</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<h4 id="ES6-和-ES5-继承的关系"><a href="#ES6-和-ES5-继承的关系" class="headerlink" title="ES6 和 ES5 继承的关系"></a>ES6 和 ES5 继承的关系</h4><ol>
+<li>ES5 和 ES6 子类 <code>this</code> 生成顺序不同。ES5 的继承先生成了子类实例，再调用父类的构造函数修饰子类实例，ES6 的继承先生成父类实例，再调用子类的构造函数修饰父类实例。这个差别使得 ES6 可以继承内置对象。</li>
+<li><strong>这样记忆</strong>，就是 es5 是我熟悉的先去，生成子类实例，再去调用父构造函数，es6 这个正好相反。简化记忆</li>
+<li><a href="https://muyiy.cn/question/js/7.html">es6 和 es5 的继承</a></li>
+</ol>
+<h2 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h2><h3 id="async-await"><a href="#async-await" class="headerlink" title="async await"></a>async await</h3><h3 id="Generator"><a href="#Generator" class="headerlink" title="Generator"></a>Generator</h3><ol>
+<li>手写 co 函数：<a href="https://www.bilibili.com/video/BV1sZ4y1j71K?from=search&seid=4431131485538593786">手写 co 函数的视频</a>。</li>
+</ol>
+<h3 id="Promise"><a href="#Promise" class="headerlink" title="Promise"></a>Promise</h3><ol>
+<li><a href="https://juejin.cn/post/6856213486633304078#heading-4">补充 promise 的细节补充及常见看代码读题</a>。</li>
+<li>怎么来中断这个 then 的链式调用，首先明确什么时候会去调用 then 也就是说，这成功的时候，那也就是说这个题的本质是让它去，失败，所以的话就是说，主动 reject，之后会去执行，then 里失败的回调，那如果是失败的回调，then 一定是成功状态的 promise 才会去调用，所以失败的回调执行后会变为失败态，所以的话，就是说会终止调用，还可以去主动抛错。然后改变这个当前 promise 的状态。</li>
+</ol>
+<h2 id="宏任务微任务"><a href="#宏任务微任务" class="headerlink" title="宏任务微任务"></a>宏任务微任务</h2><ol>
+<li>首先明确 js 为什么是单线程，一个线程删除 dom，另一个线程添加 dom 到底是删还是不删</li>
+<li>联想 左边一个调用栈，右边各一个微任务队列，和宏任务队列，</li>
+<li>就是调用栈不断的从队列中取任务，然后再去执行。</li>
+<li>为什么会有微任务队列和宏任务队列两种，为了插队，为了让一些任务插队优先执行。让任务执行的时机变的可控。</li>
+</ol>
+<h4 id="浏览器事件循环机制"><a href="#浏览器事件循环机制" class="headerlink" title="浏览器事件循环机制"></a>浏览器事件循环机制</h4><ol>
+<li>首先宏任务（script 整体代码）推入调用栈中，先同步，遇到异步代码分别投放至宏微任务队列，执行所有微任务，然后再去检查宏任务（易错：如果遇到定时器，这个要根据这个设定时间排一个顺序）。</li>
+<li>如果我想在异步任务中去更新 dom，应该是包装为微任务，如果是微任务，就是执行后会立即渲染，而宏任务，整体代码（宏）之后微–》渲染更新而此时压根就没有更新 dom，得等下一次任务循环也就意味着，多渲染了一次。</li>
+<li>引出这个 vue.nexttick,异步更新，就是不会   立刻去更新，避免多次重复渲染。</li>
+<li>那对于需要包装为宏任务的，那就直接派发为任务，默认都包装为微任务依赖于 promise.then</li>
+</ol>
+<h3 id="js-作用域链"><a href="#js-作用域链" class="headerlink" title="js 作用域链"></a>js 作用域链</h3><ol>
+<li>首先想到何时形成。</li>
+<li>作用域嵌套的时候就，可以形成这个作用域链了，想象（函数嵌套内部函数引用了外部变量）w–》闭包</li>
+<li>同时引出为什么为什么外部变量不能访问到内部的变量。</li>
+</ol>
+<h3 id="函数式编程"><a href="#函数式编程" class="headerlink" title="函数式编程"></a>函数式编程</h3><ol>
+<li>js 更多的是具有函数式编程的特点而不是纯粹的</li>
+<li>闭包</li>
+<li>偏函数柯里化</li>
+<li>高阶函数。</li>
+<li>纯<strong>函数</strong>： 三点： <strong>函数</strong>有确定的一个返回值，并且不使用全局的变量，并且不会去修改全局变量。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>js核心</category>
       </categories>
   </entry>
   <entry>
@@ -2255,150 +2399,6 @@ b=&#123;b:1&#125;
 ]]></content>
       <categories>
         <category>js基础</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>js核心梳理</title>
-    <url>/2021/02/19/JS%E6%A0%B8%E5%BF%83%E9%AA%A8%E6%9E%B6/</url>
-    <content><![CDATA[<h2 id="闭包体系"><a href="#闭包体系" class="headerlink" title="闭包体系"></a>闭包体系</h2><h3 id="切入点词法作用域"><a href="#切入点词法作用域" class="headerlink" title="切入点词法作用域"></a>切入点词法作用域</h3><ol>
-<li><p>首先我需要从作用域的底层机制说起，首先在 V8 引擎中是有编译阶段的，</p>
-<blockquote>
-<h2 id="V8-引擎如何执行一段代码"><a href="#V8-引擎如何执行一段代码" class="headerlink" title="V8 引擎如何执行一段代码"></a>V8 引擎如何执行一段代码</h2><h3 id="编译阶段"><a href="#编译阶段" class="headerlink" title="编译阶段"></a>编译阶段</h3><ol>
-<li>那在执行一段代码执行之前，得做些准备工作，</li>
-<li>具体就是需要准备<strong>基础环境</strong>。</li>
-<li>那现在有了基础环境后，就可以来执行这个代码。</li>
-<li>由于 v8 引擎并不识别代码，所以需要来，将其<strong>结构化</strong>， 转化为 <strong>AST 树</strong>，再<strong>最终转换为字节码</strong>，也就是说<strong>中间代码</strong>（介于 AST 和机器码中间的一种产物） ，但是 v8 引擎为了节省资源，它不会去将声明的函数内部的所有代码转换为中间代码。很<strong>懒惰</strong>，所以又称惰性解析阶段。只有当其函数调用的时候才会去将其内部的代码，转换为中间代码</li>
-</ol>
-<h3 id="执行阶段"><a href="#执行阶段" class="headerlink" title="执行阶段"></a>执行阶段</h3><ol>
-<li>同时要说明一点由于 V8 引擎属于jit，所以会有一个监控器，来判断是否有重复代码执行，如果有将其标记为热点代码，将其转换为二进制代码，当下次再次执行，解释器直接执行优化过的代码，提高效率。</li>
-</ol>
-</blockquote>
-<blockquote>
-<h3 id="字节码"><a href="#字节码" class="headerlink" title="字节码"></a>字节码</h3><p>所以时间上，早期编译为二进制代码太慢，所以时间上更快，空间上，所占内存小，早期为了防止重复编译将结果，缓存，而字节码所占空间很少。</p>
-</blockquote>
-<blockquote>
-</blockquote>
-<blockquote>
-<h3 id="v8-引擎如何来执行一段代码"><a href="#v8-引擎如何来执行一段代码" class="headerlink" title="v8 引擎如何来执行一段代码"></a>v8 引擎如何来执行一段代码</h3></blockquote>
-</li>
-<li><p>这里还有一点就是此时引擎会在当前的作用域去寻找有没有所声明的变量，如果有那就忽略它，这也是为什么，var 可以重复声明的本质原因，如果没有的话就将这个变量存放在当前作用域，赋值阶段。</p>
-</li>
-</ol>
-<h4 id="如何来叙述闭包"><a href="#如何来叙述闭包" class="headerlink" title="如何来叙述闭包"></a>如何来叙述闭包</h4><ol>
-<li>切入点<strong>词法作用域</strong>，那么词法作用域是怎样生成的（此时联想作用域里面有声明了一个变量），那么在编译阶段首先会来判断，当前的作用域有没有这个变量，有了就忽略，继续，没有就直接将变量放置当前作用域内并赋值 undefined.</li>
-<li>那你不能光找到它，还得赋值，在当前作用域能找到直接赋值，没找到就不断向外部作用域找形成作用域链。</li>
-<li><strong>（谈到作用域本质就联想一个调用栈，里面压入了全局执行上下文，和函数执行上下文））</strong>作用域的<strong>本质</strong>到底是什么，从<strong>表层意思</strong>来讲，它是一套规则，存放相应变量的规则，从本质上来讲，它是当前所处执行上下文，从这一点可以明白，为什么闭包中，可以从内部访问外部的变量，而外部无法访问内部的变量，全局执行上下文首先会推入调用栈中，之后每当调用一个函数，就会将函数上下文推入栈中，所以即便调用栈中，栈顶执行上下文，执行完毕后出栈，但是内部执行上下文依然可以通过，作用域链来访问，但由于栈顶执行上下文出栈了作用域链也被销毁了，所以无法访问调用栈中上下文的变量。</li>
-</ol>
-<h4 id="补充词法作用域"><a href="#补充词法作用域" class="headerlink" title="补充词法作用域"></a>补充词法作用域</h4><ol>
-<li>什么是<strong>词法作用域</strong>，由作用域想到了，作用域链，也就是说查找变量的时候一定是沿着，比如你所定义的位置，然后不断向外去延申，而动态作用域是沿着调用栈去查找的。</li>
-<li>补充函数的作用域是执行阶段就会去形成。但是查找一定是沿着定义的作用域，不断向外去延申。</li>
-<li>闭包引用的变量一定不会被回收吗，其实不对，当把这个变量直接赋值 null 就会被回收，这样相当于引用了一个空的变量自然会被回收</li>
-</ol>
-<h3 id="闭包应用。"><a href="#闭包应用。" class="headerlink" title="闭包应用。"></a>闭包应用。</h3><ol>
-<li><p>``` js<br>var a = [];<br>for(let i = 0;i&lt;10;i++){<br>a[i]=function(){<br>console.log(i)<br>}<br>};<br>a<a href="">2</a>;</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">   let 定义的 i 会运行 for 的块级作用域中，每次执行一次循环，都会创建一个块级作用域。</span><br><span class="line">   在这个块级作用域中，你又定义了一个函数，而这个函数又引用了函数外部的 i 变量，那么这就产生了闭包，也就是说，所有块级作用域中的 i 都不会被销毁，你在这里执行了 10 次循环，那么也就创建了 10 个块级作用域，这十个块级作用域中的变量 i 都会被保存在内存中。</span><br><span class="line">   那么当你再次调用该 a[n]() 时，v8 就会拿出闭包中的变量 i，并将其打印出来，因为每个闭包中的 i 值都不同，所以 a[n]() 时，打印出来的值就是 n，这个就非常符合直觉了。</span><br><span class="line">   但是如果你将 for 循环中的 i 变量声明改成 var，那么并不会产生块级作用域，那么函数引用的 i 就是全局作用域中的了，由于全局作用域中只有一个，那么在执行 for 循环的时候，i 的值会一直被改变，最后是 10，所以最终你执行 a[n]() 时，无论 n 是多少，打印出来的都是 10. 那么这就是 bug 之源了。</span><br><span class="line">2. 循环打印 1，2，3，4，5</span><br><span class="line">   和第二种思路比较相似，同样是在 setTimeout 外面再套一层函数，只不过这个函数是一个**立即执行函数** 。利用立即执行函数的入参来缓存每一个循环中的 i 值：</span><br><span class="line">   ```js</span><br><span class="line">   for (var i = 0; i &lt; 5; i++) &#123;</span><br><span class="line">       // 这里的 i 被赋值给了立即执行函数作用域内的变量 j</span><br><span class="line">       (function(j) &#123;  </span><br><span class="line">           setTimeout(function() &#123;</span><br><span class="line">               console.log(j);</span><br><span class="line">           &#125;, 1000);</span><br><span class="line">       &#125;)(i);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-<p>//就是每一次 settimeout 里的 j 对外部立即执行函数里的变量造成了引用，所以，缓存了这个值，因为 v8 不再回收这个被引用的值了，缓存下来了。</p>
-</li>
-<li><p>还可以用 promise 来实现闭包</p>
-</li>
-</ol>
-<p>高阶函数</p>
-<h3 id="闭包的应用"><a href="#闭包的应用" class="headerlink" title="闭包的应用"></a>闭包的应用</h3><h4 id="模拟私有变量"><a href="#模拟私有变量" class="headerlink" title="模拟私有变量"></a>模拟私有变量</h4><ol>
-<li><strong>模拟私有变量</strong>：就是之前像是 Java c++ 这些，有 private 私有变量， 就是不是这个类的其它成员，你无法去访问这些私有变量。</li>
-<li>在 js 生成一个类是依赖于这个构造函数，但是你实例化一个类会发现，你通过这个类可以访问到这些这个类的属性，但是这个有一个问题就是说，万一我在这个这个构造函数里定义了一些私密数据，那不就可以在这个对象去访问到这个属性了吗。</li>
-<li>用立即执行函数，形成一个闭包，返回一个类，然后将私有属性放在函数里，不去通过 this 来赋值，直接进行赋值操作；a=privatedata，这样外部是无法拿到这个私有变量的。</li>
-<li>还可以用symbol来模拟一个私有的变量。</li>
-</ol>
-<h4 id="偏函数-bind-的实现"><a href="#偏函数-bind-的实现" class="headerlink" title="偏函数 bind 的实现"></a>偏函数 bind 的实现</h4><ol>
-<li><p>[“bind”]</p>
-<blockquote>
-<h3 id="思路详解"><a href="#思路详解" class="headerlink" title="思路详解"></a>思路详解</h3><p><a href="https://www.bilibili.com/video/BV1m54y1q7hc/?spm_id_from=333.788.videocard.1">bli 易懂题解</a>.</p>
-<h3 id="个人理解"><a href="#个人理解" class="headerlink" title="个人理解"></a>个人理解</h3><ol>
-<li><p>二刷理解：</p>
-<ol>
-<li>第一点： 记住执行 bind 会返回一个函数，为什么为了之后的偏函数的应用，s.（a）（b）</li>
-<li>返回的函数需要调用它并且来改变它的 this 指向，利用 apply</li>
-<li>此时来考虑一下，类数组的问题，就是说，bind 函数里面有许多参数，被 arguements 所收集，你现在想传参数，但是 arguements 是一个类数组，需要转换为真正的数组，利用 array.propotype.slice.call()</li>
-<li>此时 bind 还具有偏函数的特性就是 bind 函数第一个括号内部，偏函数就是在第二个括号里的参数,为什么第一个括号里的参数要截取，因为我不需要第一个括号里面的第一个参数，所以要截取，对于第二个括号，只需要将其转化为数组就好，但是所谓偏函数的本质依然要将其两个参数里的东西转换为一个括号里的参数，所以我们需要合并 concat</li>
-<li>可以通过 bind 所返回的函数，实例化一个对象</li>
-<li>也就是说你需要在 Bind 所返回的函数里，去判断 this 是否是构造函数的实例，</li>
-<li>这里的构造函数指的是 person，不是你返回的函数，而且</li>
-</ol>
-</li>
-</ol>
-</blockquote>
-</li>
-</ol>
-<h4 id="柯里化"><a href="#柯里化" class="headerlink" title="柯里化"></a>柯里化</h4><h4 id="防抖节流"><a href="#防抖节流" class="headerlink" title="防抖节流"></a>防抖节流</h4><blockquote>
-<h3 id="防抖-节流"><a href="#防抖-节流" class="headerlink" title="防抖/节流"></a>防抖/节流</h3><h4 id="思想"><a href="#思想" class="headerlink" title="思想"></a>思想</h4><ol>
-<li>节流就是，n 秒内，只触发一次。（timer 无值了，说明第一次的定时任务执行完毕）</li>
-<li>防抖就是 n 秒内，触发多次只看最后一次触发，的中间多次触发，会重新计时。（timer 有值得情况会删除之前的定时器）</li>
-<li>执行 fn，this 就指向 window 了，要指向触发的 dom 节点，所以要调用 apply 绑定 this。</li>
-<li>一定要把这个 timer 放在外面，因为要形成一个闭包，这样在内存中由于闭包，就不会导致这个变量被销毁，这样能够保证多次触发函数所引用的变量是一个 timer.</li>
-<li><a href="https://www.jianshu.com/p/cc84f7594b47">防抖节流细节</a>。</li>
-<li><a href="https://blog.csdn.net/KangTongShun/article/details/105316227">防抖节流为什么要用闭包</a>。</li>
-<li><a href="https://www.cnblogs.com/ywjbokeyuan/p/14231894.html">防抖和节流和闭包的关系</a>。</li>
-</ol>
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">throter</span>(<span class="params">callback, delay</span>) </span>&#123;<span class="comment">//节流</span></span><br><span class="line">  <span class="keyword">let</span> timer;<span class="comment">//闭包应用</span></span><br><span class="line">   <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!timer) &#123;</span><br><span class="line">      timer = <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        callback.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>)</span><br><span class="line">      &#125;, delay);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">input.addEventListerener(<span class="string">&#x27;keyup&#x27;</span>, throter(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(input.value);</span><br><span class="line">&#125;, <span class="number">1000</span>))</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">debance</span>(<span class="params">callback, delay</span>) </span>&#123;<span class="comment">//防抖</span></span><br><span class="line">  <span class="keyword">let</span> timer = <span class="literal">null</span>;<span class="comment">//闭包的应用</span></span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (timer) &#123;</span><br><span class="line">      <span class="built_in">clearTimeout</span>(timer)<span class="comment">//清空定时器操作</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      timer = <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        callback.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>)</span><br><span class="line">        timer = <span class="literal">null</span><span class="comment">//这里用这个timer===null，//这里为什么要清空就是因为，如果你不清空的话</span></span><br><span class="line"><span class="comment">//，就会导致这个timer始终是有值的，那就没有办法紧接着，继续去，重新设置定时器了。/</span></span><br><span class="line"><span class="comment">//或者这样想就是，轮回，每次输入框输入完内容后，</span></span><br><span class="line">      &#125;, delay);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">input.addEventListener(<span class="string">&#x27;keyup&#x27;</span>, debance(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(input.value);</span><br><span class="line">&#125;, <span class="number">1000</span>))</span><br></pre></td></tr></table></figure>
-
-</blockquote>
-<p>   。</p>
-<h4 id="手写一个闭包"><a href="#手写一个闭包" class="headerlink" title="手写一个闭包"></a>手写一个闭包</h4><ol>
-<li><p>``` js<br>function cache(){<br>let res={}<br>return {<br>set: function(key,value){</p>
-<pre><code>res[key]=value
-</code></pre>
-<p>}<br>get: function(key,value){</p>
-<pre><code>return     res[key]
-</code></pre>
-<p>}</p>
-<p>}</p>
-<p>}//这里函数作为了返回值，并且这个内部返回的函数引用了外部的局部变量。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">高阶函数</span><br><span class="line"></span><br><span class="line">1. **高阶**函数是指使用其他函数作为参数、或者返回一个函数作为结果的函数。比如这个 map,reduce 等.</span><br><span class="line">2. **联想记忆**：为什么**高阶**，因为是属于，函数**一等公民**：所以高级---》就是函数可以做数据类型也能做的事情，比如这个，参数和返回值。</span><br><span class="line"></span><br><span class="line">### 继承</span><br><span class="line"></span><br><span class="line">1. [js 继承易懂](https://www.bilibili.com/video/BV1a5411a7n3?t=1656)</span><br><span class="line">2. [js 继承可参考视频](https://www.bilibili.com/video/BV1J54y1y7u9?from=search&amp;seid=7963754240755905813)。</span><br><span class="line">3. 首先来理解这个原型链继承就是将子类的原型对象直接变为，父类的实例，这样就可以通过**原型链实现继承**，从而拿到一些属性和方法，但是无法传递参数，而且会修改原型上的属性和方法，这里要注意一点就是要改变这个子类构造函数的指向，否则就顺着原型链指向了父类构造函数了，这个组合继承，寄生组合继承都要。</span><br><span class="line">4. 对于这个**组合继承**就是通过这个 call/apply 实现继承，首先子类实例一个对象，然后调用这个子类构造函数，之后再去调用这个父构造函数，改变这个父构造函数的 this 指向，这样并可以传递参数，这样，就给子类赋予了父类的属性和方法，并且由于构造函数声明的属性和方法都是私有的所以其它实例无法改变。并且还可以依赖原型链，去拿到这个**父类原型上的方法**，**弊端就是父类构造函数调用了两次，**一次是原型链上的，一次是这个 call 调用父构造函数的时候。</span><br><span class="line">5. **寄生组合继承**：就是由于父构造函数调用了两次所以我需要，通过 object.create(父构造函数的 propotype),就是先来创建一个对象，然后让这个对象的_proto_指向这个参数。这样就跳过了这个父的实例，完美，不过也需要修改构造函数的指向。</span><br><span class="line">6. ```js</span><br><span class="line">   function parent(name, sex) &#123;//组合继承</span><br><span class="line">     this.name = name</span><br><span class="line">     this.sex = sex</span><br><span class="line"></span><br><span class="line">     parent.prototype.say = function () &#123;</span><br><span class="line">       console.log(111);</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   function child(name, age) &#123;</span><br><span class="line">     parent.call(this, name)</span><br><span class="line"></span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   child.prototype = new parent()//第一次调用这个父构造函数</span><br><span class="line">   child.prototype.constructor = child//修改这个原型constructor指向</span><br><span class="line"></span><br><span class="line">   let a = new child()//第二次调用这个父构造函数</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">parent</span>(<span class="params">name, sex</span>) </span>&#123;<span class="comment">//寄生组合继承</span></span><br><span class="line">  <span class="built_in">this</span>.name = name</span><br><span class="line">  <span class="built_in">this</span>.sex = sex</span><br><span class="line"></span><br><span class="line">  parent.prototype.say = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="number">111</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">child</span>(<span class="params">name, age</span>) </span>&#123;</span><br><span class="line">  parent.call(<span class="built_in">this</span>, name)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">child.prototype = <span class="built_in">Object</span>.create(parent.prototype)<span class="comment">//修改子类原型对象的__proto__为父构造函数的原型对象实现继承父的原型方法</span></span><br><span class="line">child.prototype.constructor = child<span class="comment">//修改这个原型constructor指向</span></span><br></pre></td></tr></table></figure></li>
-</ol>
-<h4 id="ES6-和-ES5-继承的关系"><a href="#ES6-和-ES5-继承的关系" class="headerlink" title="ES6 和 ES5 继承的关系"></a>ES6 和 ES5 继承的关系</h4><ol>
-<li>ES5 和 ES6 子类 <code>this</code> 生成顺序不同。ES5 的继承先生成了子类实例，再调用父类的构造函数修饰子类实例，ES6 的继承先生成父类实例，再调用子类的构造函数修饰父类实例。这个差别使得 ES6 可以继承内置对象。</li>
-<li><strong>这样记忆</strong>，就是 es5 是我熟悉的先去，生成子类实例，再去调用父构造函数，es6 这个正好相反。简化记忆</li>
-<li><a href="https://muyiy.cn/question/js/7.html">es6 和 es5 的继承</a></li>
-</ol>
-<h2 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h2><h3 id="async-await"><a href="#async-await" class="headerlink" title="async await"></a>async await</h3><h3 id="Generator"><a href="#Generator" class="headerlink" title="Generator"></a>Generator</h3><ol>
-<li>手写 co 函数：<a href="https://www.bilibili.com/video/BV1sZ4y1j71K?from=search&seid=4431131485538593786">手写 co 函数的视频</a>。</li>
-</ol>
-<h3 id="Promise"><a href="#Promise" class="headerlink" title="Promise"></a>Promise</h3><ol>
-<li><a href="https://juejin.cn/post/6856213486633304078#heading-4">补充 promise 的细节补充及常见看代码读题</a>。</li>
-<li>怎么来中断这个 then 的链式调用，首先明确什么时候会去调用 then 也就是说，这成功的时候，那也就是说这个题的本质是让它去，失败，所以的话就是说，主动 reject，之后会去执行，then 里失败的回调，那如果是失败的回调，then 一定是成功状态的 promise 才会去调用，所以失败的回调执行后会变为失败态，所以的话，就是说会终止调用，还可以去主动抛错。然后改变这个当前 promise 的状态。</li>
-</ol>
-<h2 id="宏任务微任务"><a href="#宏任务微任务" class="headerlink" title="宏任务微任务"></a>宏任务微任务</h2><ol>
-<li>首先明确 js 为什么是单线程，一个线程删除 dom，另一个线程添加 dom 到底是删还是不删</li>
-<li>联想 左边一个调用栈，右边各一个微任务队列，和宏任务队列，</li>
-<li>就是调用栈不断的从队列中取任务，然后再去执行。</li>
-<li>为什么会有微任务队列和宏任务队列两种，为了插队，为了让一些任务插队优先执行。让任务执行的时机变的可控。</li>
-</ol>
-<h4 id="浏览器事件循环机制"><a href="#浏览器事件循环机制" class="headerlink" title="浏览器事件循环机制"></a>浏览器事件循环机制</h4><ol>
-<li>首先宏任务（script 整体代码）推入调用栈中，先同步，遇到异步代码分别投放至宏微任务队列，执行所有微任务，然后再去检查宏任务（易错：如果遇到定时器，这个要根据这个设定时间排一个顺序）。</li>
-<li>如果我想在异步任务中去更新 dom，应该是包装为微任务，如果是微任务，就是执行后会立即渲染，而宏任务，整体代码（宏）之后微–》渲染更新而此时压根就没有更新 dom，得等下一次任务循环也就意味着，多渲染了一次。</li>
-<li>引出这个 vue.nexttick,异步更新，就是不会   立刻去更新，避免多次重复渲染。</li>
-<li>那对于需要包装为宏任务的，那就直接派发为任务，默认都包装为微任务依赖于 promise.then</li>
-</ol>
-<h3 id="js-作用域链"><a href="#js-作用域链" class="headerlink" title="js 作用域链"></a>js 作用域链</h3><ol>
-<li>首先想到何时形成。</li>
-<li>作用域嵌套的时候就，可以形成这个作用域链了，想象（函数嵌套内部函数引用了外部变量）w–》闭包</li>
-<li>同时引出为什么为什么外部变量不能访问到内部的变量。</li>
-</ol>
-<h3 id="函数式编程"><a href="#函数式编程" class="headerlink" title="函数式编程"></a>函数式编程</h3><ol>
-<li>js 更多的是具有函数式编程的特点而不是纯粹的</li>
-<li>闭包</li>
-<li>偏函数柯里化</li>
-<li>高阶函数。</li>
-<li>纯<strong>函数</strong>： 三点： <strong>函数</strong>有确定的一个返回值，并且不使用全局的变量，并且不会去修改全局变量。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>js核心</category>
       </categories>
   </entry>
 </search>
