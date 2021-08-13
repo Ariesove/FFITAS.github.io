@@ -57,6 +57,40 @@
       </categories>
   </entry>
   <entry>
+    <title>HTTP</title>
+    <url>/2020/12/29/HTTP%E4%BD%93%E7%B3%BB/</url>
+    <content><![CDATA[<h2 id="👱-GET-和-post-本质区别"><a href="#👱-GET-和-post-本质区别" class="headerlink" title="👱 GET 和 post 本质区别"></a>👱 GET 和 post 本质区别</h2><h3 id="HTTP-常见的请求头字段"><a href="#HTTP-常见的请求头字段" class="headerlink" title="HTTP 常见的请求头字段"></a>HTTP 常见的请求头字段</h3><h3 id="叙述思路"><a href="#叙述思路" class="headerlink" title="叙述思路"></a>叙述思路</h3><ol>
+<li>首先属于 HTTP 协议—–》 引出本质是 TCP 连接——》 引出 tcp 连接次数问题—–&gt; 由次数问题：想到幂等。</li>
+<li>其次想到安全幂等，GET 安全幂等，POST 不安全也不幂等。</li>
+<li>同时还有一点 get 请求能够<strong>缓存</strong>比如第一次请求时浏览器会把相应数据缓存到本地，方便之后能直接命中：强缓存逻辑，而 post 请求时无法被缓存的。</li>
+<li>其次想到想起它们属于 HTTP 协议，也就是说也是基于 TCP 链接的，所以它们的<strong>本质</strong>都是 <strong>TCP 连接。</strong></li>
+<li>GET 请求是<strong>一个 tcp 报文</strong>  :(对于 GET 方式的请求，浏览器会把 http <strong>header</strong> 和 data 一并发送出去，服务器响应 200（返回数据）。) //你请求肯定要有请求头吗，对吧</li>
+<li>而 POST 请求是<strong>两个 tcp 报文</strong>，(浏览器先发送 header，服务器响应 100，浏览器再发送 data，服务器响应 200 ok（返回数据）。)</li>
+<li>所谓<strong>安全</strong>就是不会改变服务器资源，所谓的<strong><strong>幂</strong></strong>想起次幂，也就是说<strong>多次</strong>的意思</li>
+<li>所谓的<strong>不安全</strong>其实就是会改变，服务器的资源，所谓的不幂等就是，多次操作结果不相同。</li>
+</ol>
+<h4 id="💯-100-continue"><a href="#💯-100-continue" class="headerlink" title="💯 100 continue"></a>💯 100 continue</h4><ol>
+<li>HTTP <strong><code>100 Continue</code></strong> 信息型状态响应码表示目前为止一切正常, 客户端应该继续请求, 如果已完成请求则忽略.// 自己的话就是:👌  因为是 <strong>100</strong> 分所以<strong>目前状态正常，可以继续请求。</strong></li>
+</ol>
+<h3 id="为什么-http1-不能实现多路复用"><a href="#为什么-http1-不能实现多路复用" class="headerlink" title="为什么 http1 不能实现多路复用"></a>为什么 http1 不能实现多路复用</h3><ol>
+<li>HTTP/1.1 不是二进制传输，而是通过文本进行传输。由于没有流的概念，在使用并行传输（多路复用）传递数据时，接收端在接收到响应后，并不能区分多个响应分别对应的请求，所以无法将多个响应的结果重新进行组装，也就实现不了多路复用。</li>
+</ol>
+<h3 id="响应码"><a href="#响应码" class="headerlink" title="响应码"></a>响应码</h3><ol>
+<li>301 : 就是永久重定向，就是从 seo 优化的角度更好，会<strong>转移权重</strong>。（联想一个旧网址的 seo 和新网址的 seo）.</li>
+<li>但是 302 就是临时的重定向，<strong>不会转移权重</strong>不会去更新这个，等于是搜索权重下降了，因为 seo 不允许多个，域名指向一个地址，作弊提升这个权重排名。</li>
+<li>叙述思路：就是，301–》seo ，转移权重（就是将旧地址的搜索权重转移到新的）。. 重定向之后会做什么？读取浏览器缓存，强缓存和协商缓存</li>
+<li>302–》临时的重定向，不会把旧网址的，权重进行转移。但是会改变请求的方法把 post 改为了 get 请求，所以出现了 307 的临时重定向，不会去改变这个请求的方法。</li>
+</ol>
+<h3 id="http-持久连接"><a href="#http-持久连接" class="headerlink" title="http 持久连接"></a>http 持久连接</h3><ol>
+<li>首先第一点，何时断开服务器会去设定一个时间然后，在 keep-alive 中添加这个断开的时间。</li>
+<li>其次何时数据传输完毕，数据联想为一个 length,是不是只有长度符合你的 length 才能够判断，数据传输完毕，追问—》如果说没有 content-length;怎么来判断，就是说看编码快，如果出现了0块那就为结束</li>
+</ol>
+]]></content>
+      <categories>
+        <category>HTTP</category>
+      </categories>
+  </entry>
+  <entry>
     <title>HTML</title>
     <url>/2020/09/15/HTML%E4%BD%93%E7%B3%BB/</url>
     <content><![CDATA[<!DOCTYPE html>
@@ -151,40 +185,6 @@
 ]]></content>
       <categories>
         <category>html</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>HTTP</title>
-    <url>/2020/12/29/HTTP%E4%BD%93%E7%B3%BB/</url>
-    <content><![CDATA[<h2 id="👱-GET-和-post-本质区别"><a href="#👱-GET-和-post-本质区别" class="headerlink" title="👱 GET 和 post 本质区别"></a>👱 GET 和 post 本质区别</h2><h3 id="HTTP-常见的请求头字段"><a href="#HTTP-常见的请求头字段" class="headerlink" title="HTTP 常见的请求头字段"></a>HTTP 常见的请求头字段</h3><h3 id="叙述思路"><a href="#叙述思路" class="headerlink" title="叙述思路"></a>叙述思路</h3><ol>
-<li>首先属于 HTTP 协议—–》 引出本质是 TCP 连接——》 引出 tcp 连接次数问题—–&gt; 由次数问题：想到幂等。</li>
-<li>其次想到安全幂等，GET 安全幂等，POST 不安全也不幂等。</li>
-<li>同时还有一点 get 请求能够<strong>缓存</strong>比如第一次请求时浏览器会把相应数据缓存到本地，方便之后能直接命中：强缓存逻辑，而 post 请求时无法被缓存的。</li>
-<li>其次想到想起它们属于 HTTP 协议，也就是说也是基于 TCP 链接的，所以它们的<strong>本质</strong>都是 <strong>TCP 连接。</strong></li>
-<li>GET 请求是<strong>一个 tcp 报文</strong>  :(对于 GET 方式的请求，浏览器会把 http <strong>header</strong> 和 data 一并发送出去，服务器响应 200（返回数据）。) //你请求肯定要有请求头吗，对吧</li>
-<li>而 POST 请求是<strong>两个 tcp 报文</strong>，(浏览器先发送 header，服务器响应 100，浏览器再发送 data，服务器响应 200 ok（返回数据）。)</li>
-<li>所谓<strong>安全</strong>就是不会改变服务器资源，所谓的<strong><strong>幂</strong></strong>想起次幂，也就是说<strong>多次</strong>的意思</li>
-<li>所谓的<strong>不安全</strong>其实就是会改变，服务器的资源，所谓的不幂等就是，多次操作结果不相同。</li>
-</ol>
-<h4 id="💯-100-continue"><a href="#💯-100-continue" class="headerlink" title="💯 100 continue"></a>💯 100 continue</h4><ol>
-<li>HTTP <strong><code>100 Continue</code></strong> 信息型状态响应码表示目前为止一切正常, 客户端应该继续请求, 如果已完成请求则忽略.// 自己的话就是:👌  因为是 <strong>100</strong> 分所以<strong>目前状态正常，可以继续请求。</strong></li>
-</ol>
-<h3 id="为什么-http1-不能实现多路复用"><a href="#为什么-http1-不能实现多路复用" class="headerlink" title="为什么 http1 不能实现多路复用"></a>为什么 http1 不能实现多路复用</h3><ol>
-<li>HTTP/1.1 不是二进制传输，而是通过文本进行传输。由于没有流的概念，在使用并行传输（多路复用）传递数据时，接收端在接收到响应后，并不能区分多个响应分别对应的请求，所以无法将多个响应的结果重新进行组装，也就实现不了多路复用。</li>
-</ol>
-<h3 id="响应码"><a href="#响应码" class="headerlink" title="响应码"></a>响应码</h3><ol>
-<li>301 : 就是永久重定向，就是从 seo 优化的角度更好，会<strong>转移权重</strong>。（联想一个旧网址的 seo 和新网址的 seo）.</li>
-<li>但是 302 就是临时的重定向，<strong>不会转移权重</strong>不会去更新这个，等于是搜索权重下降了，因为 seo 不允许多个，域名指向一个地址，作弊提升这个权重排名。</li>
-<li>叙述思路：就是，301–》seo ，转移权重（就是将旧地址的搜索权重转移到新的）。. 重定向之后会做什么？读取浏览器缓存，强缓存和协商缓存</li>
-<li>302–》临时的重定向，不会把旧网址的，权重进行转移。但是会改变请求的方法把 post 改为了 get 请求，所以出现了 307 的临时重定向，不会去改变这个请求的方法。</li>
-</ol>
-<h3 id="http-持久连接"><a href="#http-持久连接" class="headerlink" title="http 持久连接"></a>http 持久连接</h3><ol>
-<li>首先第一点，何时断开服务器会去设定一个时间然后，在 keep-alive 中添加这个断开的时间。</li>
-<li>其次何时数据传输完毕，数据联想为一个 length,是不是只有长度符合你的 length 才能够判断，数据传输完毕，追问—》如果说没有 content-length;怎么来判断，就是说看编码快，如果出现了0块那就为结束</li>
-</ol>
-]]></content>
-      <categories>
-        <category>HTTP</category>
       </categories>
   </entry>
   <entry>
@@ -296,162 +296,6 @@
 <li>D-SACK<br>[http tcp](assets/http tcp.pdf?page=65).</li>
 </ol>
 <h3 id="tcp-的包一定是按照顺序的吗"><a href="#tcp-的包一定是按照顺序的吗" class="headerlink" title="tcp 的包一定是按照顺序的吗"></a>tcp 的包一定是按照顺序的吗</h3><p><a href="https://blog.csdn.net/jiujiu372/article/details/76855199">tcp 的包一定是按照顺序的吗</a></p>
-]]></content>
-      <categories>
-        <category>TCP</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>tcp重传机制拥塞控制相关</title>
-    <url>/2020/12/23/TCP%E6%8B%A5%E5%A1%9E%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9B%B8%E5%85%B3/</url>
-    <content><![CDATA[<h1 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h1><h2 id="这一次首先复习一下TCP重传机制"><a href="#这一次首先复习一下TCP重传机制" class="headerlink" title="这一次首先复习一下TCP重传机制"></a>这一次首先复习一下TCP重传机制</h2><h3 id="为什么TCP会重传呢"><a href="#为什么TCP会重传呢" class="headerlink" title="为什么TCP会重传呢"></a>为什么TCP会重传呢</h3><ul>
-<li><p>TCP建立连接的过程如果这个过程如果有丢包那么就会触发重传机制</p>
-<ul>
-<li><p>超时重传</p>
-<ul>
-<li>就是TCP内部有一个机制会设定一个时间（时延）这个时间大概略大于，tcp报文往返时间，这个时间的设置不能太短，如果太短那报文还没来的及发回来就误认为包丢了，导致重传，但是也不能设置的太长，这个会造成网络资源浪费（为什么会造成资源浪费我来解释一下：就是说如果时间设置太长了，此时真的发生丢包了，那客户端等很久之后才重发，那不是很浪费网路资源嘛对吧；</li>
-</ul>
-</li>
-<li><p>快速重传</p>
-<ul>
-<li><p>为什么已经有了超时重传：还要有快速重传</p>
-<ul>
-<li>其实是这样，就是说，由于超时重传，是要等一段时间才重传，其实效率并不是很高，所以网络设计们采取了快速重传机制这样效率更高</li>
-</ul>
-</li>
-<li><p>什么时候会触发快速重传机制，比如此时发送方发送了三个数据包（1，2，3），其中2没有发送出去，接收方只发出基于第一个数据包的确认号，并且重复了三次（不包含第一次的确认，再此基础上，再来三次确认）这个确认号，就是告诉发送方，2这个数据包丢失了，需要对方重新发送，于是触发了发送方的快速重传机制，发送方会重新传送2这个丢失数据包</p>
-</li>
-<li><p>特点</p>
-<ul>
-<li>接受方会重复发送丢失包的确认号</li>
-</ul>
-</li>
-<li><p>缺点</p>
-<ul>
-<li>这里存在一个问题就是，发送方是依据所收到的确认号，来确认接受方是否收到了数据，但是此时发送方只接受到了丢失包的确认号，它也不知道之后的数据包到底发送成功没；————于是Sack就是来解决这个问题的</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>SACK</p>
-<ul>
-<li>这里我通俗来讲一下，就是说为了能够让对方知道自己到底具体传哪些丢失的数据包，每次服务器发来的确认号，还会带上服务器已收到的最大 连续的包的序列号</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="滑动窗口"><a href="#滑动窗口" class="headerlink" title="滑动窗口"></a>滑动窗口</h2><h3 id="为什么要有滑动窗口"><a href="#为什么要有滑动窗口" class="headerlink" title="为什么要有滑动窗口"></a>为什么要有滑动窗口</h3><ul>
-<li><p>为了提升网络传输效率</p>
-<ul>
-<li><p>原因在于tcp为了能够实现可靠信息的传输：为每一个数据包都进行确认，那么这就导致了，数据包往返时间越长，网路通信效率就会大幅度的降低（不是很理解网络吞吐量），所以才引用到了窗口</p>
-</li>
-<li><p>怎么做的：就是为tcp报文设立一个滑动窗口，这个滑动窗口的大小由服务器决定/并且，是无需等待对方的确认，而可以继续发送的数据包</p>
-<ul>
-<li><p>发送窗口</p>
-<ul>
-<li>已收到确认的序列号</li>
-<li>已经发送但未收到确认的序列号（这个窗口的尺寸大小是服务器能接受的）</li>
-<li>还有一段未发送，但在接收方能力范围内的数据段（又称可用窗口的大小）（未发送但是可发送的包）</li>
-<li>超出了服务器所能接受的序列号</li>
-</ul>
-</li>
-<li><p>接收方滑动窗口</p>
-<ul>
-<li>已收到数据，并且已经确认的数据段</li>
-<li>未收到数据但是可以接受的窗口大小</li>
-<li>未收到数据但是无法确认的数据段</li>
-</ul>
-</li>
-<li><p>那有一个问题就是如果中途其中一个确认号丢失了，怎么办</p>
-<ul>
-<li>滑动窗口中的序列号是有序的，这也就意味着确认号也是有序的，只要缺失的那个序列号的确认号之后的确认号得到了确认，那么就是一种累计确认，只要某个确认号确认后默认之前的所有序列号都得到了确认（这里我对于序列号不是很理解）</li>
-</ul>
-</li>
-<li><p>滑动窗口是怎么个滑动法</p>
-<ul>
-<li>就是服务器发来确认号后，发送方的滑动窗口相应的就会滑动和确认号序列相同的距离，意味着可用窗口增加了</li>
-</ul>
-</li>
-<li><p>补充：滑动窗口大小的含义：指的是发送方不必等待对方的确认，可以发送的最大报文段</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="流量控制"><a href="#流量控制" class="headerlink" title="流量控制"></a>流量控制</h2><h3 id="就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力"><a href="#就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力" class="headerlink" title="就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力"></a>就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力</h3><h3 id="依赖于滑动窗口"><a href="#依赖于滑动窗口" class="headerlink" title="依赖于滑动窗口"></a>依赖于滑动窗口</h3><ul>
-<li>意思就是通过告知发送方自己的接收窗口大小rwnd来，控制发送方的数据–从而实现了流量控制</li>
-</ul>
-<h3 id="那所谓的窗口是什么：就是接收方最大所能处理的数据量"><a href="#那所谓的窗口是什么：就是接收方最大所能处理的数据量" class="headerlink" title="那所谓的窗口是什么：就是接收方最大所能处理的数据量"></a>那所谓的窗口是什么：就是接收方最大所能处理的数据量</h3><h3 id="窗口关闭"><a href="#窗口关闭" class="headerlink" title="窗口关闭"></a>窗口关闭</h3><ul>
-<li>主要就是在接收方发送给发送方自己最新的接收窗口大小的时候，发生了丢失–tcp的可靠传输没有对窗口大小的消息产生作用</li>
-<li>双方都在等待对方</li>
-</ul>
-<h2 id="拥塞控制"><a href="#拥塞控制" class="headerlink" title="拥塞控制"></a>拥塞控制</h2><h3 id="拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞"><a href="#拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞" class="headerlink" title="拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞"></a>拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞</h3><h3 id="那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）"><a href="#那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）" class="headerlink" title="那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）"></a>那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）</h3><h3 id="ssthresh-阈值"><a href="#ssthresh-阈值" class="headerlink" title="ssthresh//阈值"></a>ssthresh//阈值</h3><h3 id="有哪些算法"><a href="#有哪些算法" class="headerlink" title="有哪些算法"></a>有哪些算法</h3><ul>
-<li><p>慢开始</p>
-<ul>
-<li>就是一开始每当收到一个ack，其cwnd加一个，第二轮收到2个，cwnd就为2，第三轮次收到4个ack，cwnd为4,这样呈现了指数增加</li>
-</ul>
-</li>
-<li><p>拥塞避免</p>
-<ul>
-<li><p>但是随着客户端发送数据数量的增加</p>
-<ul>
-<li><p>一定会到达阈值</p>
-<ul>
-<li>进入拥塞避免后每收到一个确认，cwnd只加1/cwnd，比如当前收到了8个确认，一个加1/8,这次拥塞窗口仅加了一次，之后就是线性增长了</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>拥塞发生</p>
-<ul>
-<li><p>你即便是再怎么避免，还是会导致网络拥塞</p>
-<ul>
-<li><p>超时重传</p>
-<ul>
-<li><p>进入拥塞避免算法</p>
-<ul>
-<li><p>但是这里有一个问题就是说：每次一进入拥塞避免，拥塞窗口，直接就初始化为1</p>
-</li>
-<li><p>就算网络不拥堵，但是会卡顿，因为所能发送的数据包骤减</p>
-</li>
-<li><p>此时客户端认为其实网络情况也没有那么糟糕</p>
-<ul>
-<li>ssthresh=cwnd/2</li>
-<li>初始化cwnd=1</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>快重传</p>
-<ul>
-<li>cwnd/2</li>
-<li>sshred=cwnd/2</li>
-</ul>
-</li>
-<li><p>快恢复</p>
-<ul>
-<li><p>触发快重传后，紧接着执行</p>
-<ul>
-<li><p>cwnd=ssthred+3(ack报文）</p>
-<ul>
-<li>很明显拥塞窗口已经大于阈值了：之后再次进入线性拥塞避免算法</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
 ]]></content>
       <categories>
         <category>TCP</category>
@@ -915,111 +759,159 @@
       </categories>
   </entry>
   <entry>
-    <title>垃圾回收机制</title>
-    <url>/2020/07/12/css/</url>
-    <content><![CDATA[<h1 id="css"><a href="#css" class="headerlink" title="css"></a>css</h1><h2 id="盒模型宽度如何计算"><a href="#盒模型宽度如何计算" class="headerlink" title="盒模型宽度如何计算"></a>盒模型宽度如何计算</h2><h3 id="offeset"><a href="#offeset" class="headerlink" title="offeset"></a>offeset</h3><ul>
-<li>Subtopic</li>
-</ul>
-<h3 id="client"><a href="#client" class="headerlink" title="client"></a>client</h3><ul>
-<li>子主题</li>
-</ul>
-<h3 id="盒模型计算"><a href="#盒模型计算" class="headerlink" title="盒模型计算"></a>盒模型计算</h3><ul>
-<li><p>标准盒模型</p>
+    <title>tcp重传机制拥塞控制相关</title>
+    <url>/2020/12/23/TCP%E6%8B%A5%E5%A1%9E%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9B%B8%E5%85%B3/</url>
+    <content><![CDATA[<h1 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h1><h2 id="这一次首先复习一下TCP重传机制"><a href="#这一次首先复习一下TCP重传机制" class="headerlink" title="这一次首先复习一下TCP重传机制"></a>这一次首先复习一下TCP重传机制</h2><h3 id="为什么TCP会重传呢"><a href="#为什么TCP会重传呢" class="headerlink" title="为什么TCP会重传呢"></a>为什么TCP会重传呢</h3><ul>
+<li><p>TCP建立连接的过程如果这个过程如果有丢包那么就会触发重传机制</p>
 <ul>
-<li>box-sizing: content:box</li>
-</ul>
-</li>
-<li><p>怪异盒模型（ie）</p>
+<li><p>超时重传</p>
 <ul>
-<li>box-sizing: borderbox</li>
-<li>应用边界问题</li>
+<li>就是TCP内部有一个机制会设定一个时间（时延）这个时间大概略大于，tcp报文往返时间，这个时间的设置不能太短，如果太短那报文还没来的及发回来就误认为包丢了，导致重传，但是也不能设置的太长，这个会造成网络资源浪费（为什么会造成资源浪费我来解释一下：就是说如果时间设置太长了，此时真的发生丢包了，那客户端等很久之后才重发，那不是很浪费网路资源嘛对吧；</li>
 </ul>
 </li>
-</ul>
-<h2 id="margin-纵向重叠"><a href="#margin-纵向重叠" class="headerlink" title="margin-纵向重叠"></a>margin-纵向重叠</h2><h3 id="在练习布局的时候经常会有这个问题，就是说，上下元素的margin-会发生重叠"><a href="#在练习布局的时候经常会有这个问题，就是说，上下元素的margin-会发生重叠" class="headerlink" title="在练习布局的时候经常会有这个问题，就是说，上下元素的margin 会发生重叠"></a>在练习布局的时候经常会有这个问题，就是说，上下元素的margin 会发生重叠</h3><h3 id="再具体来讲就是margin-top-margin-bottom-margin-top-bottom"><a href="#再具体来讲就是margin-top-margin-bottom-margin-top-bottom" class="headerlink" title="再具体来讲就是margin-top+margin-bottom !== margin(top+bottom)"></a>再具体来讲就是margin-top+margin-bottom !== margin(top+bottom)</h3><h3 id="所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin"><a href="#所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin" class="headerlink" title="所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin"></a>所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin</h3><h3 id="怎么来解决这个问题"><a href="#怎么来解决这个问题" class="headerlink" title="怎么来解决这个问题"></a>怎么来解决这个问题</h3><h2 id="margin负值"><a href="#margin负值" class="headerlink" title="margin负值"></a>margin负值</h2><h3 id="这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。"><a href="#这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。" class="headerlink" title="这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。"></a>这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。</h3><h2 id="BFC"><a href="#BFC" class="headerlink" title="BFC"></a>BFC</h2><h3 id="块级格式化上下文"><a href="#块级格式化上下文" class="headerlink" title="块级格式化上下文"></a>块级格式化上下文</h3><h3 id="独立的容器"><a href="#独立的容器" class="headerlink" title="独立的容器"></a>独立的容器</h3><h3 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h3><ul>
-<li>margin纵向重叠的问题</li>
-<li>还有就是三栏布局（两列定宽）中间自适应，中间元素，加入overflow:hidden；就可以解决这个问题，因为独立容器就是紧贴着浮动的元素。这里没有必要去给父元素设置，因为浮动元素设置，是为了计算子元素的宽高的。</li>
-<li>清除浮动，原理就是bfc块是计算浮动元素高度的。</li>
-</ul>
-<h3 id="怎么来触发"><a href="#怎么来触发" class="headerlink" title="怎么来触发"></a>怎么来触发</h3><ul>
-<li><p>浮动</p>
-</li>
-<li><p>非overflow: visible</p>
-</li>
-<li><p>定位元素：absolute, fix 首先都会脱离文档流</p>
+<li><p>快速重传</p>
 <ul>
-<li>区别：absolute相对于最近的非staic定位元素进行定位也就是说定位元素，而fix是定死在浏览器窗口内不会随着滚动条的滚动而滚动</li>
-</ul>
-</li>
-<li><p>flex元素就是设置了display；flex布局的元素</p>
-</li>
-</ul>
-<h3 id="联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。"><a href="#联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。" class="headerlink" title="联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。"></a>联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。</h3><h2 id="Float布局"><a href="#Float布局" class="headerlink" title="Float布局"></a>Float布局</h2><h3 id="圣杯布局"><a href="#圣杯布局" class="headerlink" title="圣杯布局"></a>圣杯布局</h3><ul>
-<li><p>这里有个之前忽略的点就是用</p>
+<li><p>为什么已经有了超时重传：还要有快速重传</p>
 <ul>
-<li>clear:both来清楚浮动</li>
+<li>其实是这样，就是说，由于超时重传，是要等一段时间才重传，其实效率并不是很高，所以网络设计们采取了快速重传机制这样效率更高</li>
 </ul>
 </li>
-<li><p>这里有一个之前没有搞清楚的一点就是：这里用到了margin负值</p>
+<li><p>什么时候会触发快速重传机制，比如此时发送方发送了三个数据包（1，2，3），其中2没有发送出去，接收方只发出基于第一个数据包的确认号，并且重复了三次（不包含第一次的确认，再此基础上，再来三次确认）这个确认号，就是告诉发送方，2这个数据包丢失了，需要对方重新发送，于是触发了发送方的快速重传机制，发送方会重新传送2这个丢失数据包</p>
+</li>
+<li><p>特点</p>
 <ul>
-<li>如果你给一个浮动元素，负值且为100%的话，它其实是相对于父元素的，去向左来位移的</li>
+<li>接受方会重复发送丢失包的确认号</li>
 </ul>
 </li>
-<li><p>加深了对于position:relative理解</p>
+<li><p>缺点</p>
 <ul>
-<li><p>这个是相对于自身来定位的什么意思就是说，当给一个设置lerelative的元素设置了top,left,right,时它会相对于自身左上角那个顶点进行移动</p>
+<li>这里存在一个问题就是，发送方是依据所收到的确认号，来确认接受方是否收到了数据，但是此时发送方只接受到了丢失包的确认号，它也不知道之后的数据包到底发送成功没；————于是Sack就是来解决这个问题的</li>
+</ul>
 </li>
-<li><p>之前一直只是单纯用子绝父相，很少来单独的使用，relative</p>
+</ul>
 </li>
-<li><p>它的移动不会去干扰其它的布局元素也就是说，加了realtive的元素相当于不存在一样，它干扰不了其它布局的元素，其它元素的布局该是啥就是啥</p>
+<li><p>SACK</p>
 <ul>
-<li>但我这里有一个问题就是到底，脱流的元素是否会被影响，我看中间的center 会被影响</li>
+<li>这里我通俗来讲一下，就是说为了能够让对方知道自己到底具体传哪些丢失的数据包，每次服务器发来的确认号，还会带上服务器已收到的最大 连续的包的序列号</li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
-<h3 id="双飞翼布局"><a href="#双飞翼布局" class="headerlink" title="双飞翼布局"></a>双飞翼布局</h3><ul>
-<li><p>原因</p>
+<h2 id="滑动窗口"><a href="#滑动窗口" class="headerlink" title="滑动窗口"></a>滑动窗口</h2><h3 id="为什么要有滑动窗口"><a href="#为什么要有滑动窗口" class="headerlink" title="为什么要有滑动窗口"></a>为什么要有滑动窗口</h3><ul>
+<li><p>为了提升网络传输效率</p>
 <ul>
-<li>中间元素优先取渲染因为优先级更高一些</li>
-</ul>
+<li><p>原因在于tcp为了能够实现可靠信息的传输：为每一个数据包都进行确认，那么这就导致了，数据包往返时间越长，网路通信效率就会大幅度的降低（不是很理解网络吞吐量），所以才引用到了窗口</p>
 </li>
-</ul>
-<h3 id="为什么用"><a href="#为什么用" class="headerlink" title="为什么用"></a>为什么用</h3><h3 id="主要用于pc"><a href="#主要用于pc" class="headerlink" title="主要用于pc"></a>主要用于pc</h3><h2 id="清除浮动"><a href="#清除浮动" class="headerlink" title="清除浮动"></a>清除浮动</h2><h3 id="联想：clear-清除"><a href="#联想：clear-清除" class="headerlink" title="联想：clear(清除)"></a>联想：clear(清除)</h3><h3 id="clear-both-额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear-both"><a href="#clear-both-额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear-both" class="headerlink" title="clear:both 额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear:both"></a>clear:both 额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear:both</h3><h3 id="overflow-hidden"><a href="#overflow-hidden" class="headerlink" title="overflow:hidden"></a>overflow:hidden</h3><h3 id="clear-fix"><a href="#clear-fix" class="headerlink" title="clear:fix"></a>clear:fix</h3><ul>
-<li>原理类似于这个clear:both,先创建一个空元素，然后再去转换为块级元素，因为伪元素是一个行内元素，类似额外标签，但是内容是空的，然后再去清除浮动。</li>
-<li>content: ‘ ‘</li>
-<li>dispaly: block</li>
-<li>clear:both</li>
-</ul>
-<h2 id="flex"><a href="#flex" class="headerlink" title="flex"></a>flex</h2><h3 id="哪些属性"><a href="#哪些属性" class="headerlink" title="哪些属性"></a>哪些属性</h3><ul>
-<li><p>flex-direction</p>
+<li><p>怎么做的：就是为tcp报文设立一个滑动窗口，这个滑动窗口的大小由服务器决定/并且，是无需等待对方的确认，而可以继续发送的数据包</p>
 <ul>
-<li>子元素布局方向要么raw column</li>
-</ul>
-</li>
-<li><p>justify-content</p>
+<li><p>发送窗口</p>
 <ul>
-<li>space-between</li>
-<li>Subtopic</li>
+<li>已收到确认的序列号</li>
+<li>已经发送但未收到确认的序列号（这个窗口的尺寸大小是服务器能接受的）</li>
+<li>还有一段未发送，但在接收方能力范围内的数据段（又称可用窗口的大小）（未发送但是可发送的包）</li>
+<li>超出了服务器所能接受的序列号</li>
 </ul>
 </li>
-<li><p>align-item</p>
-</li>
-<li><p>wrap</p>
-</li>
-<li><p>align-self</p>
+<li><p>接收方滑动窗口</p>
 <ul>
-<li>按照当前主轴方向的垂直方向进行排列</li>
-<li>center</li>
-<li>start</li>
-<li>end</li>
+<li>已收到数据，并且已经确认的数据段</li>
+<li>未收到数据但是可以接受的窗口大小</li>
+<li>未收到数据但是无法确认的数据段</li>
+</ul>
+</li>
+<li><p>那有一个问题就是如果中途其中一个确认号丢失了，怎么办</p>
+<ul>
+<li>滑动窗口中的序列号是有序的，这也就意味着确认号也是有序的，只要缺失的那个序列号的确认号之后的确认号得到了确认，那么就是一种累计确认，只要某个确认号确认后默认之前的所有序列号都得到了确认（这里我对于序列号不是很理解）</li>
+</ul>
+</li>
+<li><p>滑动窗口是怎么个滑动法</p>
+<ul>
+<li>就是服务器发来确认号后，发送方的滑动窗口相应的就会滑动和确认号序列相同的距离，意味着可用窗口增加了</li>
+</ul>
+</li>
+<li><p>补充：滑动窗口大小的含义：指的是发送方不必等待对方的确认，可以发送的最大报文段</p>
+</li>
 </ul>
 </li>
 </ul>
-<h3 id="怎么形成弹性布局"><a href="#怎么形成弹性布局" class="headerlink" title="怎么形成弹性布局"></a>怎么形成弹性布局</h3><h2 id="垂直水平居中"><a href="#垂直水平居中" class="headerlink" title="垂直水平居中"></a>垂直水平居中</h2>]]></content>
+</li>
+</ul>
+<h2 id="流量控制"><a href="#流量控制" class="headerlink" title="流量控制"></a>流量控制</h2><h3 id="就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力"><a href="#就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力" class="headerlink" title="就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力"></a>就是来控制发送方发送数据的速率，防止超出接收方处理接收数据的能力</h3><h3 id="依赖于滑动窗口"><a href="#依赖于滑动窗口" class="headerlink" title="依赖于滑动窗口"></a>依赖于滑动窗口</h3><ul>
+<li>意思就是通过告知发送方自己的接收窗口大小rwnd来，控制发送方的数据–从而实现了流量控制</li>
+</ul>
+<h3 id="那所谓的窗口是什么：就是接收方最大所能处理的数据量"><a href="#那所谓的窗口是什么：就是接收方最大所能处理的数据量" class="headerlink" title="那所谓的窗口是什么：就是接收方最大所能处理的数据量"></a>那所谓的窗口是什么：就是接收方最大所能处理的数据量</h3><h3 id="窗口关闭"><a href="#窗口关闭" class="headerlink" title="窗口关闭"></a>窗口关闭</h3><ul>
+<li>主要就是在接收方发送给发送方自己最新的接收窗口大小的时候，发生了丢失–tcp的可靠传输没有对窗口大小的消息产生作用</li>
+<li>双方都在等待对方</li>
+</ul>
+<h2 id="拥塞控制"><a href="#拥塞控制" class="headerlink" title="拥塞控制"></a>拥塞控制</h2><h3 id="拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞"><a href="#拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞" class="headerlink" title="拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞"></a>拥塞控制主要是避免发送方不断的发送数据而导致网络拥塞</h3><h3 id="那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）"><a href="#那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）" class="headerlink" title="那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）"></a>那为了避免拥塞，需要客户端维护一个拥塞窗口（CWND）</h3><h3 id="ssthresh-阈值"><a href="#ssthresh-阈值" class="headerlink" title="ssthresh//阈值"></a>ssthresh//阈值</h3><h3 id="有哪些算法"><a href="#有哪些算法" class="headerlink" title="有哪些算法"></a>有哪些算法</h3><ul>
+<li><p>慢开始</p>
+<ul>
+<li>就是一开始每当收到一个ack，其cwnd加一个，第二轮收到2个，cwnd就为2，第三轮次收到4个ack，cwnd为4,这样呈现了指数增加</li>
+</ul>
+</li>
+<li><p>拥塞避免</p>
+<ul>
+<li><p>但是随着客户端发送数据数量的增加</p>
+<ul>
+<li><p>一定会到达阈值</p>
+<ul>
+<li>进入拥塞避免后每收到一个确认，cwnd只加1/cwnd，比如当前收到了8个确认，一个加1/8,这次拥塞窗口仅加了一次，之后就是线性增长了</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>拥塞发生</p>
+<ul>
+<li><p>你即便是再怎么避免，还是会导致网络拥塞</p>
+<ul>
+<li><p>超时重传</p>
+<ul>
+<li><p>进入拥塞避免算法</p>
+<ul>
+<li><p>但是这里有一个问题就是说：每次一进入拥塞避免，拥塞窗口，直接就初始化为1</p>
+</li>
+<li><p>就算网络不拥堵，但是会卡顿，因为所能发送的数据包骤减</p>
+</li>
+<li><p>此时客户端认为其实网络情况也没有那么糟糕</p>
+<ul>
+<li>ssthresh=cwnd/2</li>
+<li>初始化cwnd=1</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>快重传</p>
+<ul>
+<li>cwnd/2</li>
+<li>sshred=cwnd/2</li>
+</ul>
+</li>
+<li><p>快恢复</p>
+<ul>
+<li><p>触发快重传后，紧接着执行</p>
+<ul>
+<li><p>cwnd=ssthred+3(ack报文）</p>
+<ul>
+<li>很明显拥塞窗口已经大于阈值了：之后再次进入线性拥塞避免算法</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+]]></content>
       <categories>
-        <category>css</category>
+        <category>TCP</category>
       </categories>
   </entry>
   <entry>
@@ -1229,6 +1121,128 @@
 ]]></content>
       <categories>
         <category>ex6</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>垃圾回收机制</title>
+    <url>/2020/07/12/css/</url>
+    <content><![CDATA[<h1 id="css"><a href="#css" class="headerlink" title="css"></a>css</h1><h2 id="盒模型宽度如何计算"><a href="#盒模型宽度如何计算" class="headerlink" title="盒模型宽度如何计算"></a>盒模型宽度如何计算</h2><h3 id="offeset"><a href="#offeset" class="headerlink" title="offeset"></a>offeset</h3><ul>
+<li>Subtopic</li>
+</ul>
+<h3 id="client"><a href="#client" class="headerlink" title="client"></a>client</h3><ul>
+<li>子主题</li>
+</ul>
+<h3 id="盒模型计算"><a href="#盒模型计算" class="headerlink" title="盒模型计算"></a>盒模型计算</h3><ul>
+<li><p>标准盒模型</p>
+<ul>
+<li>box-sizing: content:box</li>
+</ul>
+</li>
+<li><p>怪异盒模型（ie）</p>
+<ul>
+<li>box-sizing: borderbox</li>
+<li>应用边界问题</li>
+</ul>
+</li>
+</ul>
+<h2 id="margin-纵向重叠"><a href="#margin-纵向重叠" class="headerlink" title="margin-纵向重叠"></a>margin-纵向重叠</h2><h3 id="在练习布局的时候经常会有这个问题，就是说，上下元素的margin-会发生重叠"><a href="#在练习布局的时候经常会有这个问题，就是说，上下元素的margin-会发生重叠" class="headerlink" title="在练习布局的时候经常会有这个问题，就是说，上下元素的margin 会发生重叠"></a>在练习布局的时候经常会有这个问题，就是说，上下元素的margin 会发生重叠</h3><h3 id="再具体来讲就是margin-top-margin-bottom-margin-top-bottom"><a href="#再具体来讲就是margin-top-margin-bottom-margin-top-bottom" class="headerlink" title="再具体来讲就是margin-top+margin-bottom !== margin(top+bottom)"></a>再具体来讲就是margin-top+margin-bottom !== margin(top+bottom)</h3><h3 id="所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin"><a href="#所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin" class="headerlink" title="所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin"></a>所谓的重叠就是纵方向的margin会重叠在一起取值最大的margin</h3><h3 id="怎么来解决这个问题"><a href="#怎么来解决这个问题" class="headerlink" title="怎么来解决这个问题"></a>怎么来解决这个问题</h3><h2 id="margin负值"><a href="#margin负值" class="headerlink" title="margin负值"></a>margin负值</h2><h3 id="这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。"><a href="#这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。" class="headerlink" title="这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。"></a>这里联想一个图，就是，有上下左右四个边距，然后，向上和左元素自身会发生移动，对于下和右就是相应位置将不占高和宽，自身不会变动。换言之其它元素会进行移动占据其空缺位置。</h3><h2 id="BFC"><a href="#BFC" class="headerlink" title="BFC"></a>BFC</h2><h3 id="块级格式化上下文"><a href="#块级格式化上下文" class="headerlink" title="块级格式化上下文"></a>块级格式化上下文</h3><h3 id="独立的容器"><a href="#独立的容器" class="headerlink" title="独立的容器"></a>独立的容器</h3><h3 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h3><ul>
+<li>margin纵向重叠的问题</li>
+<li>还有就是三栏布局（两列定宽）中间自适应，中间元素，加入overflow:hidden；就可以解决这个问题，因为独立容器就是紧贴着浮动的元素。这里没有必要去给父元素设置，因为浮动元素设置，是为了计算子元素的宽高的。</li>
+<li>清除浮动，原理就是bfc块是计算浮动元素高度的。</li>
+</ul>
+<h3 id="怎么来触发"><a href="#怎么来触发" class="headerlink" title="怎么来触发"></a>怎么来触发</h3><ul>
+<li><p>浮动</p>
+</li>
+<li><p>非overflow: visible</p>
+</li>
+<li><p>定位元素：absolute, fix 首先都会脱离文档流</p>
+<ul>
+<li>区别：absolute相对于最近的非staic定位元素进行定位也就是说定位元素，而fix是定死在浏览器窗口内不会随着滚动条的滚动而滚动</li>
+</ul>
+</li>
+<li><p>flex元素就是设置了display；flex布局的元素</p>
+</li>
+</ul>
+<h3 id="联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。"><a href="#联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。" class="headerlink" title="联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。"></a>联想一个场景，就是两个元素，就是上下margin重叠，并且，还有一个场景就是一个容器因为子容器浮动而高度塌陷。</h3><h2 id="Float布局"><a href="#Float布局" class="headerlink" title="Float布局"></a>Float布局</h2><h3 id="圣杯布局"><a href="#圣杯布局" class="headerlink" title="圣杯布局"></a>圣杯布局</h3><ul>
+<li><p>这里有个之前忽略的点就是用</p>
+<ul>
+<li>clear:both来清楚浮动</li>
+</ul>
+</li>
+<li><p>这里有一个之前没有搞清楚的一点就是：这里用到了margin负值</p>
+<ul>
+<li>如果你给一个浮动元素，负值且为100%的话，它其实是相对于父元素的，去向左来位移的</li>
+</ul>
+</li>
+<li><p>加深了对于position:relative理解</p>
+<ul>
+<li><p>这个是相对于自身来定位的什么意思就是说，当给一个设置lerelative的元素设置了top,left,right,时它会相对于自身左上角那个顶点进行移动</p>
+</li>
+<li><p>之前一直只是单纯用子绝父相，很少来单独的使用，relative</p>
+</li>
+<li><p>它的移动不会去干扰其它的布局元素也就是说，加了realtive的元素相当于不存在一样，它干扰不了其它布局的元素，其它元素的布局该是啥就是啥</p>
+<ul>
+<li>但我这里有一个问题就是到底，脱流的元素是否会被影响，我看中间的center 会被影响</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="双飞翼布局"><a href="#双飞翼布局" class="headerlink" title="双飞翼布局"></a>双飞翼布局</h3><ul>
+<li><p>原因</p>
+<ul>
+<li>中间元素优先取渲染因为优先级更高一些</li>
+</ul>
+</li>
+</ul>
+<h3 id="为什么用"><a href="#为什么用" class="headerlink" title="为什么用"></a>为什么用</h3><h3 id="主要用于pc"><a href="#主要用于pc" class="headerlink" title="主要用于pc"></a>主要用于pc</h3><h2 id="清除浮动"><a href="#清除浮动" class="headerlink" title="清除浮动"></a>清除浮动</h2><h3 id="联想：clear-清除"><a href="#联想：clear-清除" class="headerlink" title="联想：clear(清除)"></a>联想：clear(清除)</h3><h3 id="clear-both-额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear-both"><a href="#clear-both-额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear-both" class="headerlink" title="clear:both 额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear:both"></a>clear:both 额外标签法：就是给最后一个浮动元素后添加额外的标签，然后再去clear:both</h3><h3 id="overflow-hidden"><a href="#overflow-hidden" class="headerlink" title="overflow:hidden"></a>overflow:hidden</h3><h3 id="clear-fix"><a href="#clear-fix" class="headerlink" title="clear:fix"></a>clear:fix</h3><ul>
+<li>原理类似于这个clear:both,先创建一个空元素，然后再去转换为块级元素，因为伪元素是一个行内元素，类似额外标签，但是内容是空的，然后再去清除浮动。</li>
+<li>content: ‘ ‘</li>
+<li>dispaly: block</li>
+<li>clear:both</li>
+</ul>
+<h2 id="flex"><a href="#flex" class="headerlink" title="flex"></a>flex</h2><h3 id="哪些属性"><a href="#哪些属性" class="headerlink" title="哪些属性"></a>哪些属性</h3><ul>
+<li><p>flex-direction</p>
+<ul>
+<li>子元素布局方向要么raw column</li>
+</ul>
+</li>
+<li><p>justify-content</p>
+<ul>
+<li>space-between</li>
+<li>Subtopic</li>
+</ul>
+</li>
+<li><p>align-item</p>
+</li>
+<li><p>wrap</p>
+</li>
+<li><p>align-self</p>
+<ul>
+<li>按照当前主轴方向的垂直方向进行排列</li>
+<li>center</li>
+<li>start</li>
+<li>end</li>
+</ul>
+</li>
+</ul>
+<h3 id="怎么形成弹性布局"><a href="#怎么形成弹性布局" class="headerlink" title="怎么形成弹性布局"></a>怎么形成弹性布局</h3><h2 id="垂直水平居中"><a href="#垂直水平居中" class="headerlink" title="垂直水平居中"></a>垂直水平居中</h2>]]></content>
+      <categories>
+        <category>css</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>websocket</title>
+    <url>/2020/07/19/websocket/</url>
+    <content><![CDATA[<h1 id="websocket"><a href="#websocket" class="headerlink" title="websocket"></a>websocket</h1><h2 id="它解决了http是半双工，实现了服务端推送"><a href="#它解决了http是半双工，实现了服务端推送" class="headerlink" title="它解决了http是半双工，实现了服务端推送"></a>它解决了http是半双工，实现了服务端推送</h2><h3 id="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"><a href="#也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的" class="headerlink" title="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"></a>也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的</h3><h2 id="那为了能够实现类似全双工的效果，http做出了哪些努力，"><a href="#那为了能够实现类似全双工的效果，http做出了哪些努力，" class="headerlink" title="那为了能够实现类似全双工的效果，http做出了哪些努力，"></a>那为了能够实现类似全双工的效果，http做出了哪些努力，</h2><h3 id="轮询"><a href="#轮询" class="headerlink" title="轮询"></a>轮询</h3><ul>
+<li>其实就是说，客户端会向服务器不断的发送询问，问是否有新的数据，那么很明显这样做，效率非常的低</li>
+</ul>
+<h3 id="长轮询"><a href="#长轮询" class="headerlink" title="长轮询"></a>长轮询</h3><ul>
+<li>意思就是说只有对方有数据才会发，每次客户端仅在接受到新数据才会去询问，如果，没有那就不询问了</li>
+</ul>
+<h2 id="那么websocket是怎么来建立连接的（握手）"><a href="#那么websocket是怎么来建立连接的（握手）" class="headerlink" title="那么websocket是怎么来建立连接的（握手）"></a>那么websocket是怎么来建立连接的（握手）</h2><h3 id="其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"><a href="#其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接" class="headerlink" title="其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"></a>其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接</h3><h3 id="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"><a href="#建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了" class="headerlink" title="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"></a>建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了</h3><h2 id="这个协议更多的是对http的一种优化"><a href="#这个协议更多的是对http的一种优化" class="headerlink" title="这个协议更多的是对http的一种优化"></a>这个协议更多的是对http的一种优化</h2><h2 id="二进制帧格式？"><a href="#二进制帧格式？" class="headerlink" title="二进制帧格式？"></a>二进制帧格式？</h2>]]></content>
+      <categories>
+        <category>HTTP</category>
       </categories>
   </entry>
   <entry>
@@ -1680,20 +1694,6 @@
       </categories>
   </entry>
   <entry>
-    <title>websocket</title>
-    <url>/2020/07/19/websocket/</url>
-    <content><![CDATA[<h1 id="websocket"><a href="#websocket" class="headerlink" title="websocket"></a>websocket</h1><h2 id="它解决了http是半双工，实现了服务端推送"><a href="#它解决了http是半双工，实现了服务端推送" class="headerlink" title="它解决了http是半双工，实现了服务端推送"></a>它解决了http是半双工，实现了服务端推送</h2><h3 id="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"><a href="#也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的" class="headerlink" title="也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的"></a>也就是说客户端和服务器之间无法，随意互相发送数据，只能是客户端，发，服务器去接受，服务器无法主动发送数据，只能是被动的</h3><h2 id="那为了能够实现类似全双工的效果，http做出了哪些努力，"><a href="#那为了能够实现类似全双工的效果，http做出了哪些努力，" class="headerlink" title="那为了能够实现类似全双工的效果，http做出了哪些努力，"></a>那为了能够实现类似全双工的效果，http做出了哪些努力，</h2><h3 id="轮询"><a href="#轮询" class="headerlink" title="轮询"></a>轮询</h3><ul>
-<li>其实就是说，客户端会向服务器不断的发送询问，问是否有新的数据，那么很明显这样做，效率非常的低</li>
-</ul>
-<h3 id="长轮询"><a href="#长轮询" class="headerlink" title="长轮询"></a>长轮询</h3><ul>
-<li>意思就是说只有对方有数据才会发，每次客户端仅在接受到新数据才会去询问，如果，没有那就不询问了</li>
-</ul>
-<h2 id="那么websocket是怎么来建立连接的（握手）"><a href="#那么websocket是怎么来建立连接的（握手）" class="headerlink" title="那么websocket是怎么来建立连接的（握手）"></a>那么websocket是怎么来建立连接的（握手）</h2><h3 id="其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"><a href="#其实首先初始本质就是一个http的get-请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接" class="headerlink" title="其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接"></a>其实首先初始本质就是一个http的get 请求（之所以这样做其实是为了能够，绕过浏览器，防火墙的限制，因为这样做，但是这里为了能够告诉服务器其实并不是http协议，会加入两个字段：并且还会加入一些验证消息，目的就是为了能够防止误连接</h3><h3 id="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"><a href="#建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了" class="headerlink" title="建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了"></a>建立了连接，并且确认了就是websocket协议，之后客户端和服务器之间就可以随意互发信息了</h3><h2 id="这个协议更多的是对http的一种优化"><a href="#这个协议更多的是对http的一种优化" class="headerlink" title="这个协议更多的是对http的一种优化"></a>这个协议更多的是对http的一种优化</h2><h2 id="二进制帧格式？"><a href="#二进制帧格式？" class="headerlink" title="二进制帧格式？"></a>二进制帧格式？</h2>]]></content>
-      <categories>
-        <category>HTTP</category>
-      </categories>
-  </entry>
-  <entry>
     <title>垃圾回收机制</title>
     <url>/2020/12/15/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6/</url>
     <content><![CDATA[<h1 id="垃圾回收机制"><a href="#垃圾回收机制" class="headerlink" title="垃圾回收机制"></a>垃圾回收机制</h1><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="为什么要分类—依据"><a href="#为什么要分类—依据" class="headerlink" title="为什么要分类—依据"></a>为什么要分类—依据</h3><ul>
@@ -1827,6 +1827,83 @@
 ]]></content>
       <categories>
         <category>v8引擎</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>垃圾回收机制</title>
+    <url>/2021/01/19/%E6%89%A7%E8%A1%8C%E4%B8%8A%E4%B8%8B%E6%96%87/</url>
+    <content><![CDATA[<h1 id="执行上下文"><a href="#执行上下文" class="headerlink" title="执行上下文"></a>执行上下文</h1><h2 id="所谓的执行上下文其实就是代码所处的环境"><a href="#所谓的执行上下文其实就是代码所处的环境" class="headerlink" title="所谓的执行上下文其实就是代码所处的环境"></a>所谓的执行上下文其实就是代码所处的环境</h2><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="全局执行上下文"><a href="#全局执行上下文" class="headerlink" title="全局执行上下文"></a>全局执行上下文</h3><h3 id="函数执行上下文"><a href="#函数执行上下文" class="headerlink" title="函数执行上下文"></a>函数执行上下文</h3><h3 id="eval执行上下文–我不用"><a href="#eval执行上下文–我不用" class="headerlink" title="eval执行上下文–我不用"></a>eval执行上下文–我不用</h3><h2 id="调用栈"><a href="#调用栈" class="headerlink" title="调用栈"></a>调用栈</h2><h3 id="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"><a href="#每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间" class="headerlink" title="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"></a>每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间</h3><ul>
+<li><p>从这里开始，就可以知道作用域的本质了，其实就是当前所处的执行上下文了</p>
+<ul>
+<li><p>那为什么作用域外部无法访问到另一个作用域的内部</p>
+<ul>
+<li><p>原理其实是因为当外部执行上下文想要去访问函数执行上下文里的变量的时候，它出栈了自然是无法访问了</p>
+</li>
+<li><p>那为什么内部作用域又能去访问外部作用域</p>
+<ul>
+<li>其实这是因为zhi’x</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="全局执行上下文执行过程"><a href="#全局执行上下文执行过程" class="headerlink" title="全局执行上下文执行过程"></a>全局执行上下文执行过程</h3><ul>
+<li><p>创建阶段</p>
+<ul>
+<li>首先会创建一个全局对象window： global object</li>
+<li>创建一个this 然后让它指向这个window</li>
+<li>之后为变量和函数分配空间/并且要为变量赋一个undefined</li>
+<li>创建作用域链</li>
+</ul>
+</li>
+<li><p>执行阶段</p>
+<ul>
+<li>js引擎开始一行行执行代码，并开始给变量赋值</li>
+</ul>
+</li>
+<li><p>由此引出了变量提升的本质</p>
+<ul>
+<li>其实是因为js的执行上下文的创建阶段和赋值阶段并不同步所造成的</li>
+<li>创建阶段给变量开辟空间然后赋了初值undefined</li>
+<li>之后赋值的时候由于在访问的变量的时候，要去赋值的代码还未执行，所以依然是undefined</li>
+</ul>
+</li>
+</ul>
+<h3 id="函数执行上下文（调用时才会推入调用栈中）"><a href="#函数执行上下文（调用时才会推入调用栈中）" class="headerlink" title="函数执行上下文（调用时才会推入调用栈中）"></a>函数执行上下文（调用时才会推入调用栈中）</h3><ul>
+<li><p>创建阶段</p>
+<ul>
+<li><p>首先明确一点这个是在函数调用的时候才生成的</p>
+</li>
+<li><p>创建this </p>
+<ul>
+<li><p>将其指向调用者</p>
+</li>
+<li><p>无人调用就指向window</p>
+<ul>
+<li>也就是说，普通函数之所以this指向window其实是这里指定的</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>创建arguements 这里面包含着函数所有的参数</p>
+</li>
+<li><p>创建作用域链</p>
+</li>
+<li><p>是这样你想一想，你在全局执行上下文已经有了全局对象了，那函数执行上下文自然不用再去建立了</p>
+</li>
+</ul>
+</li>
+<li><p>执行阶段</p>
+<ul>
+<li>一行行执行函数内部的代码</li>
+</ul>
+</li>
+</ul>
+<h2 id="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"><a href="#那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度" class="headerlink" title="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"></a>那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度</h2>]]></content>
+      <categories>
+        <category>执行上下文</category>
       </categories>
   </entry>
   <entry>
@@ -1986,6 +2063,20 @@
       </categories>
   </entry>
   <entry>
+    <title>暂时性死区</title>
+    <url>/2020/02/13/%E6%9A%82%E6%97%B6%E6%80%A7%E6%AD%BB%E5%8C%BA/</url>
+    <content><![CDATA[<h3 id="何为暂时性死区"><a href="#何为暂时性死区" class="headerlink" title="何为暂时性死区"></a>何为暂时性死区</h3><ol>
+<li>首先说起这个问题，首先需要来明确一下这个var let const 的一些本质的一个区别，首先对于这个var 会有一个变量提升的问题，其实这个变量从未提升过，从执行上下文的角度来考虑，问题，首先创建的阶段对于你所声明的变量，会去开辟空间，然后到达执行阶段才去赋值，因为创建阶段先给变量赋值为undefined，，但是又由于js解释执行的时候是在之后，才有值所以是undefined.所以它的本质其实就是这个，全局执行上下文创建阶段和执行阶段两者不同步所造成的。</li>
+<li>那么这个var同时还没有作用域的概念，所以在闭包常见题种循环输出只能拿到最后一次遍历的值，因为一旦用var来声明变量，首先这个var会被提升至全局，因为它没有作用域的这个概念，然后每次遍历这个var都是唯一的所以，不断被刷新了。</li>
+<li>那么这个let const 就是说let 之所以没有变量提升的问题在于它将全局执行上下文的创建阶段和执行阶段都同步了，所以才不会出现这个，问题，并且添加了块级作用域的概念，也就是说，每次声明一个变量都会将其绑定到当前作用域内比如在函数中去。</li>
+<li>const 就是声明的变量，不能被重新赋值，对于简单值类型，不能被重复改变值，但是对于引用类型的值，只要不改它的地址，可以修改比如对象里的值。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>js核心</category>
+      </categories>
+  </entry>
+  <entry>
     <title>盒模型</title>
     <url>/2020/09/12/%E7%9B%92%E6%A8%A1%E5%9E%8B/</url>
     <content><![CDATA[<p>首先盒模型有几个属性分别是content  border padding margin </p>
@@ -2000,97 +2091,6 @@
 ]]></content>
       <categories>
         <category>css</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>垃圾回收机制</title>
-    <url>/2021/01/19/%E6%89%A7%E8%A1%8C%E4%B8%8A%E4%B8%8B%E6%96%87/</url>
-    <content><![CDATA[<h1 id="执行上下文"><a href="#执行上下文" class="headerlink" title="执行上下文"></a>执行上下文</h1><h2 id="所谓的执行上下文其实就是代码所处的环境"><a href="#所谓的执行上下文其实就是代码所处的环境" class="headerlink" title="所谓的执行上下文其实就是代码所处的环境"></a>所谓的执行上下文其实就是代码所处的环境</h2><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="全局执行上下文"><a href="#全局执行上下文" class="headerlink" title="全局执行上下文"></a>全局执行上下文</h3><h3 id="函数执行上下文"><a href="#函数执行上下文" class="headerlink" title="函数执行上下文"></a>函数执行上下文</h3><h3 id="eval执行上下文–我不用"><a href="#eval执行上下文–我不用" class="headerlink" title="eval执行上下文–我不用"></a>eval执行上下文–我不用</h3><h2 id="调用栈"><a href="#调用栈" class="headerlink" title="调用栈"></a>调用栈</h2><h3 id="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"><a href="#每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间" class="headerlink" title="每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间"></a>每当执行上下文创建一个就将起推入调用栈中，然后当函数执行完后，对应的函数执行上下文才会出栈，从而让出资源空间</h3><ul>
-<li><p>从这里开始，就可以知道作用域的本质了，其实就是当前所处的执行上下文了</p>
-<ul>
-<li><p>那为什么作用域外部无法访问到另一个作用域的内部</p>
-<ul>
-<li><p>原理其实是因为当外部执行上下文想要去访问函数执行上下文里的变量的时候，它出栈了自然是无法访问了</p>
-</li>
-<li><p>那为什么内部作用域又能去访问外部作用域</p>
-<ul>
-<li>其实这是因为zhi’x</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="全局执行上下文执行过程"><a href="#全局执行上下文执行过程" class="headerlink" title="全局执行上下文执行过程"></a>全局执行上下文执行过程</h3><ul>
-<li><p>创建阶段</p>
-<ul>
-<li>首先会创建一个全局对象window： global object</li>
-<li>创建一个this 然后让它指向这个window</li>
-<li>之后为变量和函数分配空间/并且要为变量赋一个undefined</li>
-<li>创建作用域链</li>
-</ul>
-</li>
-<li><p>执行阶段</p>
-<ul>
-<li>js引擎开始一行行执行代码，并开始给变量赋值</li>
-</ul>
-</li>
-<li><p>由此引出了变量提升的本质</p>
-<ul>
-<li>其实是因为js的执行上下文的创建阶段和赋值阶段并不同步所造成的</li>
-<li>创建阶段给变量开辟空间然后赋了初值undefined</li>
-<li>之后赋值的时候由于在访问的变量的时候，要去赋值的代码还未执行，所以依然是undefined</li>
-</ul>
-</li>
-</ul>
-<h3 id="函数执行上下文（调用时才会推入调用栈中）"><a href="#函数执行上下文（调用时才会推入调用栈中）" class="headerlink" title="函数执行上下文（调用时才会推入调用栈中）"></a>函数执行上下文（调用时才会推入调用栈中）</h3><ul>
-<li><p>创建阶段</p>
-<ul>
-<li><p>首先明确一点这个是在函数调用的时候才生成的</p>
-</li>
-<li><p>创建this </p>
-<ul>
-<li><p>将其指向调用者</p>
-</li>
-<li><p>无人调用就指向window</p>
-<ul>
-<li>也就是说，普通函数之所以this指向window其实是这里指定的</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>创建arguements 这里面包含着函数所有的参数</p>
-</li>
-<li><p>创建作用域链</p>
-</li>
-<li><p>是这样你想一想，你在全局执行上下文已经有了全局对象了，那函数执行上下文自然不用再去建立了</p>
-</li>
-</ul>
-</li>
-<li><p>执行阶段</p>
-<ul>
-<li>一行行执行函数内部的代码</li>
-</ul>
-</li>
-</ul>
-<h2 id="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"><a href="#那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度" class="headerlink" title="那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度"></a>那为什么一定要有他，存在的意义是什么，其实从网络体系分层的思想可以看出来，目的就是在解耦，降低代码执行的复杂度</h2>]]></content>
-      <categories>
-        <category>执行上下文</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>暂时性死区</title>
-    <url>/2020/02/13/%E6%9A%82%E6%97%B6%E6%80%A7%E6%AD%BB%E5%8C%BA/</url>
-    <content><![CDATA[<h3 id="何为暂时性死区"><a href="#何为暂时性死区" class="headerlink" title="何为暂时性死区"></a>何为暂时性死区</h3><ol>
-<li>首先说起这个问题，首先需要来明确一下这个var let const 的一些本质的一个区别，首先对于这个var 会有一个变量提升的问题，其实这个变量从未提升过，从执行上下文的角度来考虑，问题，首先创建的阶段对于你所声明的变量，会去开辟空间，然后到达执行阶段才去赋值，因为创建阶段先给变量赋值为undefined，，但是又由于js解释执行的时候是在之后，才有值所以是undefined.所以它的本质其实就是这个，全局执行上下文创建阶段和执行阶段两者不同步所造成的。</li>
-<li>那么这个var同时还没有作用域的概念，所以在闭包常见题种循环输出只能拿到最后一次遍历的值，因为一旦用var来声明变量，首先这个var会被提升至全局，因为它没有作用域的这个概念，然后每次遍历这个var都是唯一的所以，不断被刷新了。</li>
-<li>那么这个let const 就是说let 之所以没有变量提升的问题在于它将全局执行上下文的创建阶段和执行阶段都同步了，所以才不会出现这个，问题，并且添加了块级作用域的概念，也就是说，每次声明一个变量都会将其绑定到当前作用域内比如在函数中去。</li>
-<li>const 就是声明的变量，不能被重新赋值，对于简单值类型，不能被重复改变值，但是对于引用类型的值，只要不改它的地址，可以修改比如对象里的值。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>js核心</category>
       </categories>
   </entry>
   <entry>
